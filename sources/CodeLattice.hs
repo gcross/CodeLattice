@@ -42,7 +42,7 @@ data Location = Location
 -- @+node:gcross.20100302164430.1241:Step
 data Step = Step
     {   stepAngle :: Double -- in degrees
-    ,   stepRotation :: Double
+    ,   stepRotation :: Double -- in degrees
     } deriving (Show)
 
 -- @-node:gcross.20100302164430.1241:Step
@@ -90,7 +90,7 @@ stepFromRawVertex (RawVertex x y orientation) (Step angle rotation) =
     RawVertex
         (x + cos step_angle_in_radians)
         (y + sin step_angle_in_radians)
-        (orientation + rotation)
+        (modulo360 $ orientation + rotation)
   where
     step_angle_in_radians = (orientation + angle) / 180 * pi
 -- @-node:gcross.20100302201317.1252:stepFromRawVertex
