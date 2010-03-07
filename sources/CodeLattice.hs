@@ -9,6 +9,7 @@ module CodeLattice where
 import Control.Monad
 
 import Data.EpsilonMatcher.Multiple
+import Data.IntMap (IntMap)
 import Data.Map (Map)
 import qualified Data.Map as Map
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
@@ -57,7 +58,7 @@ data RawVertex = RawVertex
 data Vertex = Vertex
     {   vertexLocation :: Location
     ,   vertexOrientation :: Angle
-    } deriving (Show)
+    } deriving (Show,Eq)
 
 
 -- @-node:gcross.20100302164430.1235:Vertex
@@ -137,6 +138,10 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
             vertex = vertex_to_step_from `stepFromRawVertex` step
     go 0 steps
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
+-- @+node:gcross.20100306220637.1354:runResolverMonad
+runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
+runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
+-- @-node:gcross.20100306220637.1354:runResolverMonad
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
