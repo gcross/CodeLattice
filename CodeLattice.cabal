@@ -1,0 +1,15 @@
+-- @+leo-ver=4-thin
+-- @+node:gcross.20100302201317.1387:@thin CodeLattice.cabal
+-- @@language Haskell
+Name:           CodeLattice
+Version:        0.1
+Cabal-Version:  >= 1.6
+Build-Type:     Custom
+
+Library
+    Build-Depends:  Blueprint >= 0.2,
+                    base == 4.1.*,
+                    containers == 0.2.*,
+                    EpsilonMatcher == 0.1
+-- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
+-- @-leo
