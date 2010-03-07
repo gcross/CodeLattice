@@ -69,13 +69,7 @@ type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100302201317.1255:module360
 modulo360 :: Double -> Double
-modulo360 angle
-  | angle > 360
-    = modulo360 (angle-360)
-  | angle < 0
-    = modulo360 (angle+360)
-  | otherwise
-    = angle
+modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @-node:gcross.20100302201317.1255:module360
 -- @+node:gcross.20100302164430.1306:resolveVertex
 resolveVertex :: RawVertex -> ResolverMonad Vertex
