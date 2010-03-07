@@ -36,6 +36,30 @@ skipList _ [] = []
 skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091218141305.1337:skipList
 -- @-node:gcross.20091217190104.2175:Functions
+-- @+node:gcross.20100307122538.1301:Generators
+-- @+node:gcross.20100307122538.1302:Step
+instance Arbitrary Step where
+    arbitrary =
+        liftM2 Step
+            (fmap modulo360 arbitrary)
+            (fmap modulo360 arbitrary)
+-- @-node:gcross.20100307122538.1302:Step
+-- @+node:gcross.20100307133316.1307:Vertex
+instance Arbitrary RawVertex where
+    arbitrary =
+        liftM3 RawVertex
+            arbitrary
+            arbitrary
+            (fmap modulo360 arbitrary)
+-- @-node:gcross.20100307133316.1307:Vertex
+-- @+node:gcross.20100307133316.1308:Location
+instance Arbitrary Location where
+    arbitrary =
+        liftM2 Location
+            arbitrary
+            arbitrary
+-- @-node:gcross.20100307133316.1308:Location
+-- @-node:gcross.20100307122538.1301:Generators
 -- @-others
 
 main = defaultMain
@@ -92,6 +116,23 @@ main = defaultMain
         -- @-others
         ]
     -- @-node:gcross.20100306220637.1289:stepFromRawVertex
+    -- @+node:gcross.20100307122538.1300:findStepNumberForRawVertex
+    ,testProperty "findStepNumberForRawVertex" $ do
+        NonEmpty steps <- arbitrary
+        chosen_step_number <- choose (0,length steps-1)
+        let chosen_step = steps !! chosen_step_number
+        origin_vertex <- arbitrary
+        let vertex_to_find = stepFromRawVertex origin_vertex chosen_step
+            found_step_number =
+                fst
+                .
+                runResolverMonad
+                .
+                findStepNumberForRawVertex steps vertex_to_find
+                $
+                origin_vertex
+        return (chosen_step_number == found_step_number)
+    -- @-node:gcross.20100307122538.1300:findStepNumberForRawVertex
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl
