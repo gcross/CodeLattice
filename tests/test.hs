@@ -182,6 +182,60 @@ main = defaultMain
             ]
         -- @nonl
         -- @-node:gcross.20100307163258.1315:polygonsToEdgesAndAngles
+        -- @+node:gcross.20100307163258.1320:lookupAngleOfEdge
+        ,testGroup "polygonsToEdgesAndAngles" $
+            [testCase (show test_number) $
+                assertEqual
+                    "Was the correct angle found?"
+                    correct_angle
+                    (lookupAngleOfEdge (zip edges [0..]) edge_to_find disambiguation)
+            | (test_number,(edges,edge_to_find,disambiguation,correct_angle)) <-
+                zip [1..]
+                [([(0,0)
+                  ]
+                 ,(0,0)
+                 ,0
+                 ,0
+                 )
+                ,([(0,0)
+                  ,(0,0)
+                  ]
+                 ,(0,0)
+                 ,1
+                 ,1
+                 )
+                ,([(0,0)
+                  ,(1,1)
+                  ]
+                 ,(1,1)
+                 ,0
+                 ,1
+                 )
+                ,([(0,0)
+                  ,(2,2)
+                  ,(0,0)
+                  ,(1,1)
+                  ,(0,0)
+                  ,(2,2)
+                  ]
+                 ,(2,2)
+                 ,1
+                 ,5
+                 )
+                ,([(0,0)
+                  ,(2,2)
+                  ,(0,0)
+                  ,(1,1)
+                  ,(0,0)
+                  ,(2,2)
+                  ]
+                 ,(0,0)
+                 ,1
+                 ,2
+                 )
+                ]
+            ]
+        -- @-node:gcross.20100307163258.1320:lookupAngleOfEdge
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

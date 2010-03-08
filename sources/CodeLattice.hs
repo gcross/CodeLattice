@@ -158,6 +158,26 @@ polygonsToEdgesAndAngles polygons@(x1:x2:xs) =
     go _ _ = []
 polygonsToStepAngles _ = error "There needs to be at least two polygons adjoining a vertex!"
 -- @-node:gcross.20100307163258.1314:polygonsToEdgesAndAngles
+-- @+node:gcross.20100307163258.1319:lookupAngleOfEdge
+lookupAngleOfEdge :: [((Int,Int),Double)] -> (Int,Int) -> Int -> Double
+lookupAngleOfEdge table edge disambiguation = go table disambiguation
+  where
+    go :: [((Int,Int),Double)] -> Int -> Double
+    go [] _ = error $
+        "Error finding "
+        ++ show disambiguation ++
+        "-th occurance of "
+        ++ show edge ++
+        " in "
+        ++ show table
+    go ((edge_to_find,angle):rest) disambiguation
+        | edge_to_find == edge
+            = if disambiguation == 0
+                then angle
+                else go rest (disambiguation-1)
+        | otherwise
+            = go rest disambiguation
+-- @-node:gcross.20100307163258.1319:lookupAngleOfEdge
 -- @-node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100307133316.1309:Values
 -- @+node:gcross.20100307133316.1310:Tilings
