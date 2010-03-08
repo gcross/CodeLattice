@@ -15,6 +15,7 @@ import Control.Exception
 import Control.Monad
 
 import Data.COrdering
+import Data.Function
 
 import Debug.Trace
 
@@ -263,8 +264,8 @@ main = defaultMain
             -- @+node:gcross.20100308112554.1326:same location
             ,testProperty "same location" $
                 \l o1 o2 ->
-                    let v1 = (Vertex l o1)
-                        v2 = (Vertex l o2)
+                    let v1 = Vertex l o1
+                        v2 = Vertex l o2
                         v1_cmp_v2 = v1 `compareVertex` v2
                     in if o1 == o2
                         then v1_cmp_v2 == Eq v1
@@ -273,6 +274,28 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100308112554.1321:compareVertex
+        -- @+node:gcross.20100308112554.1328:mergeVertexSet
+        ,testGroup "mergeVertexSet" $
+            -- @    @+others
+            -- @+node:gcross.20100308112554.1329:different locations
+            [testProperty "different locations" $
+                \v1 v2 ->
+                    (vertexLocation v1 /= vertexLocation v2) ==>
+                        (vertexSet [v1,v2]) == (vertexSet [v1] `mergeVertexSet` vertexSet [v2])
+            -- @-node:gcross.20100308112554.1329:different locations
+            -- @+node:gcross.20100308112554.1331:same location
+            ,testProperty "same location, same orientation" $
+                \l o1 o2 ->
+                    let v1 = Vertex l o1
+                        v2 = Vertex l o2
+                        merged_set = vertexSet [v1] `mergeVertexSet` vertexSet [v2]
+                    in if o1 == o2
+                        then merged_set == vertexSet [v1]
+                        else isBottom merged_set
+            -- @-node:gcross.20100308112554.1331:same location
+            -- @-others
+            ]
+        -- @-node:gcross.20100308112554.1328:mergeVertexSet
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

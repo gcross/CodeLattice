@@ -143,10 +143,14 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
 runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
 -- @-node:gcross.20100306220637.1354:runResolverMonad
--- @+node:gcross.20100308112554.1319:setFromVertices
-setFromVertices :: [Vertex] -> VertexSet
-setFromVertices = foldl' (\tree v -> AVL.push (compareVertex v) v tree) AVL.empty
--- @-node:gcross.20100308112554.1319:setFromVertices
+-- @+node:gcross.20100308112554.1319:vertexSet
+vertexSet :: [Vertex] -> VertexSet
+vertexSet = foldl' (\tree v -> AVL.push (compareVertex v) v tree) AVL.empty
+-- @-node:gcross.20100308112554.1319:vertexSet
+-- @+node:gcross.20100308112554.1327:mergeVertexSet
+mergeVertexSet :: VertexSet -> VertexSet -> VertexSet
+mergeVertexSet = AVL.union compareVertex
+-- @-node:gcross.20100308112554.1327:mergeVertexSet
 -- @+node:gcross.20100308112554.1320:compareVertex
 compareVertex :: Vertex -> Vertex -> COrdering Vertex
 compareVertex v1 v2 =
