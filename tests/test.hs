@@ -253,6 +253,26 @@ main = defaultMain
             | Tiling name polygons _ <- tilings
             ]
         -- @-node:gcross.20100307133316.1313:sum to 360
+        -- @+node:gcross.20100308112554.1313:correct steps
+        ,testGroup "correct steps" $
+            [testCase name $
+                assertEqual
+                    "Do the interior angles sum to 360?"
+                    correct_steps
+                    (tilingToSteps . lookupTiling $ name)
+            | (name,correct_steps) <-
+                [("quadrile"
+                 ,[Step (90 * i) 0 | i <- [0..3]]
+                 )
+                ,("hextille"
+                 ,[Step (120 * i) 0 | i <- [0..2]]
+                 )
+                ,("deltille"
+                 ,[Step (60 * i) 0 | i <- [0..5]]
+                 )
+                ]
+            ]
+        -- @-node:gcross.20100308112554.1313:correct steps
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings

@@ -43,7 +43,7 @@ data Location = Location
 data Step = Step
     {   stepAngle :: Double -- in degrees
     ,   stepRotation :: Double -- in degrees
-    } deriving (Show)
+    } deriving (Show,Eq)
 
 -- @-node:gcross.20100302164430.1241:Step
 -- @+node:gcross.20100302164430.1242:RawVertex

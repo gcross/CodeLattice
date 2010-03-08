@@ -27,25 +27,65 @@ type EdgesAndAngles = [(Edge,Angle)]
 data Tiling = Tiling
     {   tilingName :: String
     ,   tilingPolygons :: [Int]
-    ,   tilingDisambiguation :: Maybe [Int]
+    ,   tilingOrientationMode :: OrientationMode
     }
 -- @-node:gcross.20100308112554.1302:Tiling
+-- @+node:gcross.20100308112554.1315:OrientationMode
+data OrientationMode =
+    OnlyOneOrientation
+  | PickFirstCompatableOrientation
+  | PickNthCompatableOrientation [Int]
+
+-- @-node:gcross.20100308112554.1315:OrientationMode
 -- @-node:gcross.20100308112554.1298:Types
 -- @+node:gcross.20100308112554.1296:Values
 -- @+node:gcross.20100308112554.1297:Tilings
 tilings :: [Tiling]
 tilings =
-    [Tiling "quadrile" [4,4,4,4] Nothing
-    ,Tiling "truncated quadrille" [8,8,4] Nothing
-    ,Tiling "snub quadrille" [4,3,4,3,3] (Just [0,0,0,1,0])
-    ,Tiling "hextille" [6,6,6] Nothing
-    ,Tiling "hexadeltille" [6,3,6,3] Nothing
-    ,Tiling "truncated hextille" [12,12,3] Nothing
-    ,Tiling "deltille" (replicate 6 3) Nothing
-    ,Tiling "rhombihexadeltille" [4,6,4,3] Nothing
-    ,Tiling "truncated hexadeltille" [12,6,4] Nothing
-    ,Tiling "snub hexatille" [6,3,3,3,3] (Just [0,0,1,0,2])
-    ,Tiling "isosnub quadrille" [4,4,3,3,3] (Just [0,0,0,0,1])
+    [Tiling
+        "quadrile"
+        [4,4,4,4]
+        OnlyOneOrientation
+    ,Tiling
+        "truncated quadrille"
+        [8,8,4]
+        PickFirstCompatableOrientation
+    ,Tiling
+        "snub quadrille"
+        [4,3,4,3,3]
+        (PickNthCompatableOrientation [0,0,0,1,0])
+    ,Tiling
+        "hextille"
+        [6,6,6]
+        OnlyOneOrientation
+    ,Tiling
+        "hexadeltille"
+        [6,3,6,3]
+        PickFirstCompatableOrientation
+    ,Tiling
+        "truncated hextille"
+        [12,12,3]
+        PickFirstCompatableOrientation
+    ,Tiling
+        "deltille"
+        (replicate 6 3)
+        OnlyOneOrientation
+    ,Tiling
+        "rhombihexadeltille"
+        [4,6,4,3]
+        PickFirstCompatableOrientation
+    ,Tiling
+        "truncated hexadeltille"
+        [12,6,4]
+        PickFirstCompatableOrientation
+    ,Tiling
+        "snub hexatille"
+        [6,3,3,3,3]
+        (PickNthCompatableOrientation [0,0,1,0,2])
+    ,Tiling
+        "isosnub quadrille"
+        [4,4,3,3,3]
+        (PickNthCompatableOrientation [0,0,0,0,1])
     ]
 -- @-node:gcross.20100308112554.1297:Tilings
 -- @-node:gcross.20100308112554.1296:Values
@@ -87,13 +127,38 @@ lookupAngleOfEdge table edge disambiguation = go table disambiguation
 -- @-node:gcross.20100308112554.1309:lookupAngleOfEdge
 -- @+node:gcross.20100308112554.1311:tilingToSteps
 tilingToSteps :: Tiling -> [Step]
-tilingToSteps (Tiling _ polygons maybe_disambiguations) =
-    let disambiguations = fromMaybe (map (const 0) polygons) maybe_disambiguations
-        edges_and_angles = polygonsToEdgesAndAngles polygons
-    in  [Step angle (modulo360 $ 180 + angle - lookupAngleOfEdge edges_and_angles (p2,p1) disambiguation)
-        | ((edge@(p1,p2),angle),disambiguation) <- zip edges_and_angles disambiguations
-        ]
+tilingToSteps (Tiling _ polygons orientation_mode) =
+    case orientation_mode of
+        OnlyOneOrientation ->
+            map (flip Step 0)
+            .
+            snd
+            .
+            unzip
+            $
+            edges_and_angles
+        PickFirstCompatableOrientation ->
+            [Step angle (modulo360 $ 180 + angle - lookupAngleOfEdge edges_and_angles (p2,p1) 0)
+            | ((p1,p2),angle) <- edges_and_angles
+            ]
+        PickNthCompatableOrientation disambiguations ->
+            [Step angle (modulo360 $ 180 + angle - lookupAngleOfEdge edges_and_angles (p2,p1) disambiguation)
+            | (((p1,p2),angle),disambiguation) <- zip edges_and_angles disambiguations
+            ]
+  where
+    edges_and_angles = polygonsToEdgesAndAngles polygons
 -- @-node:gcross.20100308112554.1311:tilingToSteps
+-- @+node:gcross.20100308112554.1314:lookupTiling
+lookupTiling :: String -> Tiling
+lookupTiling name = go tilings
+  where
+    go [] = error $ "Unable to find tiling named " ++ name
+    go (tiling:rest)
+     | (tilingName tiling == name)
+        = tiling
+     | otherwise
+        = go rest
+-- @-node:gcross.20100308112554.1314:lookupTiling
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs
