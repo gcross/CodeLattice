@@ -149,7 +149,7 @@ main = defaultMain
                     "Do the interior angles sum to 360?"
                     360
                     (sum . map polygonInteriorAngle $ polygons)
-            | (name,polygons,_) <- tilings
+            | Tiling name polygons _ <- tilings
             ]
         -- @-node:gcross.20100307133316.1313:sum to 360
         -- @-others
