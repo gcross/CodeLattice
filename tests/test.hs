@@ -22,6 +22,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck
 
 import CodeLattice
+import CodeLattice.Tilings
 -- @-node:gcross.20091217190104.1412:<< Import needed modules >>
 -- @nl
 
