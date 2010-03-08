@@ -66,73 +66,95 @@ main = defaultMain
     -- @    << Tests >>
     -- @+node:gcross.20100302201317.1388:<< Tests >>
     -- @+others
-    -- @+node:gcross.20100302201317.1389:modulo360
-    [testProperty "modulo360" $
-        \(n :: Integer) ->
-            fromInteger (n `mod` 360) == modulo360 (fromInteger n)
-    -- @-node:gcross.20100302201317.1389:modulo360
-    -- @+node:gcross.20100306220637.1289:stepFromRawVertex
-    ,testGroup "stepFromRawVertex"
+    -- @+node:gcross.20100307133316.1311:Functions
+    [testGroup "Functions"
         -- @    @+others
-        -- @+node:gcross.20100306220637.1290:horizontal step
-        [testCase "horizontal step" $
-            let original_raw_vertex = RawVertex 0 0 0
-                correct_stepped_raw_vertex = RawVertex 1 0 0
-                step = Step 0 0
-                ((stepped_vertex,correct_vertex),_) = runResolverMonad $
-                    liftM2 (,)
-                        (resolveVertex correct_stepped_raw_vertex)
-                        (resolveVertex $ stepFromRawVertex original_raw_vertex step)
-            in assertEqual "Did the step arrive at the correct vertex?"
-                correct_vertex
-                stepped_vertex
-        -- @-node:gcross.20100306220637.1290:horizontal step
-        -- @+node:gcross.20100306220637.1358:vertical step
-        ,testCase "vertical step" $
-            let original_raw_vertex = RawVertex 0 0 0
-                correct_stepped_raw_vertex = RawVertex 0 1 0
-                step = Step 90 0
-                ((stepped_vertex,correct_vertex),_) = runResolverMonad $
-                    liftM2 (,)
-                        (resolveVertex correct_stepped_raw_vertex)
-                        (resolveVertex $ stepFromRawVertex original_raw_vertex step)
-            in assertEqual "Did the step arrive at the correct vertex?"
-                correct_vertex
-                stepped_vertex
-        -- @-node:gcross.20100306220637.1358:vertical step
-        -- @+node:gcross.20100306220637.1362:step plus rotation
-        ,testCase "step plus rotation" $
-            let original_raw_vertex = RawVertex 0 0 0
-                correct_stepped_raw_vertex = RawVertex 1 0 30
-                step = Step 0 30
-                ((stepped_vertex,correct_vertex),_) = runResolverMonad $
-                    liftM2 (,)
-                        (resolveVertex correct_stepped_raw_vertex)
-                        (resolveVertex $ stepFromRawVertex original_raw_vertex step)
-            in assertEqual "Did the step arrive at the correct vertex?"
-                correct_vertex
-                stepped_vertex
-        -- @-node:gcross.20100306220637.1362:step plus rotation
+        -- @+node:gcross.20100302201317.1389:modulo360
+        [testProperty "modulo360" $
+            \(n :: Integer) ->
+                fromInteger (n `mod` 360) == modulo360 (fromInteger n)
+        -- @-node:gcross.20100302201317.1389:modulo360
+        -- @+node:gcross.20100306220637.1289:stepFromRawVertex
+        ,testGroup "stepFromRawVertex"
+            -- @    @+others
+            -- @+node:gcross.20100306220637.1290:horizontal step
+            [testCase "horizontal step" $
+                let original_raw_vertex = RawVertex 0 0 0
+                    correct_stepped_raw_vertex = RawVertex 1 0 0
+                    step = Step 0 0
+                    ((stepped_vertex,correct_vertex),_) = runResolverMonad $
+                        liftM2 (,)
+                            (resolveVertex correct_stepped_raw_vertex)
+                            (resolveVertex $ stepFromRawVertex original_raw_vertex step)
+                in assertEqual "Did the step arrive at the correct vertex?"
+                    correct_vertex
+                    stepped_vertex
+            -- @-node:gcross.20100306220637.1290:horizontal step
+            -- @+node:gcross.20100306220637.1358:vertical step
+            ,testCase "vertical step" $
+                let original_raw_vertex = RawVertex 0 0 0
+                    correct_stepped_raw_vertex = RawVertex 0 1 0
+                    step = Step 90 0
+                    ((stepped_vertex,correct_vertex),_) = runResolverMonad $
+                        liftM2 (,)
+                            (resolveVertex correct_stepped_raw_vertex)
+                            (resolveVertex $ stepFromRawVertex original_raw_vertex step)
+                in assertEqual "Did the step arrive at the correct vertex?"
+                    correct_vertex
+                    stepped_vertex
+            -- @-node:gcross.20100306220637.1358:vertical step
+            -- @+node:gcross.20100306220637.1362:step plus rotation
+            ,testCase "step plus rotation" $
+                let original_raw_vertex = RawVertex 0 0 0
+                    correct_stepped_raw_vertex = RawVertex 1 0 30
+                    step = Step 0 30
+                    ((stepped_vertex,correct_vertex),_) = runResolverMonad $
+                        liftM2 (,)
+                            (resolveVertex correct_stepped_raw_vertex)
+                            (resolveVertex $ stepFromRawVertex original_raw_vertex step)
+                in assertEqual "Did the step arrive at the correct vertex?"
+                    correct_vertex
+                    stepped_vertex
+            -- @-node:gcross.20100306220637.1362:step plus rotation
+            -- @-others
+            ]
+        -- @-node:gcross.20100306220637.1289:stepFromRawVertex
+        -- @+node:gcross.20100307122538.1300:findStepNumberForRawVertex
+        ,testProperty "findStepNumberForRawVertex" $ do
+            NonEmpty steps <- arbitrary
+            chosen_step_number <- choose (0,length steps-1)
+            let chosen_step = steps !! chosen_step_number
+            origin_vertex <- arbitrary
+            let vertex_to_find = stepFromRawVertex origin_vertex chosen_step
+                found_step_number =
+                    fst
+                    .
+                    runResolverMonad
+                    .
+                    findStepNumberForRawVertex steps vertex_to_find
+                    $
+                    origin_vertex
+            return (chosen_step_number == found_step_number)
+        -- @-node:gcross.20100307122538.1300:findStepNumberForRawVertex
         -- @-others
         ]
-    -- @-node:gcross.20100306220637.1289:stepFromRawVertex
-    -- @+node:gcross.20100307122538.1300:findStepNumberForRawVertex
-    ,testProperty "findStepNumberForRawVertex" $ do
-        NonEmpty steps <- arbitrary
-        chosen_step_number <- choose (0,length steps-1)
-        let chosen_step = steps !! chosen_step_number
-        origin_vertex <- arbitrary
-        let vertex_to_find = stepFromRawVertex origin_vertex chosen_step
-            found_step_number =
-                fst
-                .
-                runResolverMonad
-                .
-                findStepNumberForRawVertex steps vertex_to_find
-                $
-                origin_vertex
-        return (chosen_step_number == found_step_number)
-    -- @-node:gcross.20100307122538.1300:findStepNumberForRawVertex
+    -- @-node:gcross.20100307133316.1311:Functions
+    -- @+node:gcross.20100307133316.1312:Tilings
+    ,testGroup "Tilings"
+        -- @    @+others
+        -- @+node:gcross.20100307133316.1313:sum to 360
+        [testGroup "sum to 360" $
+            [testCase name $
+                assertEqual
+                    "Do the interior angles sum to 360?"
+                    360
+                    (sum . map polygonInteriorAngle $ polygons)
+            | (name,polygons,_) <- tilings
+            ]
+        -- @-node:gcross.20100307133316.1313:sum to 360
+        -- @-others
+        ]
+    -- @-node:gcross.20100307133316.1312:Tilings
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl

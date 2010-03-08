@@ -136,7 +136,31 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
 runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
 -- @-node:gcross.20100306220637.1354:runResolverMonad
+-- @+node:gcross.20100307133316.1314:polygonInteriorAngle
+polygonInteriorAngle :: Int -> Double
+polygonInteriorAngle n = (n_-2)*180/n_
+  where
+    n_ = fromIntegral n
+-- @-node:gcross.20100307133316.1314:polygonInteriorAngle
 -- @-node:gcross.20100302164430.1305:Functions
+-- @+node:gcross.20100307133316.1309:Values
+-- @+node:gcross.20100307133316.1310:Tilings
+tilings :: [(String,[Int],Maybe [Int])]
+tilings = 
+    [("quadrile",[4,4,4,4],Nothing)
+    ,("truncated quadrille",[8,8,4],Nothing)
+    ,("snub quadrille",[4,3,4,3,3],Just [0,0,0,1,0])
+    ,("hextille",[6,6,6],Nothing)
+    ,("hexadeltille",[6,3,6,3],Nothing)
+    ,("truncated hextille",[12,12,3],Nothing)
+    ,("deltille",replicate 6 3,Nothing)
+    ,("rhombihexadeltille",[4,6,4,3],Nothing)
+    ,("truncated hexadeltille",[12,6,4],Nothing)
+    ,("snub hexatille",[6,3,3,3,3],Just [0,0,1,0,2])
+    ,("isosnub quadrille",[4,4,3,3,3],Just [0,0,0,0,1])
+    ]
+-- @-node:gcross.20100307133316.1310:Tilings
+-- @-node:gcross.20100307133316.1309:Values
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
 -- @-leo
