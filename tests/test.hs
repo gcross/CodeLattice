@@ -296,6 +296,28 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100308112554.1328:mergeVertexSet
+        -- @+node:gcross.20100308112554.1339:containsVertex
+        ,testGroup "containsVertex" $
+            -- @    @+others
+            -- @+node:gcross.20100308112554.1340:different locations
+            [testProperty "different locations" $
+                \v1 v2 ->
+                    (vertexLocation v1 /= vertexLocation v2) ==>
+                        not (containsVertex (vertexSet [v1]) v2)
+            -- @-node:gcross.20100308112554.1340:different locations
+            -- @+node:gcross.20100308112554.1341:same location
+            ,testProperty "same location, same orientation" $
+                \l o1 o2 ->
+                    let vertex_set = vertexSet [Vertex l o1]
+                        vertex = Vertex l o2
+                        contained = containsVertex vertex_set vertex
+                    in if o1 == o2
+                        then contained
+                        else isBottom contained
+            -- @-node:gcross.20100308112554.1341:same location
+            -- @-others
+            ]
+        -- @-node:gcross.20100308112554.1339:containsVertex
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

@@ -164,6 +164,16 @@ compareVertex v1 v2 =
                 ++ show v2 ++
                 " are at the same location, but have different orientations!"
 -- @-node:gcross.20100308112554.1320:compareVertex
+-- @+node:gcross.20100308112554.1334:containsVertex
+containsVertex :: VertexSet -> Vertex -> Bool
+containsVertex vertex_set vertex = AVL.contains vertex_set $ cOrdToOrd . compareVertex vertex
+-- @-node:gcross.20100308112554.1334:containsVertex
+-- @+node:gcross.20100308112554.1335:cOrdToOrd
+cOrdToOrd :: COrdering a -> Ordering
+cOrdToOrd Lt = LT
+cOrdToOrd Gt = GT
+cOrdToOrd (Eq _) = EQ
+-- @-node:gcross.20100308112554.1335:cOrdToOrd
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
