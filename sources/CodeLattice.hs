@@ -149,6 +149,15 @@ polygonInteriorAngle n = (n_-2)*180/n_
   where
     n_ = fromIntegral n
 -- @-node:gcross.20100307133316.1314:polygonInteriorAngle
+-- @+node:gcross.20100307163258.1314:polygonsToEdgesAndAngles
+polygonsToEdgesAndAngles :: [Int] -> [((Int,Int),Double)]
+polygonsToEdgesAndAngles polygons@(x1:x2:xs) =
+    ((last xs,x1),0):go (polygonInteriorAngle x1) polygons
+  where
+    go angle (x1:x2:xs) = ((x1,x2),angle):go (angle + polygonInteriorAngle x2) (x2:xs)
+    go _ _ = []
+polygonsToStepAngles _ = error "There needs to be at least two polygons adjoining a vertex!"
+-- @-node:gcross.20100307163258.1314:polygonsToEdgesAndAngles
 -- @-node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100307133316.1309:Values
 -- @+node:gcross.20100307133316.1310:Tilings

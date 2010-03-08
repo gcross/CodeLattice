@@ -136,6 +136,52 @@ main = defaultMain
                     origin_vertex
             return (chosen_step_number == found_step_number)
         -- @-node:gcross.20100307122538.1300:findStepNumberForRawVertex
+        -- @+node:gcross.20100307163258.1315:polygonsToEdgesAndAngles
+        ,testGroup "polygonsToEdgesAndAngles" $
+            [testCase (show polygons) $
+                assertEqual
+                    "Is the resulting list correct?"
+                    correct_list
+                    (polygonsToEdgesAndAngles polygons)
+            | (polygons,correct_list) <-
+                [([4,4,4,4]
+                 ,[((4,4),0)
+                  ,((4,4),90)
+                  ,((4,4),180)
+                  ,((4,4),270)
+                  ]
+                 )
+                ,([6,6,6]
+                 ,[((6,6),0)
+                  ,((6,6),120)
+                  ,((6,6),240)
+                  ]
+                 )
+                ,([4,8,8]
+                 ,[((8,4),0)
+                  ,((4,8),90)
+                  ,((8,8),225)
+                  ]
+                 )
+                ,([3,6,3,6]
+                 ,[((6,3),0)
+                  ,((3,6),60)
+                  ,((6,3),180)
+                  ,((3,6),240)
+                  ]
+                 )
+                ,([3,3,4,3,4]
+                 ,[((4,3),0)
+                  ,((3,3),60)
+                  ,((3,4),120)
+                  ,((4,3),210)
+                  ,((3,4),270)
+                  ]
+                 )
+                ]
+            ]
+        -- @nonl
+        -- @-node:gcross.20100307163258.1315:polygonsToEdgesAndAngles
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
