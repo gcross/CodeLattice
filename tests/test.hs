@@ -11,6 +11,7 @@
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20091217190104.1412:<< Import needed modules >>
+import Control.Exception
 import Control.Monad
 
 import Debug.Trace
@@ -264,15 +265,30 @@ main = defaultMain
                 [("quadrile"
                  ,[Step (90 * i) 0 | i <- [0..3]]
                  )
-                ,("hextille"
-                 ,[Step (120 * i) 0 | i <- [0..2]]
-                 )
                 ,("deltille"
                  ,[Step (60 * i) 0 | i <- [0..5]]
                  )
                 ]
             ]
         -- @-node:gcross.20100308112554.1313:correct steps
+        -- @+node:gcross.20100308112554.1317:invertible steps
+        ,testGroup "invertible steps" $
+            [testCase (tilingName tiling) $
+                let steps = tilingToSteps tiling
+                    origin = RawVertex 0 0 0
+                in forM_ steps $
+                    evaluate
+                    .
+                    fst
+                    .
+                    runResolverMonad
+                    .
+                    findStepNumberForRawVertex steps origin
+                    .
+                    stepFromRawVertex origin
+            | tiling <- tilings
+            ]
+        -- @-node:gcross.20100308112554.1317:invertible steps
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings

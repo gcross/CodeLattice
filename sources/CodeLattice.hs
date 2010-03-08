@@ -105,7 +105,7 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
     let go _ [] = error $
             "Unable to find a step in "
             ++ show steps ++
-            " connecting "
+            " from "
             ++ show vertex_to_step_from ++
             " to "
             ++ show vertex_to_find ++
@@ -118,7 +118,7 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
                     then if (vertexOrientation resolved_vertex == vertexOrientation resolved_vertex_to_find)
                             then return step_number
                             else error $
-                                    "Step "
+                                    ""
                                     ++ show step ++
                                     " takes us from "
                                     ++ show vertex_to_step_from ++

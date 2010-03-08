@@ -33,6 +33,7 @@ data Tiling = Tiling
 -- @+node:gcross.20100308112554.1315:OrientationMode
 data OrientationMode =
     OnlyOneOrientation
+  | FixedOrientationRotation Double
   | PickFirstCompatableOrientation
   | PickNthCompatableOrientation [Int]
 
@@ -53,15 +54,15 @@ tilings =
     ,Tiling
         "snub quadrille"
         [4,3,4,3,3]
-        (PickNthCompatableOrientation [0,0,0,1,0])
+        (PickNthCompatableOrientation [0,0,1,1,0])
     ,Tiling
         "hextille"
         [6,6,6]
-        OnlyOneOrientation
+        (FixedOrientationRotation 180)
     ,Tiling
         "hexadeltille"
         [6,3,6,3]
-        PickFirstCompatableOrientation
+        (PickNthCompatableOrientation [0,0,1,1])
     ,Tiling
         "truncated hextille"
         [12,12,3]
@@ -74,10 +75,13 @@ tilings =
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
-    ,Tiling
-        "truncated hexadeltille"
-        [12,6,4]
-        PickFirstCompatableOrientation
+-- @+at
+--      ,Tiling
+--          "truncated hexadeltille"
+--          [12,6,4]
+--          PickFirstCompatableOrientation
+-- @-at
+-- @@c
     ,Tiling
         "snub hexatille"
         [6,3,3,3,3]
@@ -131,6 +135,14 @@ tilingToSteps (Tiling _ polygons orientation_mode) =
     case orientation_mode of
         OnlyOneOrientation ->
             map (flip Step 0)
+            .
+            snd
+            .
+            unzip
+            $
+            edges_and_angles
+        FixedOrientationRotation rotation ->
+            map (flip Step rotation)
             .
             snd
             .
