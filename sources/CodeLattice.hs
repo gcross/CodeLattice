@@ -68,16 +68,15 @@ data Tiling = Tiling
     ,   tilingPolygons :: [Int]
     ,   tilingDisambiguation :: Maybe [Int]
     }
--- @-node:gcross.20100307163258.1312:Tiling
 -- @+node:gcross.20100302201317.1254:ResolverMonad
 type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @-node:gcross.20100302201317.1254:ResolverMonad
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100302164430.1305:Functions
--- @+node:gcross.20100302201317.1255:module360
+-- @+node:gcross.20100302201317.1255:modulo360
 modulo360 :: Double -> Double
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
--- @-node:gcross.20100302201317.1255:module360
+-- @-node:gcross.20100302201317.1255:modulo360
 -- @+node:gcross.20100302164430.1306:resolveVertex
 resolveVertex :: RawVertex -> ResolverMonad Vertex
 resolveVertex (RawVertex x y angle) =
