@@ -17,6 +17,7 @@ main =
          ,"QuickCheck == 2.1.*"
          ,"random == 1.*"
          ,"array == 0.2.*"
+         ,"ChasingBottoms == 1.2.*"
          ]
         ))
         []

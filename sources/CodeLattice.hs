@@ -8,10 +8,14 @@ module CodeLattice where
 -- @+node:gcross.20100302164430.1307:<< Import needed modules >>
 import Control.Monad
 
+import Data.COrdering
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
+import Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Tree.AVL (AVL)
+import qualified Data.Tree.AVL as AVL
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -65,6 +69,9 @@ data Vertex = Vertex
 -- @+node:gcross.20100302201317.1254:ResolverMonad
 type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @-node:gcross.20100302201317.1254:ResolverMonad
+-- @+node:gcross.20100308112554.1318:VertexSet
+type VertexSet = AVL Vertex
+-- @-node:gcross.20100308112554.1318:VertexSet
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100302201317.1255:modulo360
@@ -136,6 +143,23 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
 runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
 -- @-node:gcross.20100306220637.1354:runResolverMonad
+-- @+node:gcross.20100308112554.1319:setFromVertices
+setFromVertices :: [Vertex] -> VertexSet
+setFromVertices = foldl' (\tree v -> AVL.push (compareVertex v) v tree) AVL.empty
+-- @-node:gcross.20100308112554.1319:setFromVertices
+-- @+node:gcross.20100308112554.1320:compareVertex
+compareVertex :: Vertex -> Vertex -> COrdering Vertex
+compareVertex v1 v2 =
+    case vertexLocation v1 `compare` vertexLocation v2 of
+        LT -> Lt
+        GT -> Gt
+        EQ | vertexOrientation v1 == vertexOrientation v2 -> Eq v1
+           | otherwise -> error $
+                show v1 ++
+                " and "
+                ++ show v2 ++
+                " are at the same location, but have different orientations!"
+-- @-node:gcross.20100308112554.1320:compareVertex
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs

@@ -14,12 +14,15 @@
 import Control.Exception
 import Control.Monad
 
+import Data.COrdering
+
 import Debug.Trace
 
-import Test.HUnit
+import Test.ChasingBottoms.IsBottom
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
+import Test.HUnit
 import Test.QuickCheck
 
 import CodeLattice
@@ -39,21 +42,6 @@ skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091218141305.1337:skipList
 -- @-node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20100307122538.1301:Generators
--- @+node:gcross.20100307122538.1302:Step
-instance Arbitrary Step where
-    arbitrary =
-        liftM2 Step
-            (fmap modulo360 arbitrary)
-            (fmap modulo360 arbitrary)
--- @-node:gcross.20100307122538.1302:Step
--- @+node:gcross.20100307133316.1307:Vertex
-instance Arbitrary RawVertex where
-    arbitrary =
-        liftM3 RawVertex
-            arbitrary
-            arbitrary
-            (fmap modulo360 arbitrary)
--- @-node:gcross.20100307133316.1307:Vertex
 -- @+node:gcross.20100307133316.1308:Location
 instance Arbitrary Location where
     arbitrary =
@@ -61,6 +49,28 @@ instance Arbitrary Location where
             arbitrary
             arbitrary
 -- @-node:gcross.20100307133316.1308:Location
+-- @+node:gcross.20100307133316.1307:RawVertex
+instance Arbitrary RawVertex where
+    arbitrary =
+        liftM3 RawVertex
+            arbitrary
+            arbitrary
+            (fmap modulo360 arbitrary)
+-- @-node:gcross.20100307133316.1307:RawVertex
+-- @+node:gcross.20100307122538.1302:Step
+instance Arbitrary Step where
+    arbitrary =
+        liftM2 Step
+            (fmap modulo360 arbitrary)
+            (fmap modulo360 arbitrary)
+-- @-node:gcross.20100307122538.1302:Step
+-- @+node:gcross.20100308112554.1324:Vertex
+instance Arbitrary Vertex where
+    arbitrary =
+        liftM2 Vertex
+            arbitrary
+            arbitrary
+-- @-node:gcross.20100308112554.1324:Vertex
 -- @-node:gcross.20100307122538.1301:Generators
 -- @-others
 
@@ -238,6 +248,31 @@ main = defaultMain
                 ]
             ]
         -- @-node:gcross.20100307163258.1320:lookupAngleOfEdge
+        -- @+node:gcross.20100308112554.1321:compareVertex
+        ,testGroup "compareVertex" $
+            -- @    @+others
+            -- @+node:gcross.20100308112554.1322:different locations
+            [testProperty "different locations" $
+                \v1 v2 ->
+                    (vertexLocation v1 /= vertexLocation v2) ==>
+                        case vertexLocation v1 `compare` vertexLocation v2 of
+                            LT -> v1 `compareVertex` v2 == Lt
+                            GT -> v1 `compareVertex` v2 == Gt
+                            _ -> error "should never reach here"
+            -- @-node:gcross.20100308112554.1322:different locations
+            -- @+node:gcross.20100308112554.1326:same location
+            ,testProperty "same location" $
+                \l o1 o2 ->
+                    let v1 = (Vertex l o1)
+                        v2 = (Vertex l o2)
+                        v1_cmp_v2 = v1 `compareVertex` v2
+                    in if o1 == o2
+                        then v1_cmp_v2 == Eq v1
+                        else isBottom v1_cmp_v2
+            -- @-node:gcross.20100308112554.1326:same location
+            -- @-others
+            ]
+        -- @-node:gcross.20100308112554.1321:compareVertex
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
