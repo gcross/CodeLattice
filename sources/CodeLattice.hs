@@ -42,13 +42,6 @@ data Location = Location
     } deriving (Eq,Ord,Show)
 
 -- @-node:gcross.20100302164430.1236:Location
--- @+node:gcross.20100302164430.1241:Step
-data Step = Step
-    {   stepAngle :: Double -- in degrees
-    ,   stepRotation :: Double -- in degrees
-    } deriving (Show,Eq)
-
--- @-node:gcross.20100302164430.1241:Step
 -- @+node:gcross.20100302164430.1242:RawVertex
 data RawVertex = RawVertex
     {   rawVertexX :: Double
@@ -57,6 +50,16 @@ data RawVertex = RawVertex
     } deriving (Show)
 
 -- @-node:gcross.20100302164430.1242:RawVertex
+-- @+node:gcross.20100302201317.1254:ResolverMonad
+type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
+-- @-node:gcross.20100302201317.1254:ResolverMonad
+-- @+node:gcross.20100302164430.1241:Step
+data Step = Step
+    {   stepAngle :: Double -- in degrees
+    ,   stepRotation :: Double -- in degrees
+    } deriving (Show,Eq)
+
+-- @-node:gcross.20100302164430.1241:Step
 -- @+node:gcross.20100302164430.1235:Vertex
 data Vertex = Vertex
     {   vertexLocation :: Location
@@ -65,9 +68,6 @@ data Vertex = Vertex
 
 
 -- @-node:gcross.20100302164430.1235:Vertex
--- @+node:gcross.20100302201317.1254:ResolverMonad
-type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
--- @-node:gcross.20100302201317.1254:ResolverMonad
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100308212437.1384:Ord Vertex
