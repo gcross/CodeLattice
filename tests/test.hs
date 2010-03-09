@@ -16,6 +16,8 @@ import Control.Monad
 import Control.Monad.Trans
 
 import Data.Function
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -498,6 +500,27 @@ main = defaultMain
             | name <- map tilingName tilings
             ]
         -- @-node:gcross.20100309124842.1406:growable to large lattice
+        -- @+node:gcross.20100309150650.1374:correct number of orientations
+        ,testGroup "correct number of orientations" $
+            [testCase name $
+                assertEqual
+                    "Is the number of computed orientations correct?"
+                    correct_number_of_orientations
+                    .
+                    IntMap.size
+                    .
+                    (!! 2)
+                    .
+                    snd
+                    .
+                    fromJust
+                    $
+                    Map.lookup name grown_lattices
+            | (name,correct_number_of_orientations) <-
+                [("quadrille",1)
+                ]
+            ]
+        -- @-node:gcross.20100309150650.1374:correct number of orientations
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
