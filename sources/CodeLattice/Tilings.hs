@@ -63,7 +63,7 @@ tilings =
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
-        (PickNthCompatableOrientation [0,0,1,1])
+        (PickNthCompatableOrientation [1,1,0,0])
     ,makeTiling
         "truncated hextille"
         [12,12,3]
