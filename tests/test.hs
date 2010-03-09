@@ -275,7 +275,7 @@ main = defaultMain
                                     )
 
                     assertEqual
-                        "Were the correct raw vertices enqueued?"
+                        "Were the correct vertices enqueued?"
                         (Set.fromList correct_queued_vertices)
                         (Set.fromList queued_vertices)
                     assertEqual
@@ -287,6 +287,56 @@ main = defaultMain
                         []
                         edges
                 -- @-node:gcross.20100309124842.1395:1 step
+                -- @+node:gcross.20100309124842.1402:2 steps
+                ,testCase "2 step" $ do
+                    let (((queued_vertices
+                          ,correct_queued_vertices
+                          ,correct_vertices
+                          )
+                         ,Lattice vertices edges
+                         ),_) =
+                            runLatticeMonad $
+                                liftM3 (,,)
+                                    (processRawVertex (lookupTilingSteps "quadrille") (RawVertex 0 0 0)
+                                     >>=
+                                     processRawVertices (lookupTilingSteps "quadrille")
+                                     >>=
+                                     lift . mapM resolveVertex
+                                    )
+                                    (lift . mapM resolveVertex $
+                                        [RawVertex (x+i) (y+j) 0
+                                        | (x,y) <- [(0,1),(1,0),(0,-1),(-1,0)]
+                                        , (i,j) <- [(0,1),(1,0),(0,-1),(-1,0)]
+                                        , (x+i,y+j) /= (0,0)
+                                        ]
+                                    )
+                                    (lift . mapM resolveVertex $
+                                        [RawVertex   0   0  0
+                                        ,RawVertex (-1)  0  0
+                                        ,RawVertex   0 (-1) 0
+                                        ,RawVertex   1   0  0
+                                        ,RawVertex   0   1  0
+                                        ]
+                                    )
+
+                    assertEqual
+                        "Were the correct vertices enqueued?"
+                        (Set.fromList correct_queued_vertices)
+                        (Set.fromList queued_vertices)
+                    assertEqual
+                        "Does the lattice have the correct vertices?"
+                        (Set.fromList correct_vertices)
+                        vertices
+                    assertEqual
+                        "Does the lattice have the correct edges?"
+                        (Set.fromList
+                            [Edge (EdgeSide (correct_vertices !! (ray_number+1)) ray_number)
+                                  (EdgeSide (head correct_vertices) ((ray_number+2) `mod` 4))
+                            | ray_number <- [0..3]
+                            ]
+                        )
+                        (Set.fromList edges)
+                -- @-node:gcross.20100309124842.1402:2 steps
                 -- @-others
                 ]
             -- @-node:gcross.20100309124842.1396:square

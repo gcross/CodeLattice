@@ -28,13 +28,13 @@ type Angle = Int
 data Edge = Edge
     {   edgeLeftSide :: EdgeSide
     ,   edgeRightSide :: EdgeSide
-    } deriving (Eq,Show)
+    } deriving (Eq,Ord,Show)
 -- @-node:gcross.20100302164430.1239:Edge
 -- @+node:gcross.20100302164430.1240:EdgeSide
 data EdgeSide = EdgeSide
     {   edgeSideVertex :: Vertex
     ,   edgeSideRayNumber :: Int
-    } deriving (Eq,Show)
+    } deriving (Eq,Ord,Show)
 -- @-node:gcross.20100302164430.1240:EdgeSide
 -- @+node:gcross.20100308212437.1389:Lattice
 data Lattice = Lattice
