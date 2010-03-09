@@ -28,13 +28,13 @@ type Angle = Int
 data Edge = Edge
     {   edgeLeftSide :: EdgeSide
     ,   edgeRightSide :: EdgeSide
-    }
+    } deriving (Eq,Show)
 -- @-node:gcross.20100302164430.1239:Edge
 -- @+node:gcross.20100302164430.1240:EdgeSide
 data EdgeSide = EdgeSide
     {   edgeSideVertex :: Vertex
     ,   edgeSideRayNumber :: Int
-    }
+    } deriving (Eq,Show)
 -- @-node:gcross.20100302164430.1240:EdgeSide
 -- @+node:gcross.20100308212437.1389:Lattice
 data Lattice = Lattice
@@ -57,7 +57,7 @@ data RawVertex = RawVertex
     {   rawVertexX :: Double
     ,   rawVertexY :: Double
     ,   rawVertexOrientation :: Double
-    } deriving (Show)
+    } deriving (Eq,Ord,Show)
 
 -- @-node:gcross.20100302164430.1242:RawVertex
 -- @+node:gcross.20100302201317.1254:ResolverMonad
@@ -172,6 +172,9 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
 -- @-node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100308212437.1395:Lattice
+-- @+node:gcross.20100309124842.1330:emptyLattice
+emptyLattice = Lattice Set.empty []
+-- @-node:gcross.20100309124842.1330:emptyLattice
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex -> LatticeMonad Bool
 latticeHasVertex vertex = fmap (Set.member vertex) (gets latticeVertices)
@@ -184,6 +187,11 @@ addEdgeToLattice edge = modify (\lattice -> lattice { latticeEdges = edge:(latti
 addVertexToLattice :: Vertex -> LatticeMonad ()
 addVertexToLattice vertex = modify (\lattice -> lattice { latticeVertices = Set.insert vertex (latticeVertices lattice) })
 -- @-node:gcross.20100308212437.1401:addVertexToLattice
+-- @+node:gcross.20100309124842.1331:runLatticeMonad
+runLatticeMonad :: LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int])
+runLatticeMonad = runResolverMonad . flip runStateT emptyLattice
+-- @nonl
+-- @-node:gcross.20100309124842.1331:runLatticeMonad
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex

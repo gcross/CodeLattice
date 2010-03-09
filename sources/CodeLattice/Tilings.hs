@@ -28,6 +28,7 @@ data Tiling = Tiling
     {   tilingName :: String
     ,   tilingPolygons :: [Int]
     ,   tilingOrientationMode :: OrientationMode
+    ,   tilingSteps :: [Step]
     }
 -- @-node:gcross.20100308112554.1302:Tiling
 -- @+node:gcross.20100308112554.1315:OrientationMode
@@ -43,50 +44,50 @@ data OrientationMode =
 -- @+node:gcross.20100308112554.1297:Tilings
 tilings :: [Tiling]
 tilings =
-    [Tiling
-        "quadrile"
+    [makeTiling
+        "quadrille"
         [4,4,4,4]
         OnlyOneOrientation
-    ,Tiling
+    ,makeTiling
         "truncated quadrille"
         [8,8,4]
         PickFirstCompatableOrientation
-    ,Tiling
+    ,makeTiling
         "snub quadrille"
         [4,3,4,3,3]
         (PickNthCompatableOrientation [0,0,1,1,0])
-    ,Tiling
+    ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
-    ,Tiling
+    ,makeTiling
         "hexadeltille"
         [6,3,6,3]
         (PickNthCompatableOrientation [0,0,1,1])
-    ,Tiling
+    ,makeTiling
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
-    ,Tiling
+    ,makeTiling
         "deltille"
         (replicate 6 3)
         OnlyOneOrientation
-    ,Tiling
+    ,makeTiling
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
 -- @+at
---      ,Tiling
+--      ,makeTiling
 --          "truncated hexadeltille"
 --          [12,6,4]
 --          PickFirstCompatableOrientation
 -- @-at
 -- @@c
-    ,Tiling
+    ,makeTiling
         "snub hexatille"
         [6,3,3,3,3]
         (PickNthCompatableOrientation [0,0,1,0,2])
-    ,Tiling
+    ,makeTiling
         "isosnub quadrille"
         [4,4,3,3,3]
         (PickNthCompatableOrientation [0,0,0,0,1])
@@ -131,7 +132,7 @@ lookupAngleOfEdge table edge disambiguation = go table disambiguation
 -- @-node:gcross.20100308112554.1309:lookupAngleOfEdge
 -- @+node:gcross.20100308112554.1311:tilingToSteps
 tilingToSteps :: Tiling -> [Step]
-tilingToSteps (Tiling _ polygons orientation_mode) =
+tilingToSteps (Tiling _ polygons orientation_mode _) =
     case orientation_mode of
         OnlyOneOrientation ->
             map (flip Step 0)
@@ -171,6 +172,21 @@ lookupTiling name = go tilings
      | otherwise
         = go rest
 -- @-node:gcross.20100308112554.1314:lookupTiling
+-- @+node:gcross.20100309124842.1400:lookupTilingSteps
+lookupTilingSteps :: String -> [Step]
+lookupTilingSteps = tilingSteps . lookupTiling
+-- @-node:gcross.20100309124842.1400:lookupTilingSteps
+-- @+node:gcross.20100309124842.1398:makeTiling
+makeTiling :: String -> [Int] -> OrientationMode -> Tiling
+makeTiling name polygons orientation_mode = tiling
+  where
+    tiling =
+        Tiling
+            name
+            polygons
+            orientation_mode
+            (tilingToSteps tiling)
+-- @-node:gcross.20100309124842.1398:makeTiling
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

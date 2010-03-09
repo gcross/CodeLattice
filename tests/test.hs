@@ -13,6 +13,7 @@
 -- @+node:gcross.20091217190104.1412:<< Import needed modules >>
 import Control.Exception
 import Control.Monad
+import Control.Monad.Trans
 
 import Data.Function
 import Data.Set (Set)
@@ -250,6 +251,48 @@ main = defaultMain
                 ]
             ]
         -- @-node:gcross.20100307163258.1320:lookupAngleOfEdge
+        -- @+node:gcross.20100309124842.1394:processRawVertex
+        ,testGroup "processRawVertex"
+            -- @    @+others
+            -- @+node:gcross.20100309124842.1396:square
+            [testGroup "quadrille"
+                -- @    @+others
+                -- @+node:gcross.20100309124842.1395:1 step
+                [testCase "1 step" $ do
+                    let (((queued_vertices,correct_queued_vertices),Lattice vertices edges),_) =
+                            runLatticeMonad $
+                                liftM2 (,)
+                                    (processRawVertex (lookupTilingSteps "quadrille") (RawVertex 0 0 0)
+                                     >>=
+                                     lift . mapM resolveVertex
+                                    )
+                                    (lift . mapM resolveVertex $
+                                        [RawVertex   0   1  0
+                                        ,RawVertex   1   0  0
+                                        ,RawVertex   0 (-1) 0
+                                        ,RawVertex (-1)  0  0
+                                        ]
+                                    )
+
+                    assertEqual
+                        "Were the correct raw vertices enqueued?"
+                        (Set.fromList correct_queued_vertices)
+                        (Set.fromList queued_vertices)
+                    assertEqual
+                        "Does the lattice have the correct vertices?"
+                        (Set.fromList [Vertex (Location 0 0) 0])
+                        vertices
+                    assertEqual
+                        "Does the lattice have the correct edges?"
+                        []
+                        edges
+                -- @-node:gcross.20100309124842.1395:1 step
+                -- @-others
+                ]
+            -- @-node:gcross.20100309124842.1396:square
+            -- @-others
+            ]
+        -- @-node:gcross.20100309124842.1394:processRawVertex
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
@@ -333,7 +376,7 @@ main = defaultMain
                     "Do the interior angles sum to 360?"
                     360
                     (sum . map polygonInteriorAngle $ polygons)
-            | Tiling name polygons _ <- tilings
+            | Tiling name polygons _ _ <- tilings
             ]
         -- @-node:gcross.20100307133316.1313:sum to 360
         -- @+node:gcross.20100308112554.1313:correct steps
@@ -342,9 +385,9 @@ main = defaultMain
                 assertEqual
                     "Do the interior angles sum to 360?"
                     correct_steps
-                    (tilingToSteps . lookupTiling $ name)
+                    (lookupTilingSteps name)
             | (name,correct_steps) <-
-                [("quadrile"
+                [("quadrille"
                  ,[Step (90 * i) 0 | i <- [0..3]]
                  )
                 ,("deltille"
