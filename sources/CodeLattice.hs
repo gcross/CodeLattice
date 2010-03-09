@@ -10,6 +10,7 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.State.Strict
 
+import Data.EpsilonMatcher
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
 import Data.List
@@ -35,6 +36,15 @@ data EdgeSide = EdgeSide
     ,   edgeSideRayNumber :: Int
     }
 -- @-node:gcross.20100302164430.1240:EdgeSide
+-- @+node:gcross.20100308212437.1389:Lattice
+data Lattice = Lattice
+    {   latticeVertices :: Set Vertex
+    ,   latticeEdges :: [Edge]
+    }
+-- @-node:gcross.20100308212437.1389:Lattice
+-- @+node:gcross.20100308212437.1391:LatticeMonad
+type LatticeMonad resultType = StateT Lattice (State (IntMap (EpsilonMatcher Double))) resultType
+-- @-node:gcross.20100308212437.1391:LatticeMonad
 -- @+node:gcross.20100302164430.1236:Location
 data Location = Location
     {   locationX :: Int
@@ -86,10 +96,13 @@ instance Ord Vertex where
 -- @-node:gcross.20100308212437.1384:Ord Vertex
 -- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
+-- @+node:gcross.20100308212437.1393:Miscellaneous
 -- @+node:gcross.20100302201317.1255:modulo360
 modulo360 :: Double -> Double
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @-node:gcross.20100302201317.1255:modulo360
+-- @-node:gcross.20100308212437.1393:Miscellaneous
+-- @+node:gcross.20100308212437.1392:Resolving
 -- @+node:gcross.20100302164430.1306:resolveVertex
 resolveVertex :: RawVertex -> ResolverMonad Vertex
 resolveVertex (RawVertex x y angle) =
@@ -100,6 +113,12 @@ resolveVertex (RawVertex x y angle) =
         )
         (lookupMatchIn 2 . modulo360 $ angle)
 -- @-node:gcross.20100302164430.1306:resolveVertex
+-- @+node:gcross.20100306220637.1354:runResolverMonad
+runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
+runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
+-- @-node:gcross.20100306220637.1354:runResolverMonad
+-- @-node:gcross.20100308212437.1392:Resolving
+-- @+node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100302201317.1252:stepFromRawVertex
 stepFromRawVertex ::
     RawVertex ->
@@ -151,10 +170,69 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
             vertex = vertex_to_step_from `stepFromRawVertex` step
     go 0 steps
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
--- @+node:gcross.20100306220637.1354:runResolverMonad
-runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
-runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
--- @-node:gcross.20100306220637.1354:runResolverMonad
+-- @-node:gcross.20100308212437.1394:Stepping
+-- @+node:gcross.20100308212437.1395:Lattice
+-- @+node:gcross.20100308212437.1397:latticeHasVertex
+latticeHasVertex :: Vertex -> LatticeMonad Bool
+latticeHasVertex vertex = fmap (Set.member vertex) (gets latticeVertices)
+-- @-node:gcross.20100308212437.1397:latticeHasVertex
+-- @+node:gcross.20100308212437.1399:addEdgeToLattice
+addEdgeToLattice :: Edge -> LatticeMonad ()
+addEdgeToLattice edge = modify (\lattice -> lattice { latticeEdges = edge:(latticeEdges lattice) })
+-- @-node:gcross.20100308212437.1399:addEdgeToLattice
+-- @+node:gcross.20100308212437.1401:addVertexToLattice
+addVertexToLattice :: Vertex -> LatticeMonad ()
+addVertexToLattice vertex = modify (\lattice -> lattice { latticeVertices = Set.insert vertex (latticeVertices lattice) })
+-- @-node:gcross.20100308212437.1401:addVertexToLattice
+-- @-node:gcross.20100308212437.1395:Lattice
+-- @+node:gcross.20100308212437.1402:Processing Vertices
+-- @+node:gcross.20100308212437.1404:processRawVertex
+processRawVertex :: [Step] -> RawVertex -> LatticeMonad [RawVertex]
+processRawVertex steps raw_vertex = do
+    vertex <- lift (resolveVertex raw_vertex)
+    has_vertex <- latticeHasVertex vertex
+    if has_vertex
+        then return []
+        else do
+            addVertexToLattice vertex
+            let stepped_raw_vertices = map (stepFromRawVertex raw_vertex) steps
+            stepped_vertices <- lift (mapM resolveVertex stepped_raw_vertices)
+            stepped_vertex_ray_numbers <- lift (mapM (findStepNumberForRawVertex steps raw_vertex) stepped_raw_vertices)
+            let go queued_raw_vertices
+                   ray_number
+                   (stepped_vertex:rest_stepped_vertices)
+                   (stepped_raw_vertex:rest_stepped_raw_vertices)
+                   (stepped_vertex_ray_number:rest_stepped_vertex_ray_numbers)
+                  = latticeHasVertex stepped_vertex
+                    >>=
+                    \has_stepped_vertex ->
+                        if has_stepped_vertex
+                            then (addEdgeToLattice $
+                                    Edge (EdgeSide vertex ray_number)
+                                         (EdgeSide stepped_vertex stepped_vertex_ray_number)
+                                 )
+                                 >>
+                                 recurse queued_raw_vertices
+                            else recurse (stepped_raw_vertex:queued_raw_vertices)
+                  where
+                    recurse new_queued_raw_vertices =
+                        go new_queued_raw_vertices
+                           (ray_number+1)
+                           rest_stepped_vertices
+                           rest_stepped_raw_vertices
+                           rest_stepped_vertex_ray_numbers
+                go queued_raw_vertices _ _ _ _ = return queued_raw_vertices
+            go []
+               0
+               stepped_vertices
+               stepped_raw_vertices
+               stepped_vertex_ray_numbers
+-- @-node:gcross.20100308212437.1404:processRawVertex
+-- @+node:gcross.20100308212437.1468:processRawVertices
+processRawVertices :: [Step] -> [RawVertex] -> LatticeMonad [RawVertex]
+processRawVertices steps = fmap concat . mapM (processRawVertex steps)
+-- @-node:gcross.20100308212437.1468:processRawVertices
+-- @-node:gcross.20100308212437.1402:Processing Vertices
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
