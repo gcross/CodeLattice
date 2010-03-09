@@ -49,7 +49,8 @@ skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20100309124842.1410:Values
 -- @+node:gcross.20100309124842.1411:grown_lattices
-grown_lattice_size = 40
+grown_lattice_size = 20
+grown_lattice_bound = grown_lattice_size / 2
 
 grown_lattices = Map.fromList
     [(tilingName tiling
@@ -57,10 +58,10 @@ grown_lattices = Map.fromList
         growLatticeFromOrigin
             (tilingSteps tiling)
             (Bounds
-                (-grown_lattice_size)
-                (-grown_lattice_size)
-                grown_lattice_size
-                grown_lattice_size
+                (-grown_lattice_bound)
+                (-grown_lattice_bound)
+                grown_lattice_bound
+                grown_lattice_bound
              )
      )
     | tiling <- tilings
