@@ -14,8 +14,9 @@
 import Control.Exception
 import Control.Monad
 
-import Data.COrdering
 import Data.Function
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 import Debug.Trace
 
@@ -249,78 +250,79 @@ main = defaultMain
                 ]
             ]
         -- @-node:gcross.20100307163258.1320:lookupAngleOfEdge
-        -- @+node:gcross.20100308112554.1321:compareVertex
-        ,testGroup "compareVertex" $
+        -- @-others
+        ]
+    -- @-node:gcross.20100307133316.1311:Functions
+    -- @+node:gcross.20100308212437.1385:Ord Vertex
+    ,testGroup "Ord Vertex"
+        -- @    @+others
+        -- @+node:gcross.20100308112554.1321:compare
+        [testGroup "compare" $
             -- @    @+others
             -- @+node:gcross.20100308112554.1322:different locations
             [testProperty "different locations" $
                 \v1 v2 ->
                     (vertexLocation v1 /= vertexLocation v2) ==>
-                        case vertexLocation v1 `compare` vertexLocation v2 of
-                            LT -> v1 `compareVertex` v2 == Lt
-                            GT -> v1 `compareVertex` v2 == Gt
-                            _ -> error "should never reach here"
+                        (vertexLocation v1 `compare` vertexLocation v2) == (v1 `compare` v2)
             -- @-node:gcross.20100308112554.1322:different locations
             -- @+node:gcross.20100308112554.1326:same location
             ,testProperty "same location" $
                 \l o1 o2 ->
                     let v1 = Vertex l o1
                         v2 = Vertex l o2
-                        v1_cmp_v2 = v1 `compareVertex` v2
+                        v1_cmp_v2 = v1 `compare` v2
                     in if o1 == o2
-                        then v1_cmp_v2 == Eq v1
+                        then v1_cmp_v2 == EQ
                         else isBottom v1_cmp_v2
             -- @-node:gcross.20100308112554.1326:same location
             -- @-others
             ]
-        -- @-node:gcross.20100308112554.1321:compareVertex
-        -- @+node:gcross.20100308112554.1328:mergeVertexSet
-        ,testGroup "mergeVertexSet" $
+        -- @-node:gcross.20100308112554.1321:compare
+        -- @+node:gcross.20100308112554.1328:Set.union
+        ,testGroup "Set.union" $
             -- @    @+others
             -- @+node:gcross.20100308112554.1329:different locations
             [testProperty "different locations" $
                 \v1 v2 ->
                     (vertexLocation v1 /= vertexLocation v2) ==>
-                        (vertexSet [v1,v2]) == (vertexSet [v1] `mergeVertexSet` vertexSet [v2])
+                        (Set.fromList [v1,v2]) == (Set.fromList [v1] `Set.union` Set.fromList [v2])
             -- @-node:gcross.20100308112554.1329:different locations
             -- @+node:gcross.20100308112554.1331:same location
             ,testProperty "same location, same orientation" $
                 \l o1 o2 ->
                     let v1 = Vertex l o1
                         v2 = Vertex l o2
-                        merged_set = vertexSet [v1] `mergeVertexSet` vertexSet [v2]
+                        merged_set = Set.fromList [v1] `Set.union` Set.fromList [v2]
                     in if o1 == o2
-                        then merged_set == vertexSet [v1]
+                        then merged_set == Set.fromList [v1]
                         else isBottom merged_set
             -- @-node:gcross.20100308112554.1331:same location
             -- @-others
             ]
-        -- @-node:gcross.20100308112554.1328:mergeVertexSet
-        -- @+node:gcross.20100308112554.1339:containsVertex
-        ,testGroup "containsVertex" $
+        -- @-node:gcross.20100308112554.1328:Set.union
+        -- @+node:gcross.20100308112554.1339:Set.member
+        ,testGroup "Set.member" $
             -- @    @+others
             -- @+node:gcross.20100308112554.1340:different locations
             [testProperty "different locations" $
                 \v1 v2 ->
                     (vertexLocation v1 /= vertexLocation v2) ==>
-                        not (containsVertex (vertexSet [v1]) v2)
+                        Set.notMember v2 (Set.fromList [v1])
             -- @-node:gcross.20100308112554.1340:different locations
             -- @+node:gcross.20100308112554.1341:same location
             ,testProperty "same location, same orientation" $
                 \l o1 o2 ->
-                    let vertex_set = vertexSet [Vertex l o1]
-                        vertex = Vertex l o2
-                        contained = containsVertex vertex_set vertex
+                    let contained = Set.member (Vertex l o2) (Set.fromList [Vertex l o1])
                     in if o1 == o2
                         then contained
                         else isBottom contained
             -- @-node:gcross.20100308112554.1341:same location
             -- @-others
             ]
-        -- @-node:gcross.20100308112554.1339:containsVertex
+        -- @-node:gcross.20100308112554.1339:Set.member
         -- @-others
         ]
-    -- @-node:gcross.20100307133316.1311:Functions
+    -- @-node:gcross.20100308212437.1385:Ord Vertex
     -- @+node:gcross.20100307133316.1312:Tilings
     ,testGroup "Tilings"
         -- @    @+others

@@ -6,16 +6,15 @@ module CodeLattice where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100302164430.1307:<< Import needed modules >>
+import Control.Arrow
 import Control.Monad
+import Control.Monad.State.Strict
 
-import Data.COrdering
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
 import Data.List
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Data.Tree.AVL (AVL)
-import qualified Data.Tree.AVL as AVL
+import Data.Set (Set)
+import qualified Data.Set as Set
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -69,10 +68,23 @@ data Vertex = Vertex
 -- @+node:gcross.20100302201317.1254:ResolverMonad
 type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @-node:gcross.20100302201317.1254:ResolverMonad
--- @+node:gcross.20100308112554.1318:VertexSet
-type VertexSet = AVL Vertex
--- @-node:gcross.20100308112554.1318:VertexSet
 -- @-node:gcross.20100302164430.1234:Types
+-- @+node:gcross.20100308212437.1383:Instances
+-- @+node:gcross.20100308212437.1384:Ord Vertex
+instance Ord Vertex where
+    compare v1@(Vertex l1 o1) v2@(Vertex l2 o2)
+     | l1 `compare` l2 /= EQ
+        = l1 `compare` l2
+     | o1 == o2
+        = EQ
+     | otherwise
+        = error $
+            show v1 ++
+            " and "
+            ++ show v2 ++
+            " are at the same location, but have different orientations!"
+-- @-node:gcross.20100308212437.1384:Ord Vertex
+-- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100302201317.1255:modulo360
 modulo360 :: Double -> Double
@@ -143,37 +155,6 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 runResolverMonad :: ResolverMonad resultType -> (resultType,[IntMap Int])
 runResolverMonad = runMultipleEpsilonMatchers [1e-5,1e-5,1e-5]
 -- @-node:gcross.20100306220637.1354:runResolverMonad
--- @+node:gcross.20100308112554.1319:vertexSet
-vertexSet :: [Vertex] -> VertexSet
-vertexSet = foldl' (\tree v -> AVL.push (compareVertex v) v tree) AVL.empty
--- @-node:gcross.20100308112554.1319:vertexSet
--- @+node:gcross.20100308112554.1327:mergeVertexSet
-mergeVertexSet :: VertexSet -> VertexSet -> VertexSet
-mergeVertexSet = AVL.union compareVertex
--- @-node:gcross.20100308112554.1327:mergeVertexSet
--- @+node:gcross.20100308112554.1320:compareVertex
-compareVertex :: Vertex -> Vertex -> COrdering Vertex
-compareVertex v1 v2 =
-    case vertexLocation v1 `compare` vertexLocation v2 of
-        LT -> Lt
-        GT -> Gt
-        EQ | vertexOrientation v1 == vertexOrientation v2 -> Eq v1
-           | otherwise -> error $
-                show v1 ++
-                " and "
-                ++ show v2 ++
-                " are at the same location, but have different orientations!"
--- @-node:gcross.20100308112554.1320:compareVertex
--- @+node:gcross.20100308112554.1334:containsVertex
-containsVertex :: VertexSet -> Vertex -> Bool
-containsVertex vertex_set vertex = AVL.contains vertex_set $ cOrdToOrd . compareVertex vertex
--- @-node:gcross.20100308112554.1334:containsVertex
--- @+node:gcross.20100308112554.1335:cOrdToOrd
-cOrdToOrd :: COrdering a -> Ordering
-cOrdToOrd Lt = LT
-cOrdToOrd Gt = GT
-cOrdToOrd (Eq _) = EQ
--- @-node:gcross.20100308112554.1335:cOrdToOrd
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
