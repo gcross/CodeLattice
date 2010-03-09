@@ -16,6 +16,9 @@ import Control.Monad
 import Control.Monad.Trans
 
 import Data.Function
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 
@@ -44,6 +47,16 @@ skipList _ [] = []
 skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091218141305.1337:skipList
 -- @-node:gcross.20091217190104.2175:Functions
+-- @+node:gcross.20100309124842.1410:Values
+-- @+node:gcross.20100309124842.1411:grown_lattices_40x40
+grown_lattices_40x40 = Map.fromList
+    [(tilingName tiling
+     ,runLatticeMonad $ growLatticeFromOrigin (tilingSteps tiling) (Bounds (-40) (-40) 40 40)
+     )
+    | tiling <- tilings
+    ]
+-- @-node:gcross.20100309124842.1411:grown_lattices_40x40
+-- @-node:gcross.20100309124842.1410:Values
 -- @+node:gcross.20100307122538.1301:Generators
 -- @+node:gcross.20100307133316.1308:Location
 instance Arbitrary Location where
@@ -449,21 +462,31 @@ main = defaultMain
         -- @+node:gcross.20100308112554.1317:invertible steps
         ,testGroup "invertible steps" $
             [testCase (tilingName tiling) $
-                let steps = tilingToSteps tiling
-                    origin = RawVertex 0 0 0
-                in forM_ steps $
+                forM_ (tilingSteps tiling) $
                     evaluate
                     .
                     fst
                     .
                     runResolverMonad
                     .
-                    findStepNumberForRawVertex steps origin
+                    findStepNumberForRawVertex (tilingSteps tiling) originRawVertex
                     .
-                    stepFromRawVertex origin
+                    stepFromRawVertex originRawVertex
             | tiling <- tilings
             ]
         -- @-node:gcross.20100308112554.1317:invertible steps
+        -- @+node:gcross.20100309124842.1406:growable to 40 x 40 lattice
+        ,testGroup "growable to 40 x 40 lattice" $
+            [testCase name $ do
+                let ((outside_vertices,Lattice vertices edges),_) =
+                        fromJust $
+                            Map.lookup name grown_lattices_40x40
+                mapM_ evaluate outside_vertices
+                evaluate vertices
+                mapM_ evaluate edges
+            | name <- map tilingName tilings
+            ]
+        -- @-node:gcross.20100309124842.1406:growable to 40 x 40 lattice
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings

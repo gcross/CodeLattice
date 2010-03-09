@@ -10,6 +10,7 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.State.Strict
 
+import Data.Either
 import Data.EpsilonMatcher
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
@@ -24,6 +25,14 @@ import qualified Data.Set as Set
 -- @+node:gcross.20100302164430.1237:Angle
 type Angle = Int
 -- @-node:gcross.20100302164430.1237:Angle
+-- @+node:gcross.20100309124842.1404:Bounds
+data Bounds = Bounds
+    {   boundLeft :: Double
+    ,   boundTop :: Double
+    ,   boundRight :: Double
+    ,   boundBottom :: Double
+    }
+-- @-node:gcross.20100309124842.1404:Bounds
 -- @+node:gcross.20100302164430.1239:Edge
 data Edge = Edge
     {   edgeLeftSide :: EdgeSide
@@ -101,6 +110,14 @@ instance Ord Vertex where
 modulo360 :: Double -> Double
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @-node:gcross.20100302201317.1255:modulo360
+-- @+node:gcross.20100309124842.1405:withinBounds
+withinBounds :: Bounds -> RawVertex -> Bool
+withinBounds (Bounds left top right bottom) (RawVertex x y _) =
+    (x >= left) && (x <= right) && (y >= top) && (y <= bottom)
+-- @-node:gcross.20100309124842.1405:withinBounds
+-- @+node:gcross.20100309124842.1409:originRawVertex
+originRawVertex = RawVertex 0 0 0
+-- @-node:gcross.20100309124842.1409:originRawVertex
 -- @-node:gcross.20100308212437.1393:Miscellaneous
 -- @+node:gcross.20100308212437.1392:Resolving
 -- @+node:gcross.20100302164430.1306:resolveVertex
@@ -192,6 +209,28 @@ runLatticeMonad :: LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int]
 runLatticeMonad = runResolverMonad . flip runStateT emptyLattice
 -- @nonl
 -- @-node:gcross.20100309124842.1331:runLatticeMonad
+-- @+node:gcross.20100309124842.1403:growLattice
+growLattice :: [Step] -> Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
+growLattice steps bounds = uncurry go . partitionRawVertices
+  where
+    partitionRawVertices = partitionEithers . map placeRawVertex
+
+    placeRawVertex raw_vertex =
+        if withinBounds bounds raw_vertex
+            then Right raw_vertex
+            else Left raw_vertex
+
+    go outside_raw_vertices [] = return outside_raw_vertices
+    go outside_raw_vertices next_raw_vertices =
+        fmap partitionRawVertices (processRawVertices steps next_raw_vertices)
+        >>=
+        \(new_outside_vertices,new_next_vertices) ->
+            go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
+-- @-node:gcross.20100309124842.1403:growLattice
+-- @+node:gcross.20100309124842.1408:growLatticeFromOrigin
+growLatticeFromOrigin :: [Step] -> Bounds -> LatticeMonad [RawVertex]
+growLatticeFromOrigin steps bounds = growLattice steps bounds [RawVertex 0 0 0]
+-- @-node:gcross.20100309124842.1408:growLatticeFromOrigin
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
