@@ -518,6 +518,16 @@ main = defaultMain
                     Map.lookup name grown_lattices
             | (name,correct_number_of_orientations) <-
                 [("quadrille",1)
+                ,("truncated quadrille",4)
+                ,("snub quadrille",4)
+                ,("hextille",2)
+                ,("hexadeltille",3)
+                ,("truncated hextille",6)
+                ,("deltille",1)
+                ,("rhombihexadeltille",6)
+                -- ,("truncated hexadeltille",12)
+                ,("snub hexatille",6)
+                ,("isosnub quadrille",2)
                 ]
             ]
         -- @-node:gcross.20100309150650.1374:correct number of orientations
