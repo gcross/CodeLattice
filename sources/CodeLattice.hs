@@ -15,6 +15,8 @@ import Data.EpsilonMatcher
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
 import Data.List
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
@@ -231,6 +233,22 @@ growLattice steps bounds = uncurry go . partitionRawVertices
 growLatticeFromOrigin :: [Step] -> Bounds -> LatticeMonad [RawVertex]
 growLatticeFromOrigin steps bounds = growLattice steps bounds [RawVertex 0 0 0]
 -- @-node:gcross.20100309124842.1408:growLatticeFromOrigin
+-- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
+computeVertexAdjacencies :: Lattice -> Map Vertex Int
+computeVertexAdjacencies (Lattice vertices edges) =
+    go edges Map.empty
+  where
+    go [] = id
+    go (Edge (EdgeSide v1 _) (EdgeSide v2 _):rest_edges) =
+        go rest_edges
+        .
+        Map.alter increment v1
+        .
+        Map.alter increment v2
+
+    increment Nothing = Just 1
+    increment (Just n) = Just (n+1)
+-- @-node:gcross.20100309160622.1347:computeVertexAdjacencies
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex

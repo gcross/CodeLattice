@@ -488,49 +488,87 @@ main = defaultMain
             | tiling <- tilings
             ]
         -- @-node:gcross.20100308112554.1317:invertible steps
-        -- @+node:gcross.20100309124842.1406:growable to large lattice
-        ,testGroup "growable to large lattice" $
-            [testCase name $ do
-                let ((outside_vertices,Lattice vertices edges),_) =
-                        fromJust $
-                            Map.lookup name grown_lattices
-                mapM_ evaluate outside_vertices
-                evaluate vertices
-                mapM_ evaluate edges
-            | name <- map tilingName tilings
-            ]
-        -- @-node:gcross.20100309124842.1406:growable to large lattice
-        -- @+node:gcross.20100309150650.1374:correct number of orientations
-        ,testGroup "correct number of orientations" $
-            [testCase name $
-                assertEqual
-                    "Is the number of computed orientations correct?"
-                    correct_number_of_orientations
-                    .
-                    IntMap.size
-                    .
-                    (!! 2)
-                    .
-                    snd
-                    .
-                    fromJust
-                    $
-                    Map.lookup name grown_lattices
-            | (name,correct_number_of_orientations) <-
-                [("quadrille",1)
-                ,("truncated quadrille",4)
-                ,("snub quadrille",4)
-                ,("hextille",2)
-                ,("hexadeltille",3)
-                ,("truncated hextille",6)
-                ,("deltille",1)
-                ,("rhombihexadeltille",6)
-                -- ,("truncated hexadeltille",12)
-                ,("snub hexatille",6)
-                ,("isosnub quadrille",2)
+        -- @+node:gcross.20100309160622.1349:based on grown lattice
+        ,testGroup ("based on " ++ show grown_lattice_size ++ "x" ++ show grown_lattice_size ++ " grown lattice") $
+            -- @    @+others
+            -- @+node:gcross.20100309124842.1406:consistent
+            [testGroup "consistent" $
+                [testCase name $ do
+                    let ((outside_vertices,Lattice vertices edges),_) =
+                            fromJust $
+                                Map.lookup name grown_lattices
+                    mapM_ evaluate outside_vertices
+                    evaluate vertices
+                    mapM_ evaluate edges
+                | name <- map tilingName tilings
                 ]
+            -- @-node:gcross.20100309124842.1406:consistent
+            -- @+node:gcross.20100309150650.1374:correct number of orientations
+            ,testGroup "correct number of orientations" $
+                [testCase name $
+                    assertEqual
+                        "Is the number of computed orientations correct?"
+                        correct_number_of_orientations
+                        .
+                        IntMap.size
+                        .
+                        (!! 2)
+                        .
+                        snd
+                        .
+                        fromJust
+                        $
+                        Map.lookup name grown_lattices
+                | (name,correct_number_of_orientations) <-
+                    [("quadrille",1)
+                    ,("truncated quadrille",4)
+                    ,("snub quadrille",4)
+                    ,("hextille",2)
+                    ,("hexadeltille",3)
+                    ,("truncated hextille",6)
+                    ,("deltille",1)
+                    ,("rhombihexadeltille",6)
+                    -- ,("truncated hexadeltille",12)
+                    ,("snub hexatille",6)
+                    ,("isosnub quadrille",2)
+                    ]
+                ]
+            -- @-node:gcross.20100309150650.1374:correct number of orientations
+            -- @+node:gcross.20100309160622.1348:valid adjacencies
+            ,testGroup "valid adjacencies" $
+                -- @    @+others
+                -- @+node:gcross.20100309160622.1350:pre-prune
+                [testGroup "pre-prune" $
+                    [testCase name $ do
+                        let lattice@(Lattice vertices edges) =
+                                snd
+                                .
+                                fst
+                                .
+                                fromJust
+                                $
+                                Map.lookup name grown_lattices
+                            adjacency_map = computeVertexAdjacencies lattice
+                        assertEqual
+                            "Edges consistent with vertices?"
+                            vertices
+                            (Map.keysSet adjacency_map)
+                        assertBool
+                            "All vertices adjacent to at least one edge?"
+                            (Map.fold ((&&) . (> 0)) True adjacency_map)
+                        assertEqual
+                            "Total adjacencies = twice number of edges?"
+                            (2 * length edges)
+                            (Map.fold (+) 0 adjacency_map)
+                    | name <- map tilingName tilings
+                    ]
+                -- @-node:gcross.20100309160622.1350:pre-prune
+                -- @-others
+                ]
+            -- @-node:gcross.20100309160622.1348:valid adjacencies
+            -- @-others
             ]
-        -- @-node:gcross.20100309150650.1374:correct number of orientations
+        -- @-node:gcross.20100309160622.1349:based on grown lattice
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
