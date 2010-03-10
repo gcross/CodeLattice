@@ -723,6 +723,29 @@ main = defaultMain
                   ]
                  )
                 -- @-node:gcross.20100310140947.1387:deltille
+                -- @+node:gcross.20100310140947.1389:isosnub quadrille
+                ,("isosnub quadrille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,[" 1 1 "
+                    ,"0 0 0"
+                    ,"1 1 1"
+                    ]
+                   )
+                  ,(Bounds (-2) (-2) 2 2
+                   ,[" 0 0 0 0 "
+                    ," 1 1 1 1 "
+                    ,"0 0 0 0 0"
+                    ,"1 1 1 1 1"
+                    ," 0 0 0 0 "
+                    ]
+                   )
+                  ]
+                 )
+                -- @-node:gcross.20100310140947.1389:isosnub quadrille
                 -- @-others
                 ]
             ]
