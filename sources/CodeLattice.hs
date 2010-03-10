@@ -119,8 +119,9 @@ modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @-node:gcross.20100302201317.1255:modulo360
 -- @+node:gcross.20100309124842.1405:withinBounds
 withinBounds :: Bounds -> RawVertex -> Bool
-withinBounds (Bounds left top right bottom) (RawVertex x y _) =
-    (x >= (left-epsilon)) && (x <= (right+epsilon)) && (y >= (top-epsilon)) && (y <= (bottom+epsilon))
+withinBounds (Bounds left bottom right top) (RawVertex x y _) =
+    (x >= (left-epsilon)) && (x <= (right+epsilon)) &&
+    (y >= (bottom-epsilon)) && (y <= (top+epsilon))
   where
     epsilon = 1e-10
 -- @-node:gcross.20100309124842.1405:withinBounds
@@ -328,7 +329,7 @@ drawLattice =
         [[maybe ' ' (chr . (+ ord '0')) (Map.lookup (x,y) coordinate_map)
          | x <- [0..(IntMap.size x_map)-1]
          ]
-        | y <- [0..(IntMap.size y_map)-1]
+        | y <- [(IntMap.size y_map)-1,(IntMap.size y_map)-2..0]
         ]
   where
     removeBlankLines = filter (any (/= ' '))
