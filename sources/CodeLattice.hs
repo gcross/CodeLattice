@@ -115,7 +115,7 @@ modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @+node:gcross.20100309124842.1405:withinBounds
 withinBounds :: Bounds -> RawVertex -> Bool
 withinBounds (Bounds left top right bottom) (RawVertex x y _) =
-    (x >= left) && (x <= right) && (y >= top) && (y <= bottom)
+    (x >= (left-1e-5)) && (x <= (right+1e-5)) && (y >= (top-1e-5)) && (y <= (bottom+1e-5))
 -- @-node:gcross.20100309124842.1405:withinBounds
 -- @+node:gcross.20100309124842.1409:originRawVertex
 originRawVertex = RawVertex 0 0 0
