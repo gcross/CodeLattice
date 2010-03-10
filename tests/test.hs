@@ -49,7 +49,7 @@ skipList _ [] = []
 skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091218141305.1337:skipList
 -- @-node:gcross.20091217190104.2175:Functions
--- @+node:gcross.20100309124842.1410:Values
+-- @+node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100309124842.1411:grown_lattices
 grown_lattice_size = 20
 grown_lattice_bound = grown_lattice_size / 2
@@ -69,7 +69,18 @@ grown_lattices = Map.fromList
     | tiling <- tilings
     ]
 -- @-node:gcross.20100309124842.1411:grown_lattices
--- @-node:gcross.20100309124842.1410:Values
+-- @+node:gcross.20100309160622.1352:lookupLattice
+lookupLattice :: String -> Lattice
+lookupLattice =
+    snd
+    .
+    fst
+    .
+    fromJust
+    .
+    flip Map.lookup grown_lattices
+-- @-node:gcross.20100309160622.1352:lookupLattice
+-- @-node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100307122538.1301:Generators
 -- @+node:gcross.20100307133316.1308:Location
 instance Arbitrary Location where
@@ -536,35 +547,30 @@ main = defaultMain
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
-                -- @    @+others
-                -- @+node:gcross.20100309160622.1350:pre-prune
-                [testGroup "pre-prune" $
-                    [testCase name $ do
-                        let lattice@(Lattice vertices edges) =
-                                snd
-                                .
-                                fst
-                                .
-                                fromJust
-                                $
-                                Map.lookup name grown_lattices
-                            adjacency_map = computeVertexAdjacencies lattice
+                let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges) = do
                         assertEqual
                             "Edges consistent with vertices?"
                             vertices
                             (Map.keysSet adjacency_map)
                         assertBool
-                            "All vertices adjacent to at least one edge?"
-                            (Map.fold ((&&) . (> 0)) True adjacency_map)
+                            ("All vertices adjacent to at least " ++ show (minimum_count+1) ++ " edge(s)?")
+                            (Map.fold ((&&) . (> minimum_count)) True adjacency_map)
                         assertEqual
                             "Total adjacencies = twice number of edges?"
                             (2 * length edges)
                             (Map.fold (+) 0 adjacency_map)
-                    | name <- map tilingName tilings
+                      where
+                        adjacency_map = computeVertexAdjacencies lattice
+                in
+                    [testGroup "pre-prune" $
+                        [testCase name $ checkAdjacenciesOf 0 . lookupLattice $ name
+                        | name <- map tilingName tilings
+                        ]
+                    ,testGroup "post-prune" $
+                        [testCase name $ checkAdjacenciesOf 1 . pruneLattice . lookupLattice $ name
+                        | name <- map tilingName tilings
+                        ]
                     ]
-                -- @-node:gcross.20100309160622.1350:pre-prune
-                -- @-others
-                ]
             -- @-node:gcross.20100309160622.1348:valid adjacencies
             -- @-others
             ]

@@ -249,6 +249,40 @@ computeVertexAdjacencies (Lattice vertices edges) =
     increment Nothing = Just 1
     increment (Just n) = Just (n+1)
 -- @-node:gcross.20100309160622.1347:computeVertexAdjacencies
+-- @+node:gcross.20100309160622.1351:pruneLattice
+pruneLattice :: Lattice -> Lattice
+pruneLattice lattice@(Lattice vertices edges)
+    | (length . latticeEdges $ new_lattice) < length edges
+        = pruneLattice new_lattice
+    | otherwise
+        = lattice
+  where
+    vertices_to_remove =
+        Set.fromAscList
+        .
+        map fst
+        .
+        filter ((== 1) . snd)
+        .
+        Map.toAscList
+        .
+        computeVertexAdjacencies
+        $
+        lattice
+
+    new_lattice =
+        Lattice
+            (vertices `Set.difference` vertices_to_remove)
+        .
+        filter (
+            \(Edge (EdgeSide v1 _) (EdgeSide v2 _)) ->
+                (Set.notMember v1 vertices_to_remove)
+                &&
+                (Set.notMember v2 vertices_to_remove)
+        )
+        $
+        edges
+-- @-node:gcross.20100309160622.1351:pruneLattice
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
