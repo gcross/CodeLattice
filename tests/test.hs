@@ -648,6 +648,35 @@ main = defaultMain
                   ]
                  )
                 -- @-node:gcross.20100310123433.1425:truncated quadrille
+                -- @+node:gcross.20100310140947.1384:hextille
+                ,("hextille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,["1  "
+                    ," 01"
+                    ,"1  "
+                    ]
+                   )
+                  ,(Bounds (-2) (-1) 3 1
+                   ,[" 01  01 "
+                    ,"1  01  0"
+                    ," 01  01 "
+                    ]
+                   )
+                  ,(Bounds (-2) (-2) 3 2
+                   ,["1  01  0"
+                    ," 01  01 "
+                    ,"1  01  0"
+                    ," 01  01 "
+                    ,"1  01  0"
+                    ]
+                   )
+                  ]
+                 )
+                -- @-node:gcross.20100310140947.1384:hextille
                 -- @-others
                 ]
             ]
