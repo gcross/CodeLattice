@@ -700,6 +700,29 @@ main = defaultMain
                   ]
                  )
                 -- @-node:gcross.20100310140947.1386:hexdeltille
+                -- @+node:gcross.20100310140947.1387:deltille
+                ,("deltille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,[" 0 0 "
+                    ,"0 0 0"
+                    ," 0 0 "
+                    ]
+                   )
+                  ,(Bounds (-2) (-2) 2 2
+                   ,["0 0 0 0 0"
+                    ," 0 0 0 0 "
+                    ,"0 0 0 0 0"
+                    ," 0 0 0 0 "
+                    ,"0 0 0 0 0"
+                    ]
+                   )
+                  ]
+                 )
+                -- @-node:gcross.20100310140947.1387:deltille
                 -- @-others
                 ]
             ]
