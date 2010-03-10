@@ -575,6 +575,83 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100309160622.1349:based on grown lattice
+        -- @+node:gcross.20100310123433.1422:correct pictures
+        ,testGroup "correct pictures" $
+            [testGroup name $
+                [testCase (show bounds) $
+                    assertEqual
+                        "Was the drawn picture correct?"
+                        (unlines correct_picture)
+                        (fst . fst . runLatticeMonad $ (
+                            growLatticeFromOrigin (lookupTilingSteps name) bounds
+                            >>
+                            drawLattice
+                        ))
+                | (bounds,correct_picture) <- bounds_and_correct_pictures
+                ]
+            | (name,bounds_and_correct_pictures) <-
+                -- @        @+others
+                -- @+node:gcross.20100310123433.1423:quadrille
+                [("quadrille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds 0 0 1 1
+                   ,["00"
+                    ,"00"
+                    ]
+                   )
+                  ,(Bounds 0 0 2 2
+                   ,["000"
+                    ,"000"
+                    ,"000"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,["000"
+                    ,"000"
+                    ,"000"
+                    ]
+                   )
+                  ]
+                 )
+                -- @-node:gcross.20100310123433.1423:quadrille
+                -- @+node:gcross.20100310123433.1425:truncated quadrille
+                ,("truncated quadrille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,[" 12"
+                    ," 03"
+                    ,"2  "
+                    ]
+                   )
+                  ,(Bounds (-2) (-1) 1 2
+                   ,["  12"
+                    ,"  03"
+                    ,"12  "
+                    ,"03  "
+                    ]
+                   )
+                  ,(Bounds (-2) (-1) 3 4
+                   ,["  12  "
+                    ,"  03  "
+                    ,"12  12"
+                    ,"03  03"
+                    ,"  12  "
+                    ,"  03  "
+                    ]
+                   )
+                  ]
+                 )
+                -- @-node:gcross.20100310123433.1425:truncated quadrille
+                -- @-others
+                ]
+            ]
+        -- @-node:gcross.20100310123433.1422:correct pictures
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings

@@ -10,15 +10,20 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.State.Strict
 
+import Data.Char
 import Data.Either
 import Data.EpsilonMatcher
 import Data.EpsilonMatcher.Multiple
 import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 import Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
+
+import Debug.Trace
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -33,7 +38,7 @@ data Bounds = Bounds
     ,   boundTop :: Double
     ,   boundRight :: Double
     ,   boundBottom :: Double
-    }
+    } deriving (Show)
 -- @-node:gcross.20100309124842.1404:Bounds
 -- @+node:gcross.20100302164430.1239:Edge
 data Edge = Edge
@@ -283,6 +288,49 @@ pruneLattice lattice@(Lattice vertices edges)
         $
         edges
 -- @-node:gcross.20100309160622.1351:pruneLattice
+-- @+node:gcross.20100310123433.1421:drawLattice
+drawLattice :: LatticeMonad String
+drawLattice =
+    lift getMatchMaps
+    >>=
+    \[x_map,y_map,orientation_map] ->
+        fmap (
+            Map.fromList
+            .
+            map (
+                \(Vertex (Location x_key y_key) orientation_key) ->
+                    let x = fromJust (IntMap.lookup x_key x_map)
+                        y = fromJust (IntMap.lookup y_key y_map)
+                        orientation = fromJust (IntMap.lookup orientation_key orientation_map)
+                    in ((x,y),orientation)
+            )
+            .
+            Set.elems
+            .
+            latticeVertices
+        ) get
+    >>=
+    \coordinate_map ->
+        return
+        .
+        unlines
+        .
+        transpose
+        .
+        removeBlankLines
+        .
+        transpose
+        .
+        removeBlankLines
+        $
+        [[maybe ' ' (chr . (+ ord '0')) (Map.lookup (x,y) coordinate_map)
+         | x <- [0..(IntMap.size x_map)-1]
+         ]
+        | y <- [0..(IntMap.size y_map)-1]
+        ]
+  where
+    removeBlankLines = filter (any (/= ' '))
+-- @-node:gcross.20100310123433.1421:drawLattice
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
