@@ -54,8 +54,8 @@ tilings =
         PickFirstCompatableOrientation
     ,makeTiling
         "snub quadrille"
-        [4,3,4,3,3]
-        (PickNthCompatableOrientation [0,0,1,1,0])
+        [3,4,3,4,3]
+        (PickNthCompatableOrientation [0,0,0,1,1])
     ,makeTiling
         "hextille"
         [6,6,6]
