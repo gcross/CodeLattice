@@ -745,6 +745,43 @@ main = defaultMain
                   ]
                  )
                 -- @-node:gcross.20100310140947.1386:hexdeltille
+                -- @+node:gcross.20100310140947.1392:truncated hextille
+                ,("truncated hextille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds 0 (-3) 1 0
+                   ,["0 4"
+                    ," 2 "
+                    ," 5 "
+                    ,"1 3"
+                    ]
+                   )
+                  ,(Bounds (-1) (-4) 2 1
+                   ,["3   1"
+                    ," 0 4 "
+                    ,"  2  "
+                    ,"  5  "
+                    ," 1 3 "
+                    ,"4   0"
+                    ]
+                   )
+                  ,(Bounds (-3.5) (-5) 4.5 2
+                   ,["   5     5   "
+                    ,"  1 3   1 3  "
+                    ," 4   0 4   0 "
+                    ,"2     2     2"
+                    ,"5     5     5"
+                    ," 3   1 3   1 "
+                    ,"  0 4   0 4  "
+                    ,"   2     2   "
+                    ]
+                   )
+                  ]
+                 )
+                -- @nonl
+                -- @-node:gcross.20100310140947.1392:truncated hextille
                 -- @+node:gcross.20100310140947.1387:deltille
                 ,("deltille"
                  ,[(Bounds 0 0 0 0
