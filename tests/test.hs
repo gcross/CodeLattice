@@ -575,313 +575,565 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100309160622.1349:based on grown lattice
-        -- @+node:gcross.20100310123433.1422:correct pictures
+        -- @+node:gcross.20100310140947.1395:correct pictures
         ,testGroup "correct pictures" $
-            [testGroup name $
-                [testCase (show bounds) $
-                    assertEqual
-                        "Was the drawn picture correct?"
-                        (unlines correct_picture)
-                        (fst . fst . runLatticeMonad $ (
-                            growLatticeFromOrigin (lookupTilingSteps name) bounds
-                            >>
-                            drawLattice
-                        ))
-                | (bounds,correct_picture) <- bounds_and_correct_pictures
-                ]
-            | (name,bounds_and_correct_pictures) <-
-                -- @        @+others
-                -- @+node:gcross.20100310123433.1423:quadrille
-                [("quadrille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
+            -- @    @+others
+            -- @+node:gcross.20100310123433.1422:before pruning
+            [testGroup "before pruning" $
+                [testGroup name $
+                    [testCase (show bounds) $
+                        assertEqual
+                            "Was the drawn picture correct?"
+                            (unlines correct_picture)
+                            (fst . fst . runLatticeMonad $ (
+                                growLatticeFromOrigin (lookupTilingSteps name) bounds
+                                >>
+                                getAndDrawLattice
+                            ))
+                    | (bounds,correct_picture) <- bounds_and_correct_pictures
                     ]
-                   )
-                  ,(Bounds 0 0 1 1
-                   ,["00"
-                    ,"00"
-                    ]
-                   )
-                  ,(Bounds 0 0 2 2
-                   ,["000"
-                    ,"000"
-                    ,"000"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,["000"
-                    ,"000"
-                    ,"000"
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310123433.1423:quadrille
-                -- @+node:gcross.20100310123433.1425:truncated quadrille
-                ,("truncated quadrille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,["2  "
-                    ," 03"
-                    ," 12"
-                    ]
-                   )
-                  ,(Bounds (-2) (-1) 1 2
-                   ,["03  "
-                    ,"12  "
-                    ,"  03"
-                    ,"  12"
-                    ]
-                   )
-                  ,(Bounds (-2) (-1) 3 4
-                   ,["  03  "
-                    ,"  12  "
-                    ,"03  03"
-                    ,"12  12"
-                    ,"  03  "
-                    ,"  12  "
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310123433.1425:truncated quadrille
-                -- @+node:gcross.20100310140947.1391:snub quadrille
-                ,("snub quadrille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,["  1 "
-                    ,"3   "
-                    ," 0 2"
-                    ,"1   "
-                    ,"  3 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 2 2
-                   ,["     3   "
-                    ," 0 2   0 "
-                    ,"     1   "
-                    ,"  3     3"
-                    ,"2   0 2  "
-                    ,"  1     1"
-                    ,"     3   "
-                    ," 0 2   0 "
-                    ,"     1   "
-                    ]
-                   )
-                  ,(Bounds (-3) (-3) 3 3
-                   ,["0 2   0 2   0"
-                    ,"    1     1  "
-                    ," 3     3     "
-                    ,"   0 2   0 2 "
-                    ," 1     1     "
-                    ,"    3     3  "
-                    ,"0 2   0 2   0"
-                    ,"    1     1  "
-                    ," 3     3     "
-                    ,"   0 2   0 2 "
-                    ," 1     1     "
-                    ,"    3     3  "
-                    ,"0 2   0 2   0"
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1391:snub quadrille
-                -- @+node:gcross.20100310140947.1384:hextille
-                ,("hextille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,["1  "
-                    ," 01"
-                    ,"1  "
-                    ]
-                   )
-                  ,(Bounds (-2) (-1) 3 1
-                   ,[" 01  01 "
-                    ,"1  01  0"
-                    ," 01  01 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 3 2
-                   ,["1  01  0"
-                    ," 01  01 "
-                    ,"1  01  0"
-                    ," 01  01 "
-                    ,"1  01  0"
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1384:hextille
-                -- @+node:gcross.20100310140947.1386:hexdeltille
-                ,("hexadeltille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,[" 1   "
-                    ,"2 0 2"
-                    ,"   1 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 2 2
-                   ,["2 0 2 0 2"
-                    ,"   1   1 "
-                    ,"0 2 0 2 0"
-                    ," 1   1   "
-                    ,"2 0 2 0 2"
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1386:hexdeltille
-                -- @+node:gcross.20100310140947.1392:truncated hextille
-                ,("truncated hextille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds 0 (-3) 1 0
-                   ,["0 4"
-                    ," 2 "
-                    ," 5 "
-                    ,"1 3"
-                    ]
-                   )
-                  ,(Bounds (-1) (-4) 2 1
-                   ,["3   1"
-                    ," 0 4 "
-                    ,"  2  "
-                    ,"  5  "
-                    ," 1 3 "
-                    ,"4   0"
-                    ]
-                   )
-                  ,(Bounds (-3.5) (-5) 4.5 2
-                   ,["   5     5   "
-                    ,"  1 3   1 3  "
-                    ," 4   0 4   0 "
-                    ,"2     2     2"
-                    ,"5     5     5"
-                    ," 3   1 3   1 "
-                    ,"  0 4   0 4  "
-                    ,"   2     2   "
-                    ]
-                   )
-                  ]
-                 )
-                -- @nonl
-                -- @-node:gcross.20100310140947.1392:truncated hextille
-                -- @+node:gcross.20100310140947.1387:deltille
-                ,("deltille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,[" 0 0 "
-                    ,"0 0 0"
-                    ," 0 0 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 2 2
-                   ,["0 0 0 0 0"
-                    ," 0 0 0 0 "
-                    ,"0 0 0 0 0"
-                    ," 0 0 0 0 "
-                    ,"0 0 0 0 0"
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1387:deltille
-                -- @+node:gcross.20100310140947.1393:rhombihexadeltille
-                ,("rhombihexadeltille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,[" 1 3"
-                    ," 0 4"
-                    ,"5   "
-                    ,"  2 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 3 2
-                   ,["     5     "
-                    ,"  2     2  "
-                    ,"3   1 3   1"
-                    ,"4   0 4   0"
-                    ,"  5     5  "
-                    ,"     2     "
-                    ," 1 3   1 3 "
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1393:rhombihexadeltille
-                -- @+node:gcross.20100310140947.1394:snub hexatille
-                ,("snub hexatille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
-                    ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,[" 5   "
-                    ,"2 0 1"
-                    ," 4 3 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 2 2
-                   ,["0 1 4 3 5"
-                    ," 3 5   2 "
-                    ,"  2 0 1 4"
-                    ," 1 4 3 5 "
-                    ,"3 5   2 0"
-                    ]
-                   )
-                  ]
-                 )
+                | (name,bounds_and_correct_pictures) <-
+                    -- @        @+others
+                    -- @+node:gcross.20100310123433.1423:quadrille
+                    [("quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds 0 0 1 1
+                       ,["00"
+                        ,"00"
+                        ]
+                       )
+                      ,(Bounds 0 0 2 2
+                       ,["000"
+                        ,"000"
+                        ,"000"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["000"
+                        ,"000"
+                        ,"000"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310123433.1423:quadrille
+                    -- @+node:gcross.20100310123433.1425:truncated quadrille
+                    ,("truncated quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["2  "
+                        ," 03"
+                        ," 12"
+                        ]
+                       )
+                      ,(Bounds (-2) (-1) 1 2
+                       ,["03  "
+                        ,"12  "
+                        ,"  03"
+                        ,"  12"
+                        ]
+                       )
+                      ,(Bounds (-2) (-1) 3 4
+                       ,["  03  "
+                        ,"  12  "
+                        ,"03  03"
+                        ,"12  12"
+                        ,"  03  "
+                        ,"  12  "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310123433.1425:truncated quadrille
+                    -- @+node:gcross.20100310140947.1391:snub quadrille
+                    ,("snub quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["  1 "
+                        ,"3   "
+                        ," 0 2"
+                        ,"1   "
+                        ,"  3 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["     3   "
+                        ," 0 2   0 "
+                        ,"     1   "
+                        ,"  3     3"
+                        ,"2   0 2  "
+                        ,"  1     1"
+                        ,"     3   "
+                        ," 0 2   0 "
+                        ,"     1   "
+                        ]
+                       )
+                      ,(Bounds (-3) (-3) 3 3
+                       ,["0 2   0 2   0"
+                        ,"    1     1  "
+                        ," 3     3     "
+                        ,"   0 2   0 2 "
+                        ," 1     1     "
+                        ,"    3     3  "
+                        ,"0 2   0 2   0"
+                        ,"    1     1  "
+                        ," 3     3     "
+                        ,"   0 2   0 2 "
+                        ," 1     1     "
+                        ,"    3     3  "
+                        ,"0 2   0 2   0"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1391:snub quadrille
+                    -- @+node:gcross.20100310140947.1384:hextille
+                    ,("hextille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["1  "
+                        ," 01"
+                        ,"1  "
+                        ]
+                       )
+                      ,(Bounds (-2) (-1) 3 1
+                       ,[" 01  01 "
+                        ,"1  01  0"
+                        ," 01  01 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 3 2
+                       ,["1  01  0"
+                        ," 01  01 "
+                        ,"1  01  0"
+                        ," 01  01 "
+                        ,"1  01  0"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1384:hextille
+                    -- @+node:gcross.20100310140947.1386:hexdeltille
+                    ,("hexadeltille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 1   "
+                        ,"2 0 2"
+                        ,"   1 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["2 0 2 0 2"
+                        ,"   1   1 "
+                        ,"0 2 0 2 0"
+                        ," 1   1   "
+                        ,"2 0 2 0 2"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1386:hexdeltille
+                    -- @+node:gcross.20100310140947.1392:truncated hextille
+                    ,("truncated hextille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds 0 (-3) 1 0
+                       ,["0 4"
+                        ," 2 "
+                        ," 5 "
+                        ,"1 3"
+                        ]
+                       )
+                      ,(Bounds (-1) (-4) 2 1
+                       ,["3   1"
+                        ," 0 4 "
+                        ,"  2  "
+                        ,"  5  "
+                        ," 1 3 "
+                        ,"4   0"
+                        ]
+                       )
+                      ,(Bounds (-3.5) (-5) 4.5 2
+                       ,["   5     5   "
+                        ,"  1 3   1 3  "
+                        ," 4   0 4   0 "
+                        ,"2     2     2"
+                        ,"5     5     5"
+                        ," 3   1 3   1 "
+                        ,"  0 4   0 4  "
+                        ,"   2     2   "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @nonl
+                    -- @-node:gcross.20100310140947.1392:truncated hextille
+                    -- @+node:gcross.20100310140947.1387:deltille
+                    ,("deltille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 0 0 "
+                        ,"0 0 0"
+                        ," 0 0 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["0 0 0 0 0"
+                        ," 0 0 0 0 "
+                        ,"0 0 0 0 0"
+                        ," 0 0 0 0 "
+                        ,"0 0 0 0 0"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1387:deltille
+                    -- @+node:gcross.20100310140947.1393:rhombihexadeltille
+                    ,("rhombihexadeltille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 1 3"
+                        ," 0 4"
+                        ,"5   "
+                        ,"  2 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 3 2
+                       ,["     5     "
+                        ,"  2     2  "
+                        ,"3   1 3   1"
+                        ,"4   0 4   0"
+                        ,"  5     5  "
+                        ,"     2     "
+                        ," 1 3   1 3 "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1393:rhombihexadeltille
+                    -- @+node:gcross.20100310140947.1394:snub hexatille
+                    ,("snub hexatille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 5   "
+                        ,"2 0 1"
+                        ," 4 3 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["0 1 4 3 5"
+                        ," 3 5   2 "
+                        ,"  2 0 1 4"
+                        ," 1 4 3 5 "
+                        ,"3 5   2 0"
+                        ]
+                       )
+                      ]
+                     )
 
-                -- @-node:gcross.20100310140947.1394:snub hexatille
-                -- @+node:gcross.20100310140947.1389:isosnub quadrille
-                ,("isosnub quadrille"
-                 ,[(Bounds 0 0 0 0
-                   ,["0"
+                    -- @-node:gcross.20100310140947.1394:snub hexatille
+                    -- @+node:gcross.20100310140947.1389:isosnub quadrille
+                    ,("isosnub quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,["0"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["1 1 1"
+                        ,"0 0 0"
+                        ," 1 1 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,[" 0 0 0 0 "
+                        ,"1 1 1 1 1"
+                        ,"0 0 0 0 0"
+                        ," 1 1 1 1 "
+                        ," 0 0 0 0 "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1389:isosnub quadrille
+                    -- @-others
                     ]
-                   )
-                  ,(Bounds (-1) (-1) 1 1
-                   ,["1 1 1"
-                    ,"0 0 0"
-                    ," 1 1 "
-                    ]
-                   )
-                  ,(Bounds (-2) (-2) 2 2
-                   ,[" 0 0 0 0 "
-                    ,"1 1 1 1 1"
-                    ,"0 0 0 0 0"
-                    ," 1 1 1 1 "
-                    ," 0 0 0 0 "
-                    ]
-                   )
-                  ]
-                 )
-                -- @-node:gcross.20100310140947.1389:isosnub quadrille
-                -- @-others
                 ]
+            -- @-node:gcross.20100310123433.1422:before pruning
+            -- @+node:gcross.20100310140947.1407:after pruning
+            ,testGroup "after pruning" $
+                [testGroup name $
+                    [testCase (show bounds) $
+                        assertEqual
+                            "Was the drawn picture correct?"
+                            (unlines correct_picture)
+                            (fst . fst . runLatticeMonad $ (
+                                growLatticeFromOrigin (lookupTilingSteps name) bounds
+                                >>
+                                getAndDrawPrunedLattice
+                            ))
+                    | (bounds,correct_picture) <- bounds_and_correct_pictures
+                    ]
+                | (name,bounds_and_correct_pictures) <-
+                    -- @        @+others
+                    -- @+node:gcross.20100310140947.1408:quadrille
+                    [("quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds 0 0 1 1
+                       ,["00"
+                        ,"00"
+                        ]
+                       )
+                      ,(Bounds 0 0 2 2
+                       ,["000"
+                        ,"000"
+                        ,"000"
+                        ]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["000"
+                        ,"000"
+                        ,"000"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1408:quadrille
+                    -- @+node:gcross.20100310140947.1409:truncated quadrille
+                    ,("truncated quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["03"
+                        ,"12"
+                        ]
+                       )
+                      ,(Bounds (-2) (-1) 1 2
+                       ,["03  "
+                        ,"12  "
+                        ,"  03"
+                        ,"  12"
+                        ]
+                       )
+                      ,(Bounds (-2) (-1) 3 4
+                       ,["  03  "
+                        ,"  12  "
+                        ,"03  03"
+                        ,"12  12"
+                        ,"  03  "
+                        ,"  12  "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1409:truncated quadrille
+                    -- @+node:gcross.20100310140947.1411:hextille
+                    ,("hextille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[]
+                       )
+                      ,(Bounds (-2) (-1) 3 1
+                       ,[" 01  01 "
+                        ,"1  01  0"
+                        ," 01  01 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 3 2
+                       ,["   01   "
+                        ," 01  01 "
+                        ,"1  01  0"
+                        ," 01  01 "
+                        ,"   01   "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1411:hextille
+                    -- @+node:gcross.20100310140947.1412:hexdeltille
+                    ,("hexadeltille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 1   "
+                        ,"2 0 2"
+                        ,"   1 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["  0 2 0 2"
+                        ,"   1   1 "
+                        ,"0 2 0 2 0"
+                        ," 1   1   "
+                        ,"2 0 2 0  "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1412:hexdeltille
+                    -- @+node:gcross.20100310140947.1413:truncated hextille
+                    ,("truncated hextille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds 0 (-3) 1 0
+                       ,["0 4"
+                        ," 2 "
+                        ," 5 "
+                        ,"1 3"
+                        ]
+                       )
+                      ,(Bounds (-1) (-4) 2 1
+                       ,["0 4"
+                        ," 2 "
+                        ," 5 "
+                        ,"1 3"
+                        ]
+                       )
+                      ,(Bounds (-3.5) (-5) 4.5 2
+                       ,["   5     5   "
+                        ,"  1 3   1 3  "
+                        ," 4   0 4   0 "
+                        ,"2     2     2"
+                        ,"5     5     5"
+                        ," 3   1 3   1 "
+                        ,"  0 4   0 4  "
+                        ,"   2     2   "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @nonl
+                    -- @-node:gcross.20100310140947.1413:truncated hextille
+                    -- @+node:gcross.20100310140947.1414:deltille
+                    ,("deltille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 0 0 "
+                        ,"0 0 0"
+                        ," 0 0 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["0 0 0 0 0"
+                        ," 0 0 0 0 "
+                        ,"0 0 0 0 0"
+                        ," 0 0 0 0 "
+                        ,"0 0 0 0 0"
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1414:deltille
+                    -- @+node:gcross.20100310140947.1415:rhombihexadeltille
+                    ,("rhombihexadeltille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["1 3"
+                        ,"0 4"
+                        ," 2 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 3 2
+                       ,["     5     "
+                        ,"  2     2  "
+                        ,"3   1 3   1"
+                        ,"4   0 4   0"
+                        ,"  5     5  "
+                        ,"     2     "
+                        ," 1 3   1 3 "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1415:rhombihexadeltille
+                    -- @+node:gcross.20100310140947.1416:snub hexatille
+                    ,("snub hexatille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,[" 5   "
+                        ,"2 0 1"
+                        ," 4 3 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,["0 1 4 3 5"
+                        ," 3 5   2 "
+                        ,"  2 0 1 4"
+                        ," 1 4 3 5 "
+                        ,"3 5   2 0"
+                        ]
+                       )
+                      ]
+                     )
+
+                    -- @-node:gcross.20100310140947.1416:snub hexatille
+                    -- @+node:gcross.20100310140947.1417:isosnub quadrille
+                    ,("isosnub quadrille"
+                     ,[(Bounds 0 0 0 0
+                       ,[]
+                       )
+                      ,(Bounds (-1) (-1) 1 1
+                       ,["1 1 1"
+                        ,"0 0 0"
+                        ," 1 1 "
+                        ]
+                       )
+                      ,(Bounds (-2) (-2) 2 2
+                       ,[" 0 0 0 0 "
+                        ,"1 1 1 1 1"
+                        ,"0 0 0 0 0"
+                        ," 1 1 1 1 "
+                        ," 0 0 0 0 "
+                        ]
+                       )
+                      ]
+                     )
+                    -- @-node:gcross.20100310140947.1417:isosnub quadrille
+                    -- @-others
+                    ]
+                ]
+            -- @-node:gcross.20100310140947.1407:after pruning
+            -- @-others
             ]
-        -- @-node:gcross.20100310123433.1422:correct pictures
+        -- @-node:gcross.20100310140947.1395:correct pictures
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings

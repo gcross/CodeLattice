@@ -244,7 +244,7 @@ growLatticeFromOrigin steps bounds = growLattice steps bounds [RawVertex 0 0 0]
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice -> Map Vertex Int
 computeVertexAdjacencies (Lattice vertices edges) =
-    go edges Map.empty
+    go edges (Map.fromDistinctAscList . map (id &&& const 0) . Set.toAscList $ vertices)
   where
     go [] = id
     go (Edge (EdgeSide v1 _) (EdgeSide v2 _):rest_edges) =
@@ -262,6 +262,8 @@ pruneLattice :: Lattice -> Lattice
 pruneLattice lattice@(Lattice vertices edges)
     | (length . latticeEdges $ new_lattice) < length edges
         = pruneLattice new_lattice
+    | (Set.size . latticeVertices $ new_lattice) < Set.size vertices
+        = pruneLattice new_lattice
     | otherwise
         = lattice
   where
@@ -270,7 +272,7 @@ pruneLattice lattice@(Lattice vertices edges)
         .
         map fst
         .
-        filter ((== 1) . snd)
+        filter ((< 2) . snd)
         .
         Map.toAscList
         .
@@ -292,12 +294,9 @@ pruneLattice lattice@(Lattice vertices edges)
         edges
 -- @-node:gcross.20100309160622.1351:pruneLattice
 -- @+node:gcross.20100310123433.1421:drawLattice
-drawLattice :: LatticeMonad String
-drawLattice =
-    lift getMatchMaps
-    >>=
-    \[x_map,y_map,orientation_map] ->
-        fmap (
+drawLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> String
+drawLattice x_map y_map orientation_map lattice =
+    let coordinate_map = 
             Map.fromList
             .
             map (
@@ -311,12 +310,9 @@ drawLattice =
             Set.elems
             .
             latticeVertices
-        ) get
-    >>=
-    \coordinate_map ->
-        return
-        .
-        unlines
+            $
+            lattice
+    in  unlines
         .
         transpose
         .
@@ -334,6 +330,30 @@ drawLattice =
   where
     removeBlankLines = filter (any (/= ' '))
 -- @-node:gcross.20100310123433.1421:drawLattice
+-- @+node:gcross.20100310140947.1418:getAndDrawLattice
+getAndDrawLattice :: LatticeMonad String
+getAndDrawLattice = do
+    [x_map,y_map,orientation_map] <- lift getMatchMaps
+    lattice <- get
+    return $
+        drawLattice
+            x_map
+            y_map
+            orientation_map
+            lattice
+-- @-node:gcross.20100310140947.1418:getAndDrawLattice
+-- @+node:gcross.20100310140947.1420:getAndDrawPrunedLattice
+getAndDrawPrunedLattice :: LatticeMonad String
+getAndDrawPrunedLattice = do
+    [x_map,y_map,orientation_map] <- lift getMatchMaps
+    lattice <- get
+    return $
+        drawLattice
+            x_map
+            y_map
+            orientation_map
+            (pruneLattice lattice)
+-- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
