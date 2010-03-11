@@ -831,6 +831,30 @@ main = defaultMain
                   ]
                  )
                 -- @-node:gcross.20100310140947.1393:rhombihexadeltille
+                -- @+node:gcross.20100310140947.1394:snub hexatille
+                ,("snub hexatille"
+                 ,[(Bounds 0 0 0 0
+                   ,["0"
+                    ]
+                   )
+                  ,(Bounds (-1) (-1) 1 1
+                   ,[" 5   "
+                    ,"2 0 1"
+                    ," 4 3 "
+                    ]
+                   )
+                  ,(Bounds (-2) (-2) 2 2
+                   ,["0 1 4 3 5"
+                    ," 3 5   2 "
+                    ,"  2 0 1 4"
+                    ," 1 4 3 5 "
+                    ,"3 5   2 0"
+                    ]
+                   )
+                  ]
+                 )
+
+                -- @-node:gcross.20100310140947.1394:snub hexatille
                 -- @+node:gcross.20100310140947.1389:isosnub quadrille
                 ,("isosnub quadrille"
                  ,[(Bounds 0 0 0 0
