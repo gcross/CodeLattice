@@ -57,7 +57,7 @@ grown_lattice_bound = grown_lattice_size / 2
 grown_lattices = Map.fromList
     [(tilingName tiling
      ,runLatticeMonad $
-        growLatticeFromOrigin
+        growLatticeToBoundsFromOrigin
             (tilingSteps tiling)
             (Bounds
                 (-grown_lattice_bound)
@@ -68,6 +68,7 @@ grown_lattices = Map.fromList
      )
     | tiling <- tilings
     ]
+-- @nonl
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupLattice
 lookupLattice :: String -> Lattice
@@ -586,7 +587,7 @@ main = defaultMain
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
                             (fst . fst . runLatticeMonad $ (
-                                growLatticeFromOrigin (lookupTilingSteps name) bounds
+                                growLatticeToBoundsFromOrigin (lookupTilingSteps name) bounds
                                 >>
                                 getAndDrawLattice
                             ))
@@ -884,6 +885,7 @@ main = defaultMain
                     -- @-others
                     ]
                 ]
+            -- @nonl
             -- @-node:gcross.20100310123433.1422:before pruning
             -- @+node:gcross.20100310140947.1407:after pruning
             ,testGroup "after pruning" $
@@ -893,7 +895,7 @@ main = defaultMain
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
                             (fst . fst . runLatticeMonad $ (
-                                growLatticeFromOrigin (lookupTilingSteps name) bounds
+                                growLatticeToBoundsFromOrigin (lookupTilingSteps name) bounds
                                 >>
                                 getAndDrawPrunedLattice
                             ))
@@ -1130,6 +1132,7 @@ main = defaultMain
                     -- @-others
                     ]
                 ]
+            -- @nonl
             -- @-node:gcross.20100310140947.1407:after pruning
             -- @-others
             ]

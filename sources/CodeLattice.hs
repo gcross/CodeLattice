@@ -219,9 +219,9 @@ runLatticeMonad :: LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int]
 runLatticeMonad = runResolverMonad . flip runStateT emptyLattice
 -- @nonl
 -- @-node:gcross.20100309124842.1331:runLatticeMonad
--- @+node:gcross.20100309124842.1403:growLattice
-growLattice :: [Step] -> Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
-growLattice steps bounds = uncurry go . partitionRawVertices
+-- @+node:gcross.20100309124842.1403:growLatticeToBounds
+growLatticeToBounds :: [Step] -> Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
+growLatticeToBounds steps bounds = uncurry go . partitionRawVertices
   where
     partitionRawVertices = partitionEithers . map placeRawVertex
 
@@ -236,11 +236,13 @@ growLattice steps bounds = uncurry go . partitionRawVertices
         >>=
         \(new_outside_vertices,new_next_vertices) ->
             go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
--- @-node:gcross.20100309124842.1403:growLattice
--- @+node:gcross.20100309124842.1408:growLatticeFromOrigin
-growLatticeFromOrigin :: [Step] -> Bounds -> LatticeMonad [RawVertex]
-growLatticeFromOrigin steps bounds = growLattice steps bounds [RawVertex 0 0 0]
--- @-node:gcross.20100309124842.1408:growLatticeFromOrigin
+-- @nonl
+-- @-node:gcross.20100309124842.1403:growLatticeToBounds
+-- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
+growLatticeToBoundsFromOrigin :: [Step] -> Bounds -> LatticeMonad [RawVertex]
+growLatticeToBoundsFromOrigin steps bounds = growLatticeToBounds steps bounds [RawVertex 0 0 0]
+-- @nonl
+-- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice -> Map Vertex Int
 computeVertexAdjacencies (Lattice vertices edges) =
