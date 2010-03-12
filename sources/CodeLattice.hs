@@ -356,6 +356,44 @@ getAndDrawPrunedLattice = do
             orientation_map
             (pruneLattice lattice)
 -- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
+-- @+node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
+getNumberOfEdgesInLattice, getNumberOfVerticesInLattice :: LatticeMonad Int
+getNumberOfEdgesInLattice = fmap (length . latticeEdges) get
+getNumberOfVerticesInLattice = fmap (Set.size . latticeVertices) get
+-- @-node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
+-- @+node:gcross.20100312133145.1378:iterateLattice
+iterateLattice :: [Step] -> [RawVertex] -> LatticeMonad (Lattice,[RawVertex])
+iterateLattice steps starting_raw_vertices = do
+    starting_number_of_vertices <- getNumberOfVerticesInLattice
+    starting_number_of_edges <- getNumberOfEdgesInLattice
+    let go raw_vertices = do
+            next_raw_vertices <- processRawVertices steps raw_vertices
+            pruned_lattice <- fmap pruneLattice get
+            case ((Set.size . latticeVertices) pruned_lattice > starting_number_of_vertices
+                 ,(length . latticeEdges) pruned_lattice > starting_number_of_edges
+                 ) of
+                (_,True) -> return (pruned_lattice,next_raw_vertices)
+                (True,False) -> error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
+                (False,False) -> go next_raw_vertices
+    go starting_raw_vertices
+-- @-node:gcross.20100312133145.1378:iterateLattice
+-- @+node:gcross.20100312133145.1380:iterateLatticeRepeatedly
+iterateLatticeRepeatedly :: [Step] -> [RawVertex] -> Int -> LatticeMonad ([Lattice],[RawVertex])
+iterateLatticeRepeatedly steps raw_vertices =
+    go [] raw_vertices
+    >=>
+    \(lattices,raw_vertices) ->
+        return (reverse lattices,raw_vertices)
+  where
+    go lattices current_raw_vertices number_of_iterations_remaining
+     | number_of_iterations_remaining <= 0
+        = return (lattices,current_raw_vertices)
+     | otherwise
+        = iterateLattice steps current_raw_vertices
+          >>=
+          \(lattice,next_raw_vertices) ->
+            go (lattice:lattices) next_raw_vertices number_of_iterations_remaining
+-- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
