@@ -71,8 +71,8 @@ grown_lattices = Map.fromList
 -- @nonl
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupLattice
-lookupLattice :: String -> Lattice
-lookupLattice =
+lookupGrownLattice :: String -> Lattice
+lookupGrownLattice =
     snd
     .
     fst
@@ -564,11 +564,11 @@ main = defaultMain
                         adjacency_map = computeVertexAdjacencies lattice
                 in
                     [testGroup "pre-prune" $
-                        [testCase name $ checkAdjacenciesOf 0 . lookupLattice $ name
+                        [testCase name $ checkAdjacenciesOf 0 . lookupGrownLattice $ name
                         | name <- map tilingName tilings
                         ]
                     ,testGroup "post-prune" $
-                        [testCase name $ checkAdjacenciesOf 1 . pruneLattice . lookupLattice $ name
+                        [testCase name $ checkAdjacenciesOf 1 . pruneLattice . lookupGrownLattice $ name
                         | name <- map tilingName tilings
                         ]
                     ]
