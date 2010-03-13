@@ -398,7 +398,7 @@ iterateLatticeRepeatedly raw_vertices =
         = iterateLattice current_raw_vertices
           >>=
           \(lattice,next_raw_vertices) ->
-            go (lattice:lattices) next_raw_vertices number_of_iterations_remaining
+            go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
 -- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices

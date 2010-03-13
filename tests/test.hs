@@ -1131,11 +1131,39 @@ main = defaultMain
                     -- @-others
                     ]
                 ]
-            -- @nonl
             -- @-node:gcross.20100310140947.1407:after pruning
             -- @-others
             ]
         -- @-node:gcross.20100310140947.1395:correct pictures
+        -- @+node:gcross.20100312175547.1383:iterable 20 times
+        ,testGroup "iterable 8 times" $
+            [testCase tiling_name $ do
+                let lattices =
+                        fst
+                        .
+                        fst
+                        .
+                        fst
+                        .
+                        runLatticeMonadForTiling tiling_name
+                        .
+                        iterateLatticeRepeatedly [originRawVertex]
+                        $
+                        8
+                assertEqual
+                    "Were the correct number of lattices generated?"
+                    8
+                    (length lattices)
+                forM_ (zip lattices (tail lattices)) $ \(lattice1,lattice2) -> do
+                    assertBool
+                        "Is the number of edges in the lattices monotonically increasing?"
+                        ((length . latticeEdges) lattice2 > (length . latticeEdges) lattice1)
+                    assertBool
+                        "Is the number of vertices in the lattices monotonically increasing?"
+                        ((Set.size . latticeVertices) lattice2 > (Set.size . latticeVertices) lattice1)
+            | tiling_name <- map tilingName tilings
+            ]
+        -- @-node:gcross.20100312175547.1383:iterable 20 times
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
