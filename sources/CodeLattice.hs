@@ -16,6 +16,7 @@ import Data.Char
 import Data.Either
 import Data.EpsilonMatcher
 import Data.EpsilonMatcher.Multiple
+import Data.Function
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.List
@@ -112,6 +113,13 @@ instance Ord Vertex where
             ++ show v2 ++
             " are at the same location, but have different orientations!"
 -- @-node:gcross.20100308212437.1384:Ord Vertex
+-- @+node:gcross.20100312175547.1843:Eq Lattice
+instance Eq Lattice where
+    lattice1 == lattice2 =
+        (((==) `on` latticeVertices) lattice1 lattice2)
+        &&
+        (((==) `on` (sort . latticeEdges)) lattice1 lattice2)
+-- @-node:gcross.20100312175547.1843:Eq Lattice
 -- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100308212437.1393:Miscellaneous
