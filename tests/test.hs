@@ -299,7 +299,7 @@ main = defaultMain
                 -- @    @+others
                 -- @+node:gcross.20100309124842.1395:1 step
                 [testCase "1 step" $ do
-                    let (((queued_vertices,correct_queued_vertices),Lattice vertices edges _),_) =
+                    let (((queued_vertices,correct_queued_vertices),Lattice vertices edges),_) =
                             runLatticeMonadForTiling "quadrille" $
                                 liftM2 (,)
                                     (processRawVertex (RawVertex 0 0 0)
@@ -333,7 +333,7 @@ main = defaultMain
                           ,correct_queued_vertices
                           ,correct_vertices
                           )
-                         ,Lattice vertices edges _
+                         ,Lattice vertices edges
                          ),_) =
                             runLatticeMonadForTiling "quadrille" $
                                 liftM3 (,,)
@@ -513,7 +513,7 @@ main = defaultMain
             -- @+node:gcross.20100309124842.1406:consistent
             [testGroup "consistent" $
                 [testCase name $ do
-                    let ((outside_vertices,Lattice vertices edges _),_) =
+                    let ((outside_vertices,Lattice vertices edges),_) =
                             fromJust $
                                 Map.lookup name grown_lattices
                     mapM_ evaluate outside_vertices
@@ -555,7 +555,7 @@ main = defaultMain
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
-                let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges _) = do
+                let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges) = do
                         assertEqual
                             "Edges consistent with vertices?"
                             (IntSet.fromList . Bimap.keys $ vertices)

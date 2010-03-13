@@ -52,7 +52,6 @@ data Edge = Edge
 data Lattice = Lattice
     {   latticeVertices :: Bimap Int Vertex
     ,   latticeEdges :: [Edge]
-    ,   latticeSteps :: [Step]
     }
 -- @-node:gcross.20100308212437.1389:Lattice
 -- @+node:gcross.20100302164430.1240:EdgeSide
@@ -62,7 +61,7 @@ data EdgeSide = EdgeSide
     } deriving (Eq,Ord,Show)
 -- @-node:gcross.20100302164430.1240:EdgeSide
 -- @+node:gcross.20100308212437.1391:LatticeMonad
-type LatticeMonad resultType = StateT Lattice (State (IntMap (EpsilonMatcher Double))) resultType
+type LatticeMonad resultType = StateT (Lattice,[Step]) (State (IntMap (EpsilonMatcher Double))) resultType
 -- @-node:gcross.20100308212437.1391:LatticeMonad
 -- @+node:gcross.20100302164430.1236:Location
 data Location = Location
@@ -203,13 +202,18 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 -- @-node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100309124842.1330:emptyLatticeWithSteps
-emptyLatticeWithSteps :: [Step] -> Lattice
-emptyLatticeWithSteps = Lattice Bimap.empty []
+emptyLattice :: Lattice
+emptyLattice = Lattice Bimap.empty []
 -- @-node:gcross.20100309124842.1330:emptyLatticeWithSteps
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex -> LatticeMonad Bool
-latticeHasVertex vertex = fmap (Bimap.memberR vertex . latticeVertices) get
+latticeHasVertex vertex = fmap (Bimap.memberR vertex . latticeVertices) (gets fst)
+
 -- @-node:gcross.20100308212437.1397:latticeHasVertex
+-- @+node:gcross.20100312175547.1840:modifyLattice
+modifyLattice :: (Lattice -> Lattice) -> LatticeMonad ()
+modifyLattice = modify . first
+-- @-node:gcross.20100312175547.1840:modifyLattice
 -- @+node:gcross.20100308212437.1399:addEdgeToLattice
 addEdgeToLattice :: Vertex -> Int -> Vertex -> Int -> LatticeMonad ()
 addEdgeToLattice vertex1 ray1 vertex2 ray2 =
@@ -218,7 +222,7 @@ addEdgeToLattice vertex1 ray1 vertex2 ray2 =
         (liftM (flip EdgeSide ray2) . getVertexNumberInLattice $ vertex2)
     >>=
     \edge ->
-        modify (
+        modifyLattice (
             \lattice ->
                 lattice
                 {   latticeEdges =
@@ -228,13 +232,13 @@ addEdgeToLattice vertex1 ray1 vertex2 ray2 =
 -- @-node:gcross.20100308212437.1399:addEdgeToLattice
 -- @+node:gcross.20100312175547.1838:getVertexNumberInLattice
 getVertexNumberInLattice :: Vertex -> LatticeMonad Int
-getVertexNumberInLattice vertex = fmap (fromJust . Bimap.lookupR vertex . latticeVertices) get
+getVertexNumberInLattice vertex = fmap (fromJust . Bimap.lookupR vertex . latticeVertices) getLattice
 -- @-node:gcross.20100312175547.1838:getVertexNumberInLattice
 -- @+node:gcross.20100308212437.1401:addVertexToLattice
 addVertexToLattice :: Vertex -> LatticeMonad ()
 addVertexToLattice vertex =
-    modify (
-        \lattice@(Lattice vertices _ _) ->
+    modifyLattice (
+        \lattice@(Lattice vertices _) ->
             lattice
             {   latticeVertices =
                     Bimap.insert (Bimap.size vertices) vertex vertices
@@ -243,7 +247,7 @@ addVertexToLattice vertex =
 -- @-node:gcross.20100308212437.1401:addVertexToLattice
 -- @+node:gcross.20100309124842.1331:runLatticeMonad
 runLatticeMonad :: [Step] -> LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int])
-runLatticeMonad steps = runResolverMonad . flip runStateT (emptyLatticeWithSteps steps)
+runLatticeMonad steps = (first . second $ fst) . runResolverMonad . flip runStateT (emptyLattice,steps)
 -- @-node:gcross.20100309124842.1331:runLatticeMonad
 -- @+node:gcross.20100309124842.1403:growLatticeToBounds
 growLatticeToBounds :: Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
@@ -270,7 +274,7 @@ growLatticeToBoundsFromOrigin bounds = growLatticeToBounds bounds [RawVertex 0 0
 -- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice -> IntMap Int
-computeVertexAdjacencies (Lattice vertices edges _) =
+computeVertexAdjacencies (Lattice vertices edges) =
     go edges (IntMap.fromDistinctAscList . map (id *** const 0) . Map.toAscList . Bimap.toMap $ vertices)
   where
     go [] = id
@@ -286,7 +290,7 @@ computeVertexAdjacencies (Lattice vertices edges _) =
 -- @-node:gcross.20100309160622.1347:computeVertexAdjacencies
 -- @+node:gcross.20100309160622.1351:pruneLattice
 pruneLattice :: Lattice -> Lattice
-pruneLattice lattice@(Lattice vertices edges _)
+pruneLattice lattice@(Lattice vertices edges)
     | (length . latticeEdges $ new_lattice) < length edges
         = pruneLattice new_lattice
     | (Bimap.size . latticeVertices $ new_lattice) < Bimap.size vertices
@@ -349,9 +353,13 @@ drawLattice lattice
   where
     removeBlankLines = filter (any (/= ' '))
 -- @-node:gcross.20100310123433.1421:drawLattice
+-- @+node:gcross.20100312175547.1839:getLattice
+getLattice :: LatticeMonad Lattice
+getLattice = gets fst
+-- @-node:gcross.20100312175547.1839:getLattice
 -- @+node:gcross.20100312175547.1381:getLatticeSteps
 getLatticeSteps :: LatticeMonad [Step]
-getLatticeSteps = fmap latticeSteps get
+getLatticeSteps = gets snd
 -- @-node:gcross.20100312175547.1381:getLatticeSteps
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
@@ -359,7 +367,7 @@ getAndDrawLattice =
     lift getMatchMaps
     >>=
     \[x_map,y_map,orientation_map] ->
-        fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) get
+        fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
 -- @-node:gcross.20100310140947.1418:getAndDrawLattice
 -- @+node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 getAndDrawPrunedLattice :: LatticeMonad String
@@ -367,12 +375,12 @@ getAndDrawPrunedLattice =
     lift getMatchMaps
     >>=
     \[x_map,y_map,orientation_map] ->
-        fmap (drawLattice . pruneLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) get
+        fmap (drawLattice . pruneLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
 -- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 -- @+node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 getNumberOfEdgesInLattice, getNumberOfVerticesInLattice :: LatticeMonad Int
-getNumberOfEdgesInLattice = fmap (length . latticeEdges) get
-getNumberOfVerticesInLattice = fmap (Bimap.size . latticeVertices) get
+getNumberOfEdgesInLattice = fmap (length . latticeEdges) getLattice
+getNumberOfVerticesInLattice = fmap (Bimap.size . latticeVertices) getLattice
 -- @-node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 -- @+node:gcross.20100312133145.1378:iterateLattice
 iterateLattice :: [RawVertex] -> LatticeMonad (Lattice,[RawVertex])
@@ -382,7 +390,7 @@ iterateLattice starting_raw_vertices = do
     starting_number_of_edges <- getNumberOfEdgesInLattice
     let go raw_vertices = do
             next_raw_vertices <- processRawVertices raw_vertices
-            pruned_lattice <- fmap pruneLattice get
+            pruned_lattice <- fmap pruneLattice getLattice
             case ((Bimap.size . latticeVertices) pruned_lattice > starting_number_of_vertices
                  ,(length . latticeEdges) pruned_lattice > starting_number_of_edges
                  ) of
