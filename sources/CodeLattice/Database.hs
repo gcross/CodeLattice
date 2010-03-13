@@ -197,6 +197,8 @@ storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
             map edgeToRow
             $
             edges
+        return lattice_id
+
 -- @-node:gcross.20100312175547.1831:storeLattice
 -- @+node:gcross.20100312220352.1837:fetchLattice
 fetchLattice lattice_id =
