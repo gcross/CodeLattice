@@ -15,9 +15,12 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
 
+import qualified Data.Bimap as Bimap
 import Data.Function
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -318,7 +321,7 @@ main = defaultMain
                     assertEqual
                         "Does the lattice have the correct vertices?"
                         (Set.fromList [Vertex (Location 0 0) 0])
-                        vertices
+                        (Map.keysSet . Bimap.toMapR $ vertices)
                     assertEqual
                         "Does the lattice have the correct edges?"
                         []
@@ -363,16 +366,21 @@ main = defaultMain
                     assertEqual
                         "Does the lattice have the correct vertices?"
                         (Set.fromList correct_vertices)
-                        vertices
-                    assertEqual
-                        "Does the lattice have the correct edges?"
-                        (Set.fromList
-                            [Edge (EdgeSide (correct_vertices !! (ray_number+1)) ray_number)
-                                  (EdgeSide (head correct_vertices) ((ray_number+2) `mod` 4))
-                            | ray_number <- [0..3]
-                            ]
-                        )
-                        (Set.fromList edges)
+                        (Map.keysSet . Bimap.toMapR $ vertices)
+                -- @+at
+                --      assertEqual
+                --          "Does the lattice have the correct edges?"
+                --          (Set.fromList
+                --              [Edge (EdgeSide (correct_vertices !! 
+                --  (ray_number+1)) ray_number)
+                --                    (EdgeSide (head correct_vertices) 
+                --  ((ray_number+2) `mod` 4))
+                --              | ray_number <- [0..3]
+                --              ]
+                --          )
+                --          (Set.fromList edges)
+                -- @-at
+                -- @@c
                 -- @-node:gcross.20100309124842.1402:2 steps
                 -- @-others
                 ]
@@ -550,15 +558,15 @@ main = defaultMain
                 let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges _) = do
                         assertEqual
                             "Edges consistent with vertices?"
-                            vertices
-                            (Map.keysSet adjacency_map)
+                            (IntSet.fromList . Bimap.keys $ vertices)
+                            (IntMap.keysSet adjacency_map)
                         assertBool
                             ("All vertices adjacent to at least " ++ show (minimum_count+1) ++ " edge(s)?")
-                            (Map.fold ((&&) . (> minimum_count)) True adjacency_map)
+                            (IntMap.fold ((&&) . (> minimum_count)) True adjacency_map)
                         assertEqual
                             "Total adjacencies = twice number of edges?"
                             (2 * length edges)
-                            (Map.fold (+) 0 adjacency_map)
+                            (IntMap.fold (+) 0 adjacency_map)
                       where
                         adjacency_map = computeVertexAdjacencies lattice
                 in
@@ -1160,7 +1168,7 @@ main = defaultMain
                         ((length . latticeEdges) lattice2 > (length . latticeEdges) lattice1)
                     assertBool
                         "Is the number of vertices in the lattices monotonically increasing?"
-                        ((Set.size . latticeVertices) lattice2 > (Set.size . latticeVertices) lattice1)
+                        ((Bimap.size . latticeVertices) lattice2 > (Bimap.size . latticeVertices) lattice1)
             | tiling_name <- map tilingName tilings
             ]
         -- @-node:gcross.20100312175547.1383:iterable 20 times

@@ -11,6 +11,7 @@ Library
                     base == 4.1.*,
                     containers == 0.2.*,
                     EpsilonMatcher == 0.1,
-                    mtl == 1.1.*
+                    mtl == 1.1.*,
+                    bimap == 0.2.*
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
 -- @-leo
