@@ -58,6 +58,27 @@ fetch4 a b c d accum = result' ((a, b, c, d):accum) --'
 -- @-node:gcross.20100312175547.1825:fetchX
 -- @-node:gcross.20100312175547.1823:Enumerators
 -- @+node:gcross.20100312175547.1817:Functions
+-- @+node:gcross.20100312220352.1834:edgeIteratee
+edgeIteratee :: (MonadIO m) => Int -> Int -> Int -> Int -> IterAct m [Edge]
+edgeIteratee
+    vertex_number_1 ray_number_1
+    vertex_number_2 ray_number_2
+    edges
+    =
+    result' (Edge (EdgeSide vertex_number_1 ray_number_1) -- '
+                  (EdgeSide vertex_number_2 ray_number_2)
+            :edges
+            )
+-- @-node:gcross.20100312220352.1834:edgeIteratee
+-- @+node:gcross.20100312220352.1836:vertexIteratee
+vertexIteratee :: (MonadIO m) => Int -> Int -> Int -> Int -> IterAct m [(Int,Vertex)]
+vertexIteratee vertex_number x y orientation vertices =
+    result' ((vertex_number -- '
+             ,Vertex (Location x y) orientation
+             )
+            :vertices
+            )
+-- @-node:gcross.20100312220352.1836:vertexIteratee
 -- @+node:gcross.20100312175547.1819:makeConnection
 makeConnection heading = do
     either_conn <- runErrorT $ do
@@ -177,6 +198,21 @@ storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
             $
             edges
 -- @-node:gcross.20100312175547.1831:storeLattice
+-- @+node:gcross.20100312220352.1837:fetchLattice
+fetchLattice lattice_id =
+    liftM2 Lattice
+    (   fmap Bimap.fromList $
+        doQuery
+            (sql $ "select vertex_number, x, y, orientation from vertices where lattice_id = '" ++ lattice_id ++ "'")
+            vertexIteratee
+            []
+    )
+    (   doQuery
+            (sql $ "select vertex_number_1, ray_number_1, vertex_number_2, ray_number_2 from edges where lattice_id = '" ++ lattice_id ++ "'")
+            edgeIteratee
+            []
+    )
+-- @-node:gcross.20100312220352.1837:fetchLattice
 -- @-node:gcross.20100312175547.1817:Functions
 -- @-others
 -- @-node:gcross.20100312175547.1384:@thin Database.hs
