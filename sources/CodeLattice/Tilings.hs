@@ -8,7 +8,7 @@ module CodeLattice.Tilings where
 -- @+node:gcross.20100308112554.1293:<< Import needed modules >>
 import Data.Maybe
 
-import CodeLattice (Step(..),modulo360)
+import CodeLattice (Step(..),modulo360,runLatticeMonad)
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
 
@@ -187,6 +187,9 @@ makeTiling name polygons orientation_mode = tiling
             orientation_mode
             (tilingToSteps tiling)
 -- @-node:gcross.20100309124842.1398:makeTiling
+-- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
+runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
+-- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

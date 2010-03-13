@@ -54,11 +54,11 @@ skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 grown_lattice_size = 20
 grown_lattice_bound = grown_lattice_size / 2
 
-grown_lattices = Map.fromList
-    [(tilingName tiling
-     ,runLatticeMonad $
+grown_lattices =
+    Map.fromList
+    [(tiling_name
+     ,runLatticeMonadForTiling tiling_name $
         growLatticeToBoundsFromOrigin
-            (tilingSteps tiling)
             (Bounds
                 (-grown_lattice_bound)
                 (-grown_lattice_bound)
@@ -66,9 +66,8 @@ grown_lattices = Map.fromList
                 grown_lattice_bound
              )
      )
-    | tiling <- tilings
+    | tiling_name <- map tilingName tilings
     ]
--- @nonl
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupLattice
 lookupGrownLattice :: String -> Lattice
@@ -297,10 +296,10 @@ main = defaultMain
                 -- @    @+others
                 -- @+node:gcross.20100309124842.1395:1 step
                 [testCase "1 step" $ do
-                    let (((queued_vertices,correct_queued_vertices),Lattice vertices edges),_) =
-                            runLatticeMonad $
+                    let (((queued_vertices,correct_queued_vertices),Lattice vertices edges _),_) =
+                            runLatticeMonadForTiling "quadrille" $
                                 liftM2 (,)
-                                    (processRawVertex (lookupTilingSteps "quadrille") (RawVertex 0 0 0)
+                                    (processRawVertex (RawVertex 0 0 0)
                                      >>=
                                      lift . mapM resolveVertex
                                     )
@@ -331,13 +330,13 @@ main = defaultMain
                           ,correct_queued_vertices
                           ,correct_vertices
                           )
-                         ,Lattice vertices edges
+                         ,Lattice vertices edges _
                          ),_) =
-                            runLatticeMonad $
+                            runLatticeMonadForTiling "quadrille" $
                                 liftM3 (,,)
-                                    (processRawVertex (lookupTilingSteps "quadrille") (RawVertex 0 0 0)
+                                    (processRawVertex (RawVertex 0 0 0)
                                      >>=
-                                     processRawVertices (lookupTilingSteps "quadrille")
+                                     processRawVertices
                                      >>=
                                      lift . mapM resolveVertex
                                     )
@@ -506,7 +505,7 @@ main = defaultMain
             -- @+node:gcross.20100309124842.1406:consistent
             [testGroup "consistent" $
                 [testCase name $ do
-                    let ((outside_vertices,Lattice vertices edges),_) =
+                    let ((outside_vertices,Lattice vertices edges _),_) =
                             fromJust $
                                 Map.lookup name grown_lattices
                     mapM_ evaluate outside_vertices
@@ -548,7 +547,7 @@ main = defaultMain
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
-                let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges) = do
+                let checkAdjacenciesOf minimum_count lattice@(Lattice vertices edges _) = do
                         assertEqual
                             "Edges consistent with vertices?"
                             vertices
@@ -586,8 +585,8 @@ main = defaultMain
                         assertEqual
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
-                            (fst . fst . runLatticeMonad $ (
-                                growLatticeToBoundsFromOrigin (lookupTilingSteps name) bounds
+                            (fst . fst . runLatticeMonadForTiling name $ (
+                                growLatticeToBoundsFromOrigin bounds
                                 >>
                                 getAndDrawLattice
                             ))
@@ -894,8 +893,8 @@ main = defaultMain
                         assertEqual
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
-                            (fst . fst . runLatticeMonad $ (
-                                growLatticeToBoundsFromOrigin (lookupTilingSteps name) bounds
+                            (fst . fst . runLatticeMonadForTiling name $ (
+                                growLatticeToBoundsFromOrigin bounds
                                 >>
                                 getAndDrawPrunedLattice
                             ))

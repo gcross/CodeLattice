@@ -56,6 +56,7 @@ data EdgeSide = EdgeSide
 data Lattice = Lattice
     {   latticeVertices :: Set Vertex
     ,   latticeEdges :: [Edge]
+    ,   latticeSteps :: [Step]
     }
 -- @-node:gcross.20100308212437.1389:Lattice
 -- @+node:gcross.20100308212437.1391:LatticeMonad
@@ -199,9 +200,10 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
 -- @-node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100308212437.1395:Lattice
--- @+node:gcross.20100309124842.1330:emptyLattice
-emptyLattice = Lattice Set.empty []
--- @-node:gcross.20100309124842.1330:emptyLattice
+-- @+node:gcross.20100309124842.1330:emptyLatticeWithSteps
+emptyLatticeWithSteps :: [Step] -> Lattice
+emptyLatticeWithSteps = Lattice Set.empty []
+-- @-node:gcross.20100309124842.1330:emptyLatticeWithSteps
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex -> LatticeMonad Bool
 latticeHasVertex vertex = fmap (Set.member vertex) (gets latticeVertices)
@@ -215,13 +217,12 @@ addVertexToLattice :: Vertex -> LatticeMonad ()
 addVertexToLattice vertex = modify (\lattice -> lattice { latticeVertices = Set.insert vertex (latticeVertices lattice) })
 -- @-node:gcross.20100308212437.1401:addVertexToLattice
 -- @+node:gcross.20100309124842.1331:runLatticeMonad
-runLatticeMonad :: LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int])
-runLatticeMonad = runResolverMonad . flip runStateT emptyLattice
--- @nonl
+runLatticeMonad :: [Step] -> LatticeMonad resultType -> ((resultType,Lattice),[IntMap Int])
+runLatticeMonad steps = runResolverMonad . flip runStateT (emptyLatticeWithSteps steps)
 -- @-node:gcross.20100309124842.1331:runLatticeMonad
 -- @+node:gcross.20100309124842.1403:growLatticeToBounds
-growLatticeToBounds :: [Step] -> Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
-growLatticeToBounds steps bounds = uncurry go . partitionRawVertices
+growLatticeToBounds :: Bounds -> [RawVertex] -> LatticeMonad [RawVertex]
+growLatticeToBounds bounds = uncurry go . partitionRawVertices
   where
     partitionRawVertices = partitionEithers . map placeRawVertex
 
@@ -232,20 +233,19 @@ growLatticeToBounds steps bounds = uncurry go . partitionRawVertices
 
     go outside_raw_vertices [] = return outside_raw_vertices
     go outside_raw_vertices next_raw_vertices =
-        fmap partitionRawVertices (processRawVertices steps next_raw_vertices)
+        fmap partitionRawVertices (processRawVertices next_raw_vertices)
         >>=
         \(new_outside_vertices,new_next_vertices) ->
             go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
 -- @nonl
 -- @-node:gcross.20100309124842.1403:growLatticeToBounds
 -- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
-growLatticeToBoundsFromOrigin :: [Step] -> Bounds -> LatticeMonad [RawVertex]
-growLatticeToBoundsFromOrigin steps bounds = growLatticeToBounds steps bounds [RawVertex 0 0 0]
--- @nonl
+growLatticeToBoundsFromOrigin :: Bounds -> LatticeMonad [RawVertex]
+growLatticeToBoundsFromOrigin bounds = growLatticeToBounds bounds [RawVertex 0 0 0]
 -- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice -> Map Vertex Int
-computeVertexAdjacencies (Lattice vertices edges) =
+computeVertexAdjacencies (Lattice vertices edges _) =
     go edges (Map.fromDistinctAscList . map (id &&& const 0) . Set.toAscList $ vertices)
   where
     go [] = id
@@ -261,7 +261,7 @@ computeVertexAdjacencies (Lattice vertices edges) =
 -- @-node:gcross.20100309160622.1347:computeVertexAdjacencies
 -- @+node:gcross.20100309160622.1351:pruneLattice
 pruneLattice :: Lattice -> Lattice
-pruneLattice lattice@(Lattice vertices edges)
+pruneLattice lattice@(Lattice vertices edges _)
     | (length . latticeEdges $ new_lattice) < length edges
         = pruneLattice new_lattice
     | (Set.size . latticeVertices $ new_lattice) < Set.size vertices
@@ -283,17 +283,18 @@ pruneLattice lattice@(Lattice vertices edges)
         lattice
 
     new_lattice =
-        Lattice
-            (vertices `Set.difference` vertices_to_remove)
-        .
-        filter (
-            \(Edge (EdgeSide v1 _) (EdgeSide v2 _)) ->
-                (Set.notMember v1 vertices_to_remove)
-                &&
-                (Set.notMember v2 vertices_to_remove)
-        )
-        $
-        edges
+        lattice
+            {   latticeVertices = 
+                    vertices `Set.difference` vertices_to_remove
+            ,   latticeEdges =
+                    filter (
+                        \(Edge (EdgeSide v1 _) (EdgeSide v2 _)) ->
+                            (Set.notMember v1 vertices_to_remove)
+                            &&
+                            (Set.notMember v2 vertices_to_remove)
+                    ) edges
+
+            }
 -- @-node:gcross.20100309160622.1351:pruneLattice
 -- @+node:gcross.20100310123433.1421:drawLattice
 drawLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> String
@@ -332,6 +333,10 @@ drawLattice x_map y_map orientation_map lattice =
   where
     removeBlankLines = filter (any (/= ' '))
 -- @-node:gcross.20100310123433.1421:drawLattice
+-- @+node:gcross.20100312175547.1381:getLatticeSteps
+getLatticeSteps :: LatticeMonad [Step]
+getLatticeSteps = fmap latticeSteps get
+-- @-node:gcross.20100312175547.1381:getLatticeSteps
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
 getAndDrawLattice = do
@@ -362,12 +367,13 @@ getNumberOfEdgesInLattice = fmap (length . latticeEdges) get
 getNumberOfVerticesInLattice = fmap (Set.size . latticeVertices) get
 -- @-node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 -- @+node:gcross.20100312133145.1378:iterateLattice
-iterateLattice :: [Step] -> [RawVertex] -> LatticeMonad (Lattice,[RawVertex])
-iterateLattice steps starting_raw_vertices = do
+iterateLattice :: [RawVertex] -> LatticeMonad (Lattice,[RawVertex])
+iterateLattice starting_raw_vertices = do
+    steps <- getLatticeSteps
     starting_number_of_vertices <- getNumberOfVerticesInLattice
     starting_number_of_edges <- getNumberOfEdgesInLattice
     let go raw_vertices = do
-            next_raw_vertices <- processRawVertices steps raw_vertices
+            next_raw_vertices <- processRawVertices raw_vertices
             pruned_lattice <- fmap pruneLattice get
             case ((Set.size . latticeVertices) pruned_lattice > starting_number_of_vertices
                  ,(length . latticeEdges) pruned_lattice > starting_number_of_edges
@@ -378,8 +384,8 @@ iterateLattice steps starting_raw_vertices = do
     go starting_raw_vertices
 -- @-node:gcross.20100312133145.1378:iterateLattice
 -- @+node:gcross.20100312133145.1380:iterateLatticeRepeatedly
-iterateLatticeRepeatedly :: [Step] -> [RawVertex] -> Int -> LatticeMonad ([Lattice],[RawVertex])
-iterateLatticeRepeatedly steps raw_vertices =
+iterateLatticeRepeatedly :: [RawVertex] -> Int -> LatticeMonad ([Lattice],[RawVertex])
+iterateLatticeRepeatedly raw_vertices =
     go [] raw_vertices
     >=>
     \(lattices,raw_vertices) ->
@@ -389,7 +395,7 @@ iterateLatticeRepeatedly steps raw_vertices =
      | number_of_iterations_remaining <= 0
         = return (lattices,current_raw_vertices)
      | otherwise
-        = iterateLattice steps current_raw_vertices
+        = iterateLattice current_raw_vertices
           >>=
           \(lattice,next_raw_vertices) ->
             go (lattice:lattices) next_raw_vertices number_of_iterations_remaining
@@ -397,8 +403,9 @@ iterateLatticeRepeatedly steps raw_vertices =
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
-processRawVertex :: [Step] -> RawVertex -> LatticeMonad [RawVertex]
-processRawVertex steps raw_vertex = do
+processRawVertex :: RawVertex -> LatticeMonad [RawVertex]
+processRawVertex raw_vertex = do
+    steps <- getLatticeSteps
     vertex <- lift (resolveVertex raw_vertex)
     has_vertex <- latticeHasVertex vertex
     if has_vertex
@@ -439,8 +446,8 @@ processRawVertex steps raw_vertex = do
                stepped_vertex_ray_numbers
 -- @-node:gcross.20100308212437.1404:processRawVertex
 -- @+node:gcross.20100308212437.1468:processRawVertices
-processRawVertices :: [Step] -> [RawVertex] -> LatticeMonad [RawVertex]
-processRawVertices steps = fmap concat . mapM (processRawVertex steps)
+processRawVertices :: [RawVertex] -> LatticeMonad [RawVertex]
+processRawVertices = fmap concat . mapM processRawVertex
 -- @-node:gcross.20100308212437.1468:processRawVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
 -- @-node:gcross.20100302164430.1305:Functions
