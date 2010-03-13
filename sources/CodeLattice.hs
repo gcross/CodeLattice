@@ -297,24 +297,22 @@ pruneLattice lattice@(Lattice vertices edges _)
             }
 -- @-node:gcross.20100309160622.1351:pruneLattice
 -- @+node:gcross.20100310123433.1421:drawLattice
-drawLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> String
-drawLattice x_map y_map orientation_map lattice =
+drawLattice :: Lattice -> String
+drawLattice lattice
+  | (Set.null . latticeVertices) lattice = ""
+  | otherwise =
     let coordinate_map = 
             Map.fromList
             .
-            map (
-                \(Vertex (Location x_key y_key) orientation_key) ->
-                    let x = fromJust (IntMap.lookup x_key x_map)
-                        y = fromJust (IntMap.lookup y_key y_map)
-                        orientation = fromJust (IntMap.lookup orientation_key orientation_map)
-                    in ((x,y),orientation)
-            )
+            map (((locationX &&& locationY) . vertexLocation) &&& vertexOrientation)
             .
             Set.elems
             .
             latticeVertices
             $
             lattice
+        (min_X,max_X) = (minimum &&& maximum) . map fst . Map.keys $ coordinate_map
+        (min_Y,max_Y) = (minimum &&& maximum) . map snd . Map.keys $ coordinate_map
     in  unlines
         .
         transpose
@@ -326,9 +324,9 @@ drawLattice x_map y_map orientation_map lattice =
         removeBlankLines
         $
         [[maybe ' ' (chr . (+ ord '0')) (Map.lookup (x,y) coordinate_map)
-         | x <- [0..(IntMap.size x_map)-1]
+         | x <- [min_X..max_X]
          ]
-        | y <- [(IntMap.size y_map)-1,(IntMap.size y_map)-2..0]
+        | y <- [max_Y,max_Y-1..min_Y]
         ]
   where
     removeBlankLines = filter (any (/= ' '))
@@ -339,27 +337,19 @@ getLatticeSteps = fmap latticeSteps get
 -- @-node:gcross.20100312175547.1381:getLatticeSteps
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
-getAndDrawLattice = do
-    [x_map,y_map,orientation_map] <- lift getMatchMaps
-    lattice <- get
-    return $
-        drawLattice
-            x_map
-            y_map
-            orientation_map
-            lattice
+getAndDrawLattice = 
+    lift getMatchMaps
+    >>=
+    \[x_map,y_map,orientation_map] ->
+        fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) get
 -- @-node:gcross.20100310140947.1418:getAndDrawLattice
 -- @+node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 getAndDrawPrunedLattice :: LatticeMonad String
-getAndDrawPrunedLattice = do
-    [x_map,y_map,orientation_map] <- lift getMatchMaps
-    lattice <- get
-    return $
-        drawLattice
-            x_map
-            y_map
-            orientation_map
-            (pruneLattice lattice)
+getAndDrawPrunedLattice = 
+    lift getMatchMaps
+    >>=
+    \[x_map,y_map,orientation_map] ->
+        fmap (drawLattice . pruneLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) get
 -- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 -- @+node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 getNumberOfEdgesInLattice, getNumberOfVerticesInLattice :: LatticeMonad Int
@@ -400,6 +390,30 @@ iterateLatticeRepeatedly raw_vertices =
           \(lattice,next_raw_vertices) ->
             go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
 -- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
+-- @+node:gcross.20100312175547.1828:mapKeysToPositionInLattice
+mapKeysToPositionsInLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> Lattice
+mapKeysToPositionsInLattice x_map y_map orientation_map lattice@(Lattice old_vertices old_edges _) =
+    lattice
+    {   latticeVertices = Set.map mapKeysToPositionsInVertex old_vertices
+    ,   latticeEdges = map mapKeysToPositionsInEdge old_edges
+    }
+  where
+    mapKeysToPositionsInVertex (Vertex (Location x_key y_key) orientation_key) =
+        Vertex (Location x y) orientation
+      where
+        x = fromJust (IntMap.lookup x_key x_map)
+        y = fromJust (IntMap.lookup y_key y_map)
+        orientation = fromJust (IntMap.lookup orientation_key orientation_map)
+
+    mapKeysToPositionsInEdge (Edge edgeside1 edgeside2) =
+        Edge (mapKeysToPositionsInEdgeSide edgeside1)
+             (mapKeysToPositionsInEdgeSide edgeside2)
+
+    mapKeysToPositionsInEdgeSide edgeside =
+        edgeside
+        {   edgeSideVertex = mapKeysToPositionsInVertex (edgeSideVertex edgeside)
+        }
+-- @-node:gcross.20100312175547.1828:mapKeysToPositionInLattice
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
