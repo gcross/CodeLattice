@@ -10,8 +10,12 @@ Library
     Build-Depends:  Blueprint >= 0.2,
                     base == 4.1.*,
                     containers == 0.2.*,
-                    EpsilonMatcher == 0.1,
+                    random == 1.0.*,
                     mtl == 1.1.*,
-                    bimap == 0.2.*
+                    EpsilonMatcher == 0.1,
+                    bimap == 0.2.*,
+                    uuid == 1.*,
+                    Takusen == 0.8.*,
+                    ConfigFile == 1.0.*
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
 -- @-leo
