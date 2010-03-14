@@ -5,6 +5,8 @@
 -- @<< Language extensions >>
 -- @+node:gcross.20100312175547.1842:<< Language extensions >>
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- @-node:gcross.20100312175547.1842:<< Language extensions >>
 -- @nl
 
@@ -129,6 +131,11 @@ insertRows name statement type_ids rows =
             " rows."
 -- @-node:gcross.20100312175547.1833:insertRows
 -- @+node:gcross.20100312175547.1831:storeLattice
+storeLattice ::
+    String ->
+    Int ->
+    Lattice ->
+    (forall mark . DBM mark Session String)
 storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
     generateRandomUUIDAsString
     >>=
@@ -149,15 +156,6 @@ storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
             ,bindP $ (length edges)
             ]
 
-        let vertexToRow :: (DBBind String s stmt bo, DBBind Int s stmt bo) =>
-                           (Int,Vertex) -> [BindA s stmt bo]
-            vertexToRow (vertex_number,Vertex (Location x y) orientation) =
-                [bindP $ lattice_id
-                ,bindP $ vertex_number
-                ,bindP $ x
-                ,bindP $ y
-                ,bindP $ orientation
-                ]
         insertRows
             "insert_vertices"
             "insert into vertices (lattice_id, vertex_number, x, y, orientation) values ((?::uuid),?,?,?,?)"
@@ -167,38 +165,35 @@ storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ]
-            .
-            map vertexToRow
-            .
-            Bimap.toList
-            $
-            vertices
-
-
-        let edgeToRow :: (DBBind String s stmt bo, DBBind Int s stmt bo) =>
-                         Edge -> [BindA s stmt bo]
-            edgeToRow (Edge (EdgeSide vertex_number_1 ray_1) (EdgeSide vertex_number_2 ray_2)) =
-                [bindP $ lattice_id
-                ,bindP $ vertex_number_1
-                ,bindP $ ray_1
-                ,bindP $ vertex_number_2
-                ,bindP $ ray_2
+            [   [bindP $ lattice_id
+                ,bindP $ vertex_number
+                ,bindP $ x
+                ,bindP $ y
+                ,bindP $ orientation
                 ]
+            |   (vertex_number,Vertex (Location x y) orientation) <-
+                    Bimap.toList vertices
+            ]
+
         insertRows
             "insert_edges"
-            "insert into edges (lattice_id, vertex_number_1, ray_1, vertex_number_2, ray_2) values ((?::uuid),?,?,?,?)"
+            "insert into edges (lattice_id, vertex_number_1, ray_number_1, vertex_number_2, ray_number_2) values ((?::uuid),?,?,?,?)"
             [pgTypeOid (undefined :: String)
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ]
-            .
-            map edgeToRow
-            $
-            edges
+            [   [bindP $ lattice_id
+                ,bindP $ vertex_number_1
+                ,bindP $ ray_1
+                ,bindP $ vertex_number_2
+                ,bindP $ ray_2
+                ]
+            |   Edge (EdgeSide vertex_number_1 ray_1) (EdgeSide vertex_number_2 ray_2)
+                    <- edges
+            ]
         return lattice_id
-
 -- @-node:gcross.20100312175547.1831:storeLattice
 -- @+node:gcross.20100312220352.1837:fetchLattice
 fetchLattice lattice_id =

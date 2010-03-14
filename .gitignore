@@ -2,3 +2,7 @@ build
 test
 Setup
 *.cfg
+*.hi
+*.o
+scripts/draw-lattice
+scripts/generate-lattices

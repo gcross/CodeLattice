@@ -2,6 +2,12 @@
 -- @+node:gcross.20100302164430.1233:@thin CodeLattice.hs
 -- @@language Haskell
 
+-- @<< Language extensions >>
+-- @+node:gcross.20100312220352.1855:<< Language extensions >>
+{-# LANGUAGE DeriveDataTypeable #-}
+-- @-node:gcross.20100312220352.1855:<< Language extensions >>
+-- @nl
+
 module CodeLattice where
 
 -- @<< Import needed modules >>
@@ -25,6 +31,7 @@ import qualified Data.Map as Map
 import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Typeable
 
 import Debug.Trace
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
@@ -53,7 +60,8 @@ data Edge = Edge
 data Lattice = Lattice
     {   latticeVertices :: Bimap Int Vertex
     ,   latticeEdges :: [Edge]
-    }
+    } deriving (Typeable)
+
 -- @-node:gcross.20100308212437.1389:Lattice
 -- @+node:gcross.20100302164430.1240:EdgeSide
 data EdgeSide = EdgeSide

@@ -22,11 +22,16 @@
 <v t="gcross.20100302201317.1269"><vh>@path tests</vh>
 <v t="gcross.20100302201317.1270"><vh>@thin test.hs</vh></v>
 </v>
+<v t="gcross.20100312220352.1840"><vh>@path scripts</vh>
+<v t="gcross.20100312220352.1841"><vh>@thin generate-lattices.hs</vh></v>
+<v t="gcross.20100312220352.1851"><vh>@thin draw-lattice.hs</vh></v>
+</v>
 </vnodes>
 <tnodes>
 <t tx="gcross.20100302164430.1231"></t>
 <t tx="gcross.20100302164430.1232" str_leo_pos="4"></t>
 <t tx="gcross.20100302201317.1269"></t>
 <t tx="gcross.20100308112554.1291"></t>
+<t tx="gcross.20100312220352.1840"></t>
 </tnodes>
 </leo_file>
