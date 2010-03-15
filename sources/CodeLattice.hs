@@ -282,7 +282,6 @@ growLatticeToBounds bounds = uncurry go . partitionRawVertices
         >>=
         \(new_outside_vertices,new_next_vertices) ->
             go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
--- @nonl
 -- @-node:gcross.20100309124842.1403:growLatticeToBounds
 -- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 growLatticeToBoundsFromOrigin :: Bounds -> LatticeMonad [RawVertex]
@@ -404,16 +403,18 @@ iterateLattice starting_raw_vertices = do
     steps <- getLatticeSteps
     starting_number_of_vertices <- getNumberOfVerticesInLattice
     starting_number_of_edges <- getNumberOfEdgesInLattice
-    let go raw_vertices = do
-            next_raw_vertices <- processRawVertices raw_vertices
+    let go bounds raw_vertices = do
+            next_raw_vertices <- growLatticeToBounds bounds raw_vertices
             pruned_lattice <- fmap pruneLattice getLattice
             case ((Bimap.size . latticeVertices) pruned_lattice > starting_number_of_vertices
                  ,(length . latticeEdges) pruned_lattice > starting_number_of_edges
                  ) of
                 (_,True) -> return (pruned_lattice,next_raw_vertices)
                 (True,False) -> error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
-                (False,False) -> go next_raw_vertices
-    go starting_raw_vertices
+                (False,False) -> go (expandBounds bounds) next_raw_vertices
+    go (Bounds (-1) (-1) 1 1) starting_raw_vertices
+  where
+    expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
 -- @-node:gcross.20100312133145.1378:iterateLattice
 -- @+node:gcross.20100312133145.1380:iterateLatticeRepeatedly
 iterateLatticeRepeatedly :: [RawVertex] -> Int -> LatticeMonad ([Lattice],[RawVertex])
