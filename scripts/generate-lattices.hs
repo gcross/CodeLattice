@@ -26,27 +26,34 @@ import CodeLattice.Tilings
 -- @+node:gcross.20100312220352.1842:main
 main =
     let lattices =
-            fst
-            .
-            fst
-            .
-            fst
-            .
-            runLatticeMonadForTiling "quadrille" $
-                iterateLatticeRepeatedly [originRawVertex] 20
+            concat
+            [   let (((key_space_lattices,_),_),[x_map,y_map,o_map]) =
+                        runLatticeMonadForTiling tiling_name $
+                            iterateLatticeRepeatedly [originRawVertex] 20
+                    position_space_lattices =
+                        map (mapKeysToPositionsInLattice x_map y_map o_map)
+                            key_space_lattices
+                in zip3 (repeat tiling_name) [1..] position_space_lattices
+            | tiling_name <- map tilingName tilings
+            ]
     in  makeConnection "builder"
         >>=
         \connection ->
             withSession connection $
                 withTransaction ReadUncommitted $
-                    forM_ (zip [1..] lattices) $ 
-                        \(growth_iteration_number,lattice) ->
+                    forM_ lattices $ 
+                        \(tiling_name,growth_iteration_number,lattice) ->
                             (liftIO $ do
-                                putStrLn $ "Storing iteration " ++ show growth_iteration_number ++ "..."
+                                putStrLn $
+                                    "Storing tiling "
+                                    ++ show tiling_name ++
+                                    ", growth iteration #"
+                                    ++ show growth_iteration_number ++
+                                    "..."
                                 putStrLn . drawLattice $ lattice
                             )
                             >>
-                            storeLattice "quadrille" growth_iteration_number lattice
+                            storeLattice tiling_name growth_iteration_number lattice
                             >>=
                             fetchLattice
                             >>=
