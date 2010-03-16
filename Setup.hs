@@ -64,12 +64,6 @@ gcc_flags =
     case flag_mode of
         Debug -> ["-g"]
         Optimized -> ["-O3","-ffast-math","-funroll-loops"]
-
-gfortran_flags =
-    ["-cpp","-fimplicit-none"]++gcc_flags++
-    case flag_mode of
-        Debug -> ["-fbounds-check"]
-        Optimized -> []
 -- @-node:gcross.20100315191926.2401:Flags
 -- @-node:gcross.20100315191926.2399:Values
 -- @+node:gcross.20100315191926.2402:main
