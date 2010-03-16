@@ -12,6 +12,7 @@ module Main where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100315191926.3209:<< Import needed modules >>
+import Control.Exception
 import Control.Monad
 
 import Data.Array.Storable
@@ -61,20 +62,18 @@ main = do
         number_of_operators = scanNumberOfOperators config
     putStrLn $ show number_of_qubits ++ " qubits"
     putStrLn $ show number_of_operators ++ " operators"
-    values <- newLabelingArray config
     let total_number_of_labelings = computeNumberOfLabelings config
     current_number_ref <- newIORef (1 :: Integer)
-    scanOverLabelings config $ \updates -> do
+    scanOverLabelings config $ \values -> do
         current_number <- readIORef current_number_ref
         putStr $ printf "[%i/%i]... " current_number total_number_of_labelings
         writeIORef current_number_ref (current_number+1)
         hFlush stdout
-        applyUpdates values updates
-        best_distance <- solveForLabeling config values
+        best_distance <- evaluate (solveForLabeling config values)
         if best_distance > 2
             then do
                 putStrLn "YEP!"
-                getElems values >>= putStr . show
+                putStr . show $ values
                 putStr ": "
                 putStrLn . show $ best_distance
             else putStrLn "nope"
