@@ -19,12 +19,15 @@ module CodeLattice.Scanning where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100314233604.1667:<< Import needed modules >>
+import Control.Arrow
 import Control.Monad
 
 import Data.Array
 import Data.Array.MArray
 import Data.Array.Storable
 import qualified Data.Bimap as Bimap
+import qualified Data.IntMap as IntMap
+import Data.Maybe
 import Data.NDArray hiding ((!))
 import Data.NDArray.Classes
 import Data.Vec ((:.)(..))
@@ -84,10 +87,14 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
     }
   where
     number_of_vertices = Bimap.size vertices
-    vertex_orientation_map =
-        listArray (0,number_of_vertices-1)
+    vertex_map =
+        IntMap.fromAscList
         .
-        map (vertexOrientation . snd)
+        map (\(qubit_number,(vertex_number,vertex)) ->
+                (vertex_number,(qubit_number,vertexOrientation vertex))
+            )
+        .
+        zip [0..]
         .
         Bimap.toAscList
         $
@@ -102,11 +109,15 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
         .
         map (\(Edge (EdgeSide vertex_number_1 ray_number_1)
                     (EdgeSide vertex_number_2 ray_number_2)
-              ) -> [vertex_number_1
-                   ,ray_number_1 * number_of_orientations + (vertex_orientation_map ! vertex_number_1)
-                   ,vertex_number_2
-                   ,ray_number_2 * number_of_orientations + (vertex_orientation_map ! vertex_number_2)
-                   ]
+              ) -> let (qubit_number_1, orientation_number_1) =
+                           fromJust $ IntMap.lookup vertex_number_1 vertex_map
+                       (qubit_number_2, orientation_number_2) =
+                           fromJust $ IntMap.lookup vertex_number_2 vertex_map
+                   in  [qubit_number_1
+                       ,ray_number_1 * number_of_orientations + orientation_number_1
+                       ,qubit_number_2
+                       ,ray_number_2 * number_of_orientations + orientation_number_2
+                       ]
         )
         $
         edges
