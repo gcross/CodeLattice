@@ -12,10 +12,15 @@ Library
                     containers == 0.2.*,
                     random == 1.0.*,
                     mtl == 1.1.*,
+                    array == 0.2.*,
                     EpsilonMatcher == 0.1,
                     bimap == 0.2.*,
                     uuid == 1.*,
                     Takusen == 0.8.*,
-                    ConfigFile == 1.0.*
+                    ConfigFile == 1.0.*,
+                    Vec == 0.9.*,
+                    NDArray == 0.1
+
+
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
 -- @-leo

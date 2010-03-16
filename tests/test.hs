@@ -21,6 +21,7 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+import Data.IORef
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -37,6 +38,7 @@ import Test.HUnit
 import Test.QuickCheck
 
 import CodeLattice
+import CodeLattice.Scanning
 import CodeLattice.Tilings
 -- @-node:gcross.20091217190104.1412:<< Import needed modules >>
 -- @nl
@@ -388,6 +390,81 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100309124842.1394:processRawVertex
+        -- @+node:gcross.20100315120315.1427:runThunkOverUpdates
+        ,testGroup "runThunkOverUpdates" $
+            let runWith input = do
+                    results_ref <- newIORef []
+                    runThunkOverUpdates (modifyIORef results_ref . (:)) input
+                    fmap reverse (readIORef results_ref)
+            in
+                -- @        @+others
+                -- @+node:gcross.20100315120315.1428:[[]]
+                [testCase "[[]]" $
+                    runWith ([] :: [[()]])
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[]]
+                -- @-node:gcross.20100315120315.1428:[[]]
+                -- @+node:gcross.20100315120315.1430:[[()]]
+                ,testCase "[[()]]" $
+                    runWith [[()]]
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(0,())]]
+                -- @-node:gcross.20100315120315.1430:[[()]]
+                -- @+node:gcross.20100315120315.1434:[[(),()]]
+                ,testCase "[[(),()]]" $
+                    runWith [[(),()]]
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(0,())],[(0,())]]
+                -- @-node:gcross.20100315120315.1434:[[(),()]]
+                -- @+node:gcross.20100315120315.1436:[[()],[()]]
+                ,testCase "[[()],[()]]" $
+                    runWith [[()],[()]]
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(1,()),(0,())]]
+                -- @-node:gcross.20100315120315.1436:[[()],[()]]
+                -- @+node:gcross.20100315120315.1440:[[(),()],[(),()]]
+                ,testCase "[[(),()],[(),()]]" $
+                    runWith [[(),()],[(),()]]
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(1,()),(0,())],[(1,())],[(1,()),(0,())],[(1,())]]
+                -- @-node:gcross.20100315120315.1440:[[(),()],[(),()]]
+                -- @+node:gcross.20100315120315.1442:[[1,2],[3,4]]
+                ,testCase "[[1,2],[3,4]]" $
+                    runWith [[1,2],[3,4]]
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(1,3),(0,1)],[(1,4)],[(1,3),(0,2)],[(1,4)]]
+                -- @-node:gcross.20100315120315.1442:[[1,2],[3,4]]
+                -- @+node:gcross.20100315120315.1444:replicate 3 [1,2]
+                ,testCase "replicate 3 [1,2]" $
+                    runWith (replicate 3 [1,2])
+                    >>=
+                    assertEqual
+                        "Was the correct list generated?"
+                        [[(2,1),(1,1),(0,1)]
+                        ,[(2,2)]
+                        ,[(2,1),(1,2)]
+                        ,[(2,2)]
+                        ,[(2,1),(1,1),(0,2)]
+                        ,[(2,2)]
+                        ,[(2,1),(1,2)]
+                        ,[(2,2)]
+                        ]
+                -- @-node:gcross.20100315120315.1444:replicate 3 [1,2]
+                -- @-others
+                ]
+        -- @-node:gcross.20100315120315.1427:runThunkOverUpdates
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
