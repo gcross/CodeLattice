@@ -54,8 +54,8 @@ data ScanConfiguration = ScanConfiguration
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
--- @+node:gcross.20100315191926.2799:solveForLabeling
-foreign import ccall solve :: CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO CInt
+-- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
+foreign import ccall solve :: CInt -> CInt -> Ptr CInt -> Ptr CInt -> Bool -> IO CInt
 
 solveForLabeling :: ScanConfiguration -> [CInt] -> CInt
 solveForLabeling config values =
@@ -67,7 +67,19 @@ solveForLabeling config values =
             (scanNumberOfOperators config)
             p_operator_table
             p_values
--- @-node:gcross.20100315191926.2799:solveForLabeling
+            False
+
+solveNoisilyForLabeling :: ScanConfiguration -> [CInt] -> IO CInt
+solveNoisilyForLabeling config values =
+    withNDArray (scanOperatorTable config) $ \p_operator_table ->
+    withArray values $ \p_values ->
+        solve
+            (scanNumberOfQubits config)
+            (scanNumberOfOperators config)
+            p_operator_table
+            p_values
+            True
+-- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration

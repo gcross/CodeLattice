@@ -25,7 +25,8 @@ typedef qec<operator_t> qec_t;
 //@+node:gcross.20100315191926.2794:solve
 extern "C" int solve(
     int number_of_qubits, int number_of_operators,
-    int* restrict operator_table, int* restrict values
+    int* restrict operator_table, int* restrict values,
+    bool noisy
 ) {
     operator_vector_t operators;
     operators.resize(number_of_operators);
@@ -36,13 +37,29 @@ extern "C" int solve(
         operator_table += 4;
     }
     qec_t code(operators);
-    code.optimize_logical_qubits(false);
+    code.optimize_logical_qubits(noisy);
+    if (noisy) {
+        cout << code << endl;
+        cout << endl;
+        cout << "Distances: ";
+        BOOST_FOREACH(const int& distance, code.logical_qubit_error_distances) {
+            cout << distance << " ";
+        }
+        cout << endl;
+    }
     if(code.logical_qubits.size() == 0)
         return 0;
     else
         return code.logical_qubit_error_distances.back();
 }
 //@-node:gcross.20100315191926.2794:solve
+//@+node:gcross.20100316133702.1646:<<
+std::ostream& operator<<(std::ostream& out, const dynamic_quantum_operator& op) {
+    for(int i = 0; i < op.length(); i++)
+        out.put(pauli_char_from_op(op,i));
+	return out;
+}
+//@-node:gcross.20100316133702.1646:<<
 //@-node:gcross.20100315191926.1439:Functions
 //@-others
 //@-node:gcross.20100315191926.1436:@thin Scanning/C.cc

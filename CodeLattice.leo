@@ -28,6 +28,7 @@
 <v t="gcross.20100312220352.1841"><vh>@thin generate-lattices.hs</vh></v>
 <v t="gcross.20100312220352.1851"><vh>@thin draw-lattice.hs</vh></v>
 <v t="gcross.20100315191926.3207"><vh>@thin scan-lattice.hs</vh></v>
+<v t="gcross.20100316133702.1488"><vh>@thin solve-lattice-for-labeling.hs</vh></v>
 </v>
 </vnodes>
 <tnodes>
