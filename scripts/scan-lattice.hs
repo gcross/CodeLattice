@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100315191926.3208:<< Language extensions >>
+{-# LANGUAGE ScopedTypeVariables #-}
 -- @-node:gcross.20100315191926.3208:<< Language extensions >>
 -- @nl
 
@@ -14,6 +15,7 @@ module Main where
 import Control.Monad
 
 import Data.Array.Storable
+import Data.IORef
 import Data.Maybe
 
 import Database.Enumerator
@@ -21,6 +23,8 @@ import Database.PostgreSQL.Enumerator
 
 import System.Environment
 import System.IO
+
+import Text.Printf
 
 import CodeLattice
 import CodeLattice.Database
@@ -59,13 +63,25 @@ main = do
     putStrLn $ show number_of_operators ++ " operators"
     initializeScanner config
     values <- newArray_ (0,number_of_orientations*number_of_rays-1)
+    let total_number_of_combinations :: Integer =
+            (product  $ replicate number_of_orientations 2)
+            *
+            (product $ replicate (number_of_orientations*(number_of_rays-2)) 3)
+    current_number_ref <- newIORef (1 :: Integer)
     runThunkOverLabelingUpdates number_of_orientations number_of_rays $ \updates -> do
-        applyUpdates values updates
-        getElems values >>= putStr . show
-        putStr ": "
+        current_number <- readIORef current_number_ref
+        putStr $ printf "[%i/%i]... " current_number total_number_of_combinations
+        writeIORef current_number_ref (current_number+1)
         hFlush stdout
-        updateOperatorsAndSolve config values >>= putStrLn . show
-        return ()
+        applyUpdates values updates
+        best_distance <- updateOperatorsAndSolve config values
+        if best_distance > 2
+            then do
+                putStrLn "YEP!"
+                getElems values >>= putStr . show
+                putStr ": "
+                putStrLn . show $ best_distance
+            else putStrLn "nope"
 -- @-node:gcross.20100315191926.3210:main
 -- @-others
 -- @-node:gcross.20100315191926.3207:@thin scan-lattice.hs
