@@ -5,7 +5,14 @@
 -- @<< Language extensions >>
 -- @+node:gcross.20100315120315.1445:<< Language extensions >>
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 -- @-node:gcross.20100315120315.1445:<< Language extensions >>
+-- @nl
+
+-- @<< Link dependencies >>
+-- @+node:gcross.20100315191926.1987:<< Link dependencies >>
+{-# BLUEPRINT-LINK-DEPENDENCY CodeLattice.Scanning.C o #-}
+-- @-node:gcross.20100315191926.1987:<< Link dependencies >>
 -- @nl
 
 module CodeLattice.Scanning where
@@ -15,10 +22,16 @@ module CodeLattice.Scanning where
 import Control.Monad
 
 import Data.Array
+import Data.Array.MArray
+import Data.Array.Storable
 import qualified Data.Bimap as Bimap
 import Data.NDArray hiding ((!))
+import Data.NDArray.Classes
 import Data.Vec ((:.)(..))
 import qualified Data.Vec as V
+
+import Foreign.C
+import Foreign.Ptr
 
 import CodeLattice
 -- @-node:gcross.20100314233604.1667:<< Import needed modules >>
@@ -32,10 +45,32 @@ data ScanConfiguration = ScanConfiguration
     ,   scanNumberOfOperators :: Int
     ,   scanNumberOfOrientations :: Int
     ,   scanNumberOfRays :: Int
-    ,   scanOperatorTable :: Array2D Int
+    ,   scanOperatorTable :: Array2D CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
 -- @-node:gcross.20100314233604.1668:Types
+-- @+node:gcross.20100315191926.2795:C Functions
+-- @+node:gcross.20100315191926.2798:initializeScanner
+foreign import ccall initialize_scanner :: CInt -> CInt -> IO ()
+
+initializeScanner :: ScanConfiguration -> IO ()
+initializeScanner config =
+    initialize_scanner
+        (fromIntegral . scanNumberOfQubits $ config)
+        (fromIntegral . scanNumberOfOperators $ config)
+-- @-node:gcross.20100315191926.2798:initializeScanner
+-- @+node:gcross.20100315191926.2799:updateOperatorsAndSolve
+foreign import ccall update_operators_and_solve :: Ptr CInt -> Ptr CInt -> IO CInt
+
+updateOperatorsAndSolve :: ScanConfiguration -> StorableArray Int CInt -> IO CInt
+updateOperatorsAndSolve config values =
+    withNDArray (scanOperatorTable config) $ \p_operator_table ->
+    withStorableArray values $ \p_values ->
+        update_operators_and_solve
+            p_operator_table
+            p_values
+-- @-node:gcross.20100315191926.2799:updateOperatorsAndSolve
+-- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
 latticeToScanConfiguration :: Int -> Int -> Lattice -> ScanConfiguration
@@ -50,7 +85,7 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
   where
     number_of_vertices = Bimap.size vertices
     vertex_orientation_map =
-        listArray (0,number_of_vertices)
+        listArray (0,number_of_vertices-1)
         .
         map (vertexOrientation . snd)
         .
@@ -59,7 +94,9 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
         vertices
     number_of_edges = length edges
     operator_table =
-        fromListWithShape (number_of_edges :. 2 :. ())
+        fromListWithShape (number_of_edges :. 4 :. ())
+        .
+        map fromIntegral
         .
         concat
         .
@@ -75,13 +112,15 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
         edges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
 -- @+node:gcross.20100315120315.1425:runThunkOverLabelingUpdates
-runThunkOverLabelingUpdates :: Monad m => ([(Int,Int)] -> m ()) -> Int -> Int -> m ()
+runThunkOverLabelingUpdates :: Monad m => Int -> Int -> ([(Int,CInt)] -> m ()) -> m ()
 {-# INLINE runThunkOverLabelingUpdates #-}
-runThunkOverLabelingUpdates thunk number_of_orientations number_of_rays =
+runThunkOverLabelingUpdates number_of_orientations number_of_rays thunk =
     runThunkOverUpdates thunk $
-        replicate number_of_orientations [1,3]
+        replicate number_of_orientations [1]
         ++
-        replicate (number_of_orientations*(number_of_rays-1)) [1,2,3]
+        replicate number_of_orientations [1,2]
+        ++
+        replicate (number_of_orientations*(number_of_rays-2)) [1,2,3]
 -- @-node:gcross.20100315120315.1425:runThunkOverLabelingUpdates
 -- @+node:gcross.20100315120315.1426:runThunkOverUpdates
 runThunkOverUpdates :: Monad m => ([(Int,a)] -> m ()) -> [[a]] -> m ()
@@ -97,6 +136,10 @@ runThunkOverUpdates thunk lists =
       where
         goNext = go (index+1) rest
 -- @-node:gcross.20100315120315.1426:runThunkOverUpdates
+-- @+node:gcross.20100315191926.1435:applyUpdates
+applyUpdates :: StorableArray Int CInt -> [(Int,CInt)] -> IO ()
+applyUpdates = mapM_ . uncurry . writeArray
+-- @-node:gcross.20100315191926.1435:applyUpdates
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs

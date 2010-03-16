@@ -19,7 +19,10 @@ Library
                     Takusen == 0.8.*,
                     ConfigFile == 1.0.*,
                     Vec == 0.9.*,
-                    NDArray == 0.1
+                    NDArray == 0.1,
+                    filepath == 1.1.*
+
+    Extra-Libraries: stdc++
 
 
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal

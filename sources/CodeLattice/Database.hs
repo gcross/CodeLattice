@@ -44,6 +44,12 @@ get1 x _ = return $ Left $ Just $! x
 
 get2 :: (Monad m) => a -> b -> IterAct m (Maybe (a,b))
 get2 x y _ = return $ Left $ Just $! (x,y)
+
+get3 :: (Monad m) => a -> b -> c -> IterAct m (Maybe (a,b,c))
+get3 x y z _ = return $ Left $ Just $! (x,y,z)
+
+get4 :: (Monad m) => a -> b -> c -> d -> IterAct m (Maybe (a,b,c,d))
+get4 x y z w _ = return $ Left $ Just $! (x,y,z,w)
 -- @-node:gcross.20100312175547.1824:getX
 -- @+node:gcross.20100312175547.1825:fetchX
 fetch1 :: (Monad m) => a -> IterAct m [a]

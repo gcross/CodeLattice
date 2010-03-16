@@ -11,12 +11,13 @@
 <vnodes>
 <v t="gcross.20100302164430.1232" str_leo_pos="4"><vh>@chapters</vh></v>
 <v t="gcross.20100302201317.1387"><vh>@thin CodeLattice.cabal</vh></v>
-<v t="gcross.20100302201317.1268"><vh>@thin Setup.hs</vh></v>
+<v t="gcross.20100315191926.2391"><vh>@thin Setup.hs</vh></v>
 <v t="gcross.20100302164430.1231"><vh>@path sources</vh>
 <v t="gcross.20100302164430.1233"><vh>@thin CodeLattice.hs</vh></v>
 <v t="gcross.20100308112554.1291"><vh>@path CodeLattice</vh>
 <v t="gcross.20100312175547.1384"><vh>@thin Database.hs</vh></v>
 <v t="gcross.20100314233604.1666"><vh>@thin Scanning.hs</vh></v>
+<v t="gcross.20100315191926.1436"><vh>@thin Scanning/C.cc</vh></v>
 <v t="gcross.20100308112554.1292"><vh>@thin Tilings.hs</vh></v>
 </v>
 </v>
@@ -26,6 +27,7 @@
 <v t="gcross.20100312220352.1840"><vh>@path scripts</vh>
 <v t="gcross.20100312220352.1841"><vh>@thin generate-lattices.hs</vh></v>
 <v t="gcross.20100312220352.1851"><vh>@thin draw-lattice.hs</vh></v>
+<v t="gcross.20100315191926.3207"><vh>@thin scan-lattice.hs</vh></v>
 </v>
 </vnodes>
 <tnodes>
