@@ -12,6 +12,7 @@ module Main where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100312220352.1853:<< Import needed modules >>
 import Control.Monad
+import Control.Monad.Trans
 
 import Database.Enumerator
 import Database.PostgreSQL.Enumerator
@@ -39,7 +40,12 @@ main =
                     get1
                     Nothing
                 >>=
-                maybe (error "Can't find this lattice!") fetchLattice
+                maybe (error "Can't find this lattice!") (
+                    \lattice_id ->
+                        liftIO (putStrLn $ "Lattice ID:" ++ lattice_id)
+                        >>
+                        fetchLattice lattice_id
+                )
         )
     )
     >>=
