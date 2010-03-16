@@ -43,7 +43,10 @@ extern "C" int update_operators_and_solve(int* restrict operator_table, int* res
     }
     qec_t code(operators);
     code.optimize_logical_qubits(false);
-    return code.logical_qubit_error_distances.back();
+    if(code.logical_qubits.size() == 0)
+        return 0;
+    else
+        return code.logical_qubit_error_distances.back();
 }
 //@-node:gcross.20100315191926.2794:update_operators_and_solve
 //@-node:gcross.20100315191926.1439:Functions
