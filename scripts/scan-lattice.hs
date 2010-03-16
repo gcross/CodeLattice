@@ -61,20 +61,16 @@ main = do
         number_of_operators = scanNumberOfOperators config
     putStrLn $ show number_of_qubits ++ " qubits"
     putStrLn $ show number_of_operators ++ " operators"
-    initializeScanner config
-    values <- newArray_ (0,number_of_orientations*number_of_rays-1)
-    let total_number_of_combinations :: Integer =
-            (product  $ replicate number_of_orientations 2)
-            *
-            (product $ replicate (number_of_orientations*(number_of_rays-2)) 3)
+    values <- newLabelingArray config
+    let total_number_of_labelings = computeNumberOfLabelings config
     current_number_ref <- newIORef (1 :: Integer)
-    runThunkOverLabelingUpdates number_of_orientations number_of_rays $ \updates -> do
+    scanOverLabelings config $ \updates -> do
         current_number <- readIORef current_number_ref
-        putStr $ printf "[%i/%i]... " current_number total_number_of_combinations
+        putStr $ printf "[%i/%i]... " current_number total_number_of_labelings
         writeIORef current_number_ref (current_number+1)
         hFlush stdout
         applyUpdates values updates
-        best_distance <- updateOperatorsAndSolve config values
+        best_distance <- solveForLabeling config values
         if best_distance > 2
             then do
                 putStrLn "YEP!"

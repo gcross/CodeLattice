@@ -27,6 +27,7 @@ import Data.Array.MArray
 import Data.Array.Storable
 import qualified Data.Bimap as Bimap
 import qualified Data.IntMap as IntMap
+import Data.List
 import Data.Maybe
 import Data.NDArray hiding ((!))
 import Data.NDArray.Classes
@@ -44,45 +45,38 @@ import CodeLattice
 -- @+node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100314233604.1669:ScanConfiguration
 data ScanConfiguration = ScanConfiguration
-    {   scanNumberOfQubits :: Int
-    ,   scanNumberOfOperators :: Int
-    ,   scanNumberOfOrientations :: Int
-    ,   scanNumberOfRays :: Int
+    {   scanNumberOfQubits :: CInt
+    ,   scanNumberOfOperators :: CInt
+    ,   scanNumberOfOrientations :: CInt
+    ,   scanNumberOfRays :: CInt
     ,   scanOperatorTable :: Array2D CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
--- @+node:gcross.20100315191926.2798:initializeScanner
-foreign import ccall initialize_scanner :: CInt -> CInt -> IO ()
+-- @+node:gcross.20100315191926.2799:solveForLabeling
+foreign import ccall solve :: CInt -> CInt -> Ptr CInt -> Ptr CInt -> IO CInt
 
-initializeScanner :: ScanConfiguration -> IO ()
-initializeScanner config =
-    initialize_scanner
-        (fromIntegral . scanNumberOfQubits $ config)
-        (fromIntegral . scanNumberOfOperators $ config)
--- @-node:gcross.20100315191926.2798:initializeScanner
--- @+node:gcross.20100315191926.2799:updateOperatorsAndSolve
-foreign import ccall update_operators_and_solve :: Ptr CInt -> Ptr CInt -> IO CInt
-
-updateOperatorsAndSolve :: ScanConfiguration -> StorableArray Int CInt -> IO CInt
-updateOperatorsAndSolve config values =
+solveForLabeling :: ScanConfiguration -> StorableArray Int CInt -> IO CInt
+solveForLabeling config values =
     withNDArray (scanOperatorTable config) $ \p_operator_table ->
     withStorableArray values $ \p_values ->
-        update_operators_and_solve
+        solve
+            (fromIntegral $ scanNumberOfQubits config)
+            (fromIntegral $ scanNumberOfOperators config)
             p_operator_table
             p_values
--- @-node:gcross.20100315191926.2799:updateOperatorsAndSolve
+-- @-node:gcross.20100315191926.2799:solveForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
 latticeToScanConfiguration :: Int -> Int -> Lattice -> ScanConfiguration
 latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertices edges) =
     ScanConfiguration
-    {   scanNumberOfQubits = number_of_vertices
-    ,   scanNumberOfOperators = number_of_edges
-    ,   scanNumberOfOrientations = number_of_orientations
-    ,   scanNumberOfRays = number_of_rays
+    {   scanNumberOfQubits = fromIntegral number_of_vertices
+    ,   scanNumberOfOperators = fromIntegral number_of_edges
+    ,   scanNumberOfOrientations = fromIntegral number_of_orientations
+    ,   scanNumberOfRays = fromIntegral number_of_rays
     ,   scanOperatorTable = operator_table
     }
   where
@@ -122,17 +116,23 @@ latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertic
         $
         edges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
--- @+node:gcross.20100315120315.1425:runThunkOverLabelingUpdates
-runThunkOverLabelingUpdates :: Monad m => Int -> Int -> ([(Int,CInt)] -> m ()) -> m ()
-{-# INLINE runThunkOverLabelingUpdates #-}
-runThunkOverLabelingUpdates number_of_orientations number_of_rays thunk =
-    runThunkOverUpdates thunk $
-        replicate number_of_orientations [1]
+-- @+node:gcross.20100315120315.1425:scanOverLabelings
+scanOverLabelings :: Monad m => ScanConfiguration -> ([(Int,CInt)] -> m ()) -> m ()
+{-# INLINE scanOverLabelings #-}
+scanOverLabelings
+    (ScanConfiguration
+        {   scanNumberOfOrientations = number_of_orientations
+        ,   scanNumberOfRays = number_of_rays
+        }
+    )
+    thunk
+    = runThunkOverUpdates thunk $
+        genericReplicate number_of_orientations [1]
         ++
-        replicate number_of_orientations [1,2]
+        genericReplicate number_of_orientations [1,2]
         ++
-        replicate (number_of_orientations*(number_of_rays-2)) [1,2,3]
--- @-node:gcross.20100315120315.1425:runThunkOverLabelingUpdates
+        genericReplicate (number_of_orientations*(number_of_rays-2)) [1,2,3]
+-- @-node:gcross.20100315120315.1425:scanOverLabelings
 -- @+node:gcross.20100315120315.1426:runThunkOverUpdates
 runThunkOverUpdates :: Monad m => ([(Int,a)] -> m ()) -> [[a]] -> m ()
 {-# INLINE runThunkOverUpdates #-}
@@ -151,6 +151,26 @@ runThunkOverUpdates thunk lists =
 applyUpdates :: StorableArray Int CInt -> [(Int,CInt)] -> IO ()
 applyUpdates = mapM_ . uncurry . writeArray
 -- @-node:gcross.20100315191926.1435:applyUpdates
+-- @+node:gcross.20100316133702.1464:newLabelingArray
+newLabelingArray :: ScanConfiguration -> IO (StorableArray Int CInt)
+newLabelingArray
+    (ScanConfiguration
+        {   scanNumberOfOrientations = number_of_orientations
+        ,   scanNumberOfRays = number_of_rays
+        }
+    ) = newArray_ (0,fromIntegral $ number_of_orientations*number_of_rays-1)
+-- @-node:gcross.20100316133702.1464:newLabelingArray
+-- @+node:gcross.20100316133702.1465:computeNumberOfLabelings
+computeNumberOfLabelings :: ScanConfiguration -> Integer
+computeNumberOfLabelings
+    (ScanConfiguration
+        {   scanNumberOfOrientations = number_of_orientations
+        ,   scanNumberOfRays = number_of_rays
+        }
+    ) = (product $ genericReplicate number_of_orientations 2)
+        *
+        (product $ genericReplicate (number_of_orientations*(number_of_rays-2)) 3)
+-- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs
