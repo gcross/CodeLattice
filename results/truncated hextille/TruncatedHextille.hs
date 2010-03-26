@@ -50,6 +50,46 @@ edges =
     ,Edge (EdgeSide 1 3 'Y') (EdgeSide 2 2 'Y')
     ,Edge (EdgeSide 2 2 'Y') (EdgeSide 3 1 'Y')
     ]
+-- @+at
+--      ++ -- diamond
+--      [Edge (EdgeSide 3 1 'X') (EdgeSide 4 0 'Z')
+--      ,Edge (EdgeSide 4 0 'Y') (EdgeSide 5 1 'Y')
+--      ,Edge (EdgeSide 5 6 'Y') (EdgeSide 4 7 'Y')
+--      ,Edge (EdgeSide 4 7 'X') (EdgeSide 3 6 'Y')
+--      ]
+-- @-at
+-- @@c
+-- @+at
+--      ++ -- star
+--      [Edge (EdgeSide 7 3 'Y') (EdgeSide 8 2 'Y')
+--      ,Edge (EdgeSide 8 2 'X') (EdgeSide 6 2 'X')
+--      ,Edge (EdgeSide 1 3 'X') (EdgeSide 0 2 'Y')
+--      ,Edge (EdgeSide 0 2 'X') (EdgeSide 2 2 'X')
+--      ,Edge (EdgeSide 7 4 'Y') (EdgeSide 8 5 'Y')
+--      ,Edge (EdgeSide 8 5 'Z') (EdgeSide 6 5 'Z')
+--      ,Edge (EdgeSide 2 5 'Z') (EdgeSide 0 5 'Z')
+--      ,Edge (EdgeSide 0 5 'X') (EdgeSide 1 4 'Z')
+--      ]
+-- @-at
+-- @@c
+-- @+at
+--      ++ -- half star 1
+--      [Edge (EdgeSide 1 3 'X') (EdgeSide 0 2 'Y')
+--      ,Edge (EdgeSide 0 2 'X') (EdgeSide 2 2 'X')
+--      ,Edge (EdgeSide 7 4 'Y') (EdgeSide 8 5 'Y')
+--      ,Edge (EdgeSide 8 5 'Z') (EdgeSide 6 5 'Z')
+--      ]
+-- @-at
+-- @@c
+-- @+at
+--      ++ -- half star 2
+--      [Edge (EdgeSide 7 3 'Y') (EdgeSide 8 2 'Y')
+--      ,Edge (EdgeSide 8 2 'X') (EdgeSide 6 2 'X')
+--      ,Edge (EdgeSide 2 5 'Z') (EdgeSide 0 5 'Z')
+--      ,Edge (EdgeSide 0 5 'X') (EdgeSide 1 4 'Z')
+--      ]
+-- @-at
+-- @@c
 -- @-node:gcross.20100316190653.1487:edges
 -- @-node:gcross.20100316190653.1486:Values
 -- @+node:gcross.20100316190653.1488:Functions
