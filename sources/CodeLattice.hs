@@ -63,6 +63,9 @@ data Lattice = Lattice
     } deriving (Typeable)
 
 -- @-node:gcross.20100308212437.1389:Lattice
+-- @+node:gcross.20100327142350.1553:PositionSpaceLattice
+newtype PositionSpaceLattice = PositionSpaceLattice { unwrapPositionSpaceLattice :: Lattice }
+-- @-node:gcross.20100327142350.1553:PositionSpaceLattice
 -- @+node:gcross.20100302164430.1240:EdgeSide
 data EdgeSide = EdgeSide
     {   edgeSideVertexNumber :: Int
@@ -334,8 +337,8 @@ pruneLattice lattice@(Lattice vertices edges)
             }
 -- @-node:gcross.20100309160622.1351:pruneLattice
 -- @+node:gcross.20100310123433.1421:drawLattice
-drawLattice :: Lattice -> String
-drawLattice lattice
+drawLattice :: PositionSpaceLattice -> String
+drawLattice (PositionSpaceLattice lattice)
   | (Bimap.null . latticeVertices) lattice = ""
   | otherwise =
     let coordinate_map = 
@@ -390,7 +393,7 @@ getAndDrawPrunedLattice =
     lift getMatchMaps
     >>=
     \[x_map,y_map,orientation_map] ->
-        fmap (drawLattice . pruneLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
+        fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map . pruneLattice) getLattice
 -- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 -- @+node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 getNumberOfEdgesInLattice, getNumberOfVerticesInLattice :: LatticeMonad Int
@@ -434,8 +437,10 @@ iterateLatticeRepeatedly raw_vertices =
             go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
 -- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
 -- @+node:gcross.20100312175547.1828:mapKeysToPositionInLattice
-mapKeysToPositionsInLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> Lattice
+mapKeysToPositionsInLattice :: MatchMap -> MatchMap -> MatchMap -> Lattice -> PositionSpaceLattice
 mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
+    PositionSpaceLattice
+    $
     lattice
     {   latticeVertices =
             Bimap.fromList
