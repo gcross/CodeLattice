@@ -8,7 +8,15 @@ module CodeLattice.Tilings where
 -- @+node:gcross.20100308112554.1293:<< Import needed modules >>
 import Data.Maybe
 
-import CodeLattice (Step(..),modulo360,runLatticeMonad)
+import CodeLattice
+            (Step(..)
+            ,modulo360
+            ,runLatticeMonad
+            ,growLatticeToBoundsFromOrigin
+            ,Bounds
+            ,PositionSpaceLattice
+            ,mapKeysToPositionsInLattice
+            )
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
 
@@ -190,6 +198,14 @@ makeTiling name polygons orientation_mode = tiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
+-- @+node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
+growPositionSpaceLatticeFromTilingToBounds :: Tiling -> Bounds -> PositionSpaceLattice
+growPositionSpaceLatticeFromTilingToBounds tiling bounds =
+    mapKeysToPositionsInLattice x_map y_map orientation_map lattice
+  where
+    ((_,lattice),[x_map,y_map,orientation_map]) =
+        runLatticeMonad (tilingSteps tiling) (growLatticeToBoundsFromOrigin bounds)
+-- @-node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

@@ -11,6 +11,7 @@
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20091217190104.1412:<< Import needed modules >>
+import Control.Applicative.Infix
 import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
@@ -74,7 +75,7 @@ grown_lattices =
     | tiling_name <- map tilingName tilings
     ]
 -- @-node:gcross.20100309124842.1411:grown_lattices
--- @+node:gcross.20100309160622.1352:lookupLattice
+-- @+node:gcross.20100309160622.1352:lookupGrownLattice
 lookupGrownLattice :: String -> Lattice
 lookupGrownLattice =
     snd
@@ -84,7 +85,7 @@ lookupGrownLattice =
     fromJust
     .
     flip Map.lookup grown_lattices
--- @-node:gcross.20100309160622.1352:lookupLattice
+-- @-node:gcross.20100309160622.1352:lookupGrownLattice
 -- @-node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100307122538.1301:Generators
 -- @+node:gcross.20100307133316.1308:Location
@@ -469,6 +470,35 @@ main = defaultMain
                 -- @-others
                 ]
         -- @-node:gcross.20100316133702.1476:runThunkOverChoices
+        -- @+node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
+        ,testGroup "periodizeLatticeGrownWithinRectangularBounds" $
+            let arbitraryNonemptyPeriodizedLattice :: Gen Lattice
+                arbitraryNonemptyPeriodizedLattice = do
+                    tiling <- elements tilings
+                    minX <- choose (-10,0)
+                    minY <- choose (-10,0)
+                    maxX <- choose (0,10)
+                    maxY <- choose (0,10)
+                    let lattice =
+                            unwrapPositionSpaceLattice
+                            .
+                            periodizeLatticeGrownWithinRectangularBounds
+                            $
+                            growPositionSpaceLatticeFromTilingToBounds
+                                tiling
+                                (Bounds minX minY maxX maxY)
+                    if isEmptyLattice lattice
+                        then arbitraryNonemptyPeriodizedLattice
+                        else return lattice
+            in
+                -- @        @+others
+                -- @+node:gcross.20100331110052.1850:Vertex with orientation 0 at origin
+                [testProperty "Either empty or has vertex with orientation 0 at origin" $
+                    fmap (Bimap.memberR (Vertex (Location 0 0) 0) . latticeVertices) arbitraryNonemptyPeriodizedLattice
+                -- @-node:gcross.20100331110052.1850:Vertex with orientation 0 at origin
+                -- @-others
+                ]
+        -- @-node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

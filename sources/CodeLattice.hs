@@ -12,6 +12,7 @@ module CodeLattice where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100302164430.1307:<< Import needed modules >>
+import Control.Applicative.Infix
 import Control.Arrow
 import Control.Monad
 import Control.Monad.State.Strict
@@ -218,10 +219,22 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
 -- @-node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100308212437.1395:Lattice
--- @+node:gcross.20100309124842.1330:emptyLatticeWithSteps
+-- @+node:gcross.20100309124842.1330:emptyLattice
 emptyLattice :: Lattice
 emptyLattice = Lattice Bimap.empty []
--- @-node:gcross.20100309124842.1330:emptyLatticeWithSteps
+-- @-node:gcross.20100309124842.1330:emptyLattice
+-- @+node:gcross.20100331110052.1851:isEmptyLattice
+isEmptyLattice :: Lattice -> Bool
+isEmptyLattice = (Bimap.null . latticeVertices) <^(||)^> (null . latticeEdges)
+-- @-node:gcross.20100331110052.1851:isEmptyLattice
+-- @+node:gcross.20100331110052.1852:latticeNumberOfEdges
+latticeNumberOfEdges :: Lattice -> Int
+latticeNumberOfEdges = length . latticeEdges
+-- @-node:gcross.20100331110052.1852:latticeNumberOfEdges
+-- @+node:gcross.20100331110052.1853:latticeNumberOfVertices
+latticeNumberOfVertices :: Lattice -> Int
+latticeNumberOfVertices = Bimap.size . latticeVertices
+-- @-node:gcross.20100331110052.1853:latticeNumberOfVertices
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex -> LatticeMonad Bool
 latticeHasVertex vertex = fmap (Bimap.memberR vertex . latticeVertices) (gets fst)
@@ -463,9 +476,13 @@ mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice -> PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
   | period_width == 0 || period_height == 0
-    = PositionSpaceLattice $ emptyLattice
+    = -- trace "empty lattice!" $
+      PositionSpaceLattice $ emptyLattice
   | otherwise
-    = PositionSpaceLattice $ Lattice filtered_vertices filtered_edges
+    = -- trace ("period = " ++ show period_width ++ "x" ++ show period_height) $
+      -- trace ("number of vertices = " ++ show (Bimap.size filtered_vertices)) $
+      -- trace ("number of edges = " ++ show (length filtered_edges)) $
+      PositionSpaceLattice $ Lattice filtered_vertices filtered_edges
   where
     locations_with_orientation_zero =
         map vertexLocation
@@ -500,7 +517,7 @@ periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vert
         mapMaybe
             (\(vertex_number,Vertex (Location x y) orientation) ->
                 if (x >= minX) && (x < maxX) &&
-                   (y >= minY) && (y < minY)
+                   (y >= minY) && (y < maxY)
                     then Just (vertex_number,Vertex (Location (x-minX) (y-minY)) orientation)
                     else Nothing
             )

@@ -20,7 +20,8 @@ Library
                     ConfigFile == 1.0.*,
                     Vec == 0.9.*,
                     NDArray == 0.1,
-                    filepath == 1.1.*
+                    filepath == 1.1.*,
+                    InfixApplicative == 1.*
 
     Extra-Libraries: stdc++
 
