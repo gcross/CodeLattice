@@ -105,8 +105,6 @@ data Vertex = Vertex
     {   vertexLocation :: Location
     ,   vertexOrientation :: Angle
     } deriving (Show,Eq)
-
-
 -- @-node:gcross.20100302164430.1235:Vertex
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
@@ -461,6 +459,132 @@ mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
         y = fromJust (IntMap.lookup y_key y_map)
         orientation = fromJust (IntMap.lookup orientation_key orientation_map)
 -- @-node:gcross.20100312175547.1828:mapKeysToPositionInLattice
+-- @+node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
+periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice -> PositionSpaceLattice
+periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
+  | period_width == 0 || period_height == 0
+    = PositionSpaceLattice $ emptyLattice
+  | otherwise
+    = PositionSpaceLattice $ Lattice filtered_vertices filtered_edges
+  where
+    locations_with_orientation_zero =
+        map vertexLocation
+        .
+        filter ((== 0) . vertexOrientation)
+        .
+        Bimap.elems
+        $
+        vertices
+    Location minX minY = minimum locations_with_orientation_zero
+
+    findMaximumCoordinate minA locationA locationB =
+        maximum
+        .
+        mapMaybe (
+            \location ->
+                if locationA location == minA
+                    then Just (locationB location)
+                    else Nothing
+        )
+        $
+        locations_with_orientation_zero
+    maxX = findMaximumCoordinate minY locationY locationX
+    maxY = findMaximumCoordinate minX locationX locationY
+
+    period_width = maxX - minX
+    period_height = maxY - minY
+
+    filtered_vertices =
+        Bimap.fromList
+        .
+        mapMaybe
+            (\(vertex_number,Vertex (Location x y) orientation) ->
+                if (x >= minX) && (x < maxX) &&
+                   (y >= minY) && (y < minY)
+                    then Just (vertex_number,Vertex (Location (x-minX) (y-minY)) orientation)
+                    else Nothing
+            )
+        .
+        Bimap.assocs
+        $
+        vertices
+
+    filtered_edges =
+        mapMaybe
+            (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) ->
+                case (Bimap.member v1 filtered_vertices,Bimap.member v2 filtered_vertices) of
+                    (True,True) -> Just edge
+                    (False,False) -> Nothing
+                    (True,False) -> periodizeEdge s1 r2 . fromJust $ Bimap.lookup v2 vertices
+                    (False,True) -> periodizeEdge s2 r1 . fromJust $ Bimap.lookup v1 vertices
+            )
+        $
+        edges
+      where
+        periodizeEdge interior_edge_side exterior_ray_number (Vertex (Location x y) orientation)
+          | x < minX || y < minY
+            = Nothing
+          | otherwise
+            = let wrapped_x = if x < maxX then x else x-period_width
+                  wrapped_y = if y < maxY then y else y-period_height
+                  wrapped_vertex = Vertex (Location wrapped_x wrapped_y) orientation
+                  wrapped_vertex_number = fromJust $ Bimap.lookupR wrapped_vertex vertices
+              in Just $ Edge interior_edge_side (EdgeSide wrapped_vertex_number exterior_ray_number)
+
+-- @+at
+--      bottom_boundary_x_values =
+--          Set.fromList
+--          .
+--          mapMaybe (
+--              \(Location x y) ->
+--                  if (y == minY) && (x >= maxX) && (x <= maxX)
+--                      then Just x
+--                      else Nothing
+--              )
+--          $
+--          locations
+--      left_boundary_y_values =
+--          Set.fromList
+--          .
+--          mapMaybe (
+--              \(Location x y) ->
+--                  if (x == minX) && (y >= maxY) && (y <= maxY)
+--                      then Just y
+--                      else Nothing
+--              )
+--          $
+--          locations
+--  
+--      bottom_boundary_x_values_minus_right_boundary = Set.delete maxX 
+--  bottom_boundary_x_values
+--      left_boundary_y_values_minus_top_boundary = Set.delete maxY 
+--  left_boundary_y_values
+--      filtered_locations_with_orientation_zero = map vertexLocation . filter 
+--  ((== 0) . vertexOrientation) elems $ filtered_vertices
+--      filtered_locations_with_orientation_zero = map vertexLocation . filter 
+--  ((== 0) . vertexOrientation) elems $ filtered_vertices
+--  confirmed_that_all_vertices_with_orientation_zero_fall_on_a_grid_within_the_bounds 
+--  =
+--          all (\(Vertex (Location x y) _) ->
+--                      (Set.member x 
+--  bottom_boundary_x_values_minus_right_boundary)
+--                      &&
+--                      (Set.member y 
+--  left_boundary_y_values_minus_top_boundary)
+--              )
+--          .
+--          Bimap.elems
+--          $
+--          filtered_vertices
+--  confirmed_that_there_are_the_expected_number_of_vertices_with_orientation_zero 
+--  =
+--          length filtered_locations_with_orientation_zero ==
+--              length bottom_boundary_x_values_minus_right_boundary *
+--              length left_boundary_y_values_minus_top_boundary
+-- @-at
+-- @@c
+-- @nonl
+-- @-node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
