@@ -476,13 +476,9 @@ mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice -> PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
   | period_width == 0 || period_height == 0
-    = -- trace "empty lattice!" $
-      PositionSpaceLattice $ emptyLattice
+    = PositionSpaceLattice $ emptyLattice
   | otherwise
-    = -- trace ("period = " ++ show period_width ++ "x" ++ show period_height) $
-      -- trace ("number of vertices = " ++ show (Bimap.size filtered_vertices)) $
-      -- trace ("number of edges = " ++ show (length filtered_edges)) $
-      PositionSpaceLattice $ Lattice filtered_vertices filtered_edges
+    = PositionSpaceLattice $ Lattice filtered_vertices filtered_edges
   where
     locations_with_orientation_zero =
         map vertexLocation
@@ -547,60 +543,6 @@ periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vert
                   wrapped_vertex = Vertex (Location wrapped_x wrapped_y) orientation
                   wrapped_vertex_number = fromJust $ Bimap.lookupR wrapped_vertex vertices
               in Just $ Edge interior_edge_side (EdgeSide wrapped_vertex_number exterior_ray_number)
-
--- @+at
---      bottom_boundary_x_values =
---          Set.fromList
---          .
---          mapMaybe (
---              \(Location x y) ->
---                  if (y == minY) && (x >= maxX) && (x <= maxX)
---                      then Just x
---                      else Nothing
---              )
---          $
---          locations
---      left_boundary_y_values =
---          Set.fromList
---          .
---          mapMaybe (
---              \(Location x y) ->
---                  if (x == minX) && (y >= maxY) && (y <= maxY)
---                      then Just y
---                      else Nothing
---              )
---          $
---          locations
---  
---      bottom_boundary_x_values_minus_right_boundary = Set.delete maxX 
---  bottom_boundary_x_values
---      left_boundary_y_values_minus_top_boundary = Set.delete maxY 
---  left_boundary_y_values
---      filtered_locations_with_orientation_zero = map vertexLocation . filter 
---  ((== 0) . vertexOrientation) elems $ filtered_vertices
---      filtered_locations_with_orientation_zero = map vertexLocation . filter 
---  ((== 0) . vertexOrientation) elems $ filtered_vertices
---  confirmed_that_all_vertices_with_orientation_zero_fall_on_a_grid_within_the_bounds 
---  =
---          all (\(Vertex (Location x y) _) ->
---                      (Set.member x 
---  bottom_boundary_x_values_minus_right_boundary)
---                      &&
---                      (Set.member y 
---  left_boundary_y_values_minus_top_boundary)
---              )
---          .
---          Bimap.elems
---          $
---          filtered_vertices
---  confirmed_that_there_are_the_expected_number_of_vertices_with_orientation_zero 
---  =
---          length filtered_locations_with_orientation_zero ==
---              length bottom_boundary_x_values_minus_right_boundary *
---              length left_boundary_y_values_minus_top_boundary
--- @-at
--- @@c
--- @nonl
 -- @-node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
