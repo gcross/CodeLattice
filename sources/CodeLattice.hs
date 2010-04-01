@@ -491,7 +491,17 @@ periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vert
     Location minX minY = minimum locations_with_orientation_zero
 
     findMaximumCoordinate minA locationA locationB =
-        maximum
+        head
+        .
+        (\lst ->
+            case lst of
+                (x:rest@(_:_)) -> rest
+                _ -> lst
+        )
+        .
+        reverse
+        .
+        sort
         .
         mapMaybe (
             \location ->

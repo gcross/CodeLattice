@@ -498,33 +498,43 @@ main = defaultMain
                 -- @-node:gcross.20100331110052.1850:Vertex with orientation 0 at origin
                 -- @+node:gcross.20100331110052.1854:There exists an orientation 0 vertex at every grid point
                 ,testProperty "There exists an orientation 0 vertex at every grid point" $
-                  fmap (
-                    \(Lattice vertices _) ->
-                        let locations_with_zero_orientation =
-                                map vertexLocation
-                                .
-                                filter ((== 0) . vertexOrientation)
-                                .
-                                Bimap.elems
-                                $
-                                vertices
-                            getSetOfCoordinatesAlongBoundary locationA locationB =
-                                mapMaybe (
-                                    \location ->
-                                        if locationA location == 0
-                                            then Just (locationB location)
-                                            else Nothing
-                                    )
-                                $
-                                locations_with_zero_orientation
-                            top_boundary_x_values = getSetOfCoordinatesAlongBoundary locationY locationX
-                            left_boundary_y_values = getSetOfCoordinatesAlongBoundary locationX locationY
-                        in all (\(x,y) -> Bimap.memberR (Vertex (Location 0 0) 0) vertices) $
-                            zip top_boundary_x_values
-                                left_boundary_y_values
-                  ) arbitraryNonemptyPeriodizedLattice
+                    fmap (
+                        \(Lattice vertices _) ->
+                            let locations_with_zero_orientation =
+                                    map vertexLocation
+                                    .
+                                    filter ((== 0) . vertexOrientation)
+                                    .
+                                    Bimap.elems
+                                    $
+                                    vertices
+                                getSetOfCoordinatesAlongBoundary locationA locationB =
+                                    mapMaybe (
+                                        \location ->
+                                            if locationA location == 0
+                                                then Just (locationB location)
+                                                else Nothing
+                                        )
+                                    $
+                                    locations_with_zero_orientation
+                                top_boundary_x_values = getSetOfCoordinatesAlongBoundary locationY locationX
+                                left_boundary_y_values = getSetOfCoordinatesAlongBoundary locationX locationY
+                            in all (\(x,y) -> Bimap.memberR (Vertex (Location 0 0) 0) vertices) $
+                                zip top_boundary_x_values
+                                    left_boundary_y_values
+                    ) arbitraryNonemptyPeriodizedLattice
                 -- @nonl
                 -- @-node:gcross.20100331110052.1854:There exists an orientation 0 vertex at every grid point
+                -- @+node:gcross.20100331161014.1557:All vertices have same number of rays
+                ,testProperty "All vertices have same number of rays" $
+                    fmap (
+                        (\(x:xs) -> all (==x) xs)
+                        .
+                        IntMap.elems
+                        .
+                        computeVertexAdjacencies
+                    ) arbitraryNonemptyPeriodizedLattice
+                -- @-node:gcross.20100331161014.1557:All vertices have same number of rays
                 -- @-others
                 ]
         -- @-node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
