@@ -53,7 +53,7 @@ main =
                                 putStrLn . drawLattice $ lattice
                             )
                             >>
-                            storeLattice tiling_name growth_iteration_number lattice
+                            storeLattice tiling_name False growth_iteration_number lattice
                             >>=
                             fetchLattice
                             >>=

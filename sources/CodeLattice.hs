@@ -65,7 +65,7 @@ data Lattice = Lattice
 
 -- @-node:gcross.20100308212437.1389:Lattice
 -- @+node:gcross.20100327142350.1553:PositionSpaceLattice
-newtype PositionSpaceLattice = PositionSpaceLattice { unwrapPositionSpaceLattice :: Lattice }
+newtype PositionSpaceLattice = PositionSpaceLattice { unwrapPositionSpaceLattice :: Lattice } deriving (Eq,Typeable)
 -- @-node:gcross.20100327142350.1553:PositionSpaceLattice
 -- @+node:gcross.20100302164430.1240:EdgeSide
 data EdgeSide = EdgeSide
@@ -558,6 +558,42 @@ periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vert
                   wrapped_vertex_number = fromJust $ Bimap.lookupR wrapped_vertex vertices
               in Just $ Edge interior_edge_side (EdgeSide wrapped_vertex_number exterior_ray_number)
 -- @-node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
+-- @+node:gcross.20100331165456.1579:iteratePeriodicLattice
+iteratePeriodicLattice :: [RawVertex] -> LatticeMonad (PositionSpaceLattice,[RawVertex])
+iteratePeriodicLattice starting_raw_vertices = do
+    steps <- getLatticeSteps
+    starting_number_of_vertices <- getNumberOfVerticesInLattice
+    starting_number_of_edges <- getNumberOfEdgesInLattice
+    let go bounds raw_vertices = do
+            next_raw_vertices <- growLatticeToBounds bounds raw_vertices
+            pruned_lattice <- fmap periodizeLatticeGrownWithinRectangularBounds getPositionSpaceLattice
+            case ((Bimap.size . latticeVertices . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_vertices
+                 ,(length . latticeEdges . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_edges
+                 ) of
+                (_,True) -> return (pruned_lattice,next_raw_vertices)
+                (True,False) -> error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
+                (False,False) -> go (expandBounds bounds) next_raw_vertices
+    go (Bounds (-1) (-1) 1 1) starting_raw_vertices
+  where
+    expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
+-- @-node:gcross.20100331165456.1579:iteratePeriodicLattice
+-- @+node:gcross.20100331165456.1581:iterateLatticeRepeatedly
+iteratePeriodicLatticeRepeatedly :: [RawVertex] -> Int -> LatticeMonad ([PositionSpaceLattice],[RawVertex])
+iteratePeriodicLatticeRepeatedly raw_vertices =
+    go [] raw_vertices
+    >=>
+    \(lattices,raw_vertices) ->
+        return (reverse lattices,raw_vertices)
+  where
+    go lattices current_raw_vertices number_of_iterations_remaining
+     | number_of_iterations_remaining <= 0
+        = return (lattices,current_raw_vertices)
+     | otherwise
+        = iteratePeriodicLattice current_raw_vertices
+          >>=
+          \(lattice,next_raw_vertices) ->
+            go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
+-- @-node:gcross.20100331165456.1581:iterateLatticeRepeatedly
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex

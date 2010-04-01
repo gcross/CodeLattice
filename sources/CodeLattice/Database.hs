@@ -139,24 +139,27 @@ insertRows name statement type_ids rows =
 -- @+node:gcross.20100312175547.1831:storeLattice
 storeLattice ::
     String ->
+    Bool ->
     Int ->
-    Lattice ->
+    PositionSpaceLattice ->
     (forall mark . DBM mark Session String)
-storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
+storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice (Lattice vertices edges)) =
     generateRandomUUIDAsString
     >>=
     \lattice_id -> do
         insertRow
             "insert_lattice"
-            "insert into lattices (lattice_id, tiling_name, growth_iteration_number, number_of_vertices, number_of_edges) values ((?::uuid),?,?,?,?)"
+            "insert into lattices (lattice_id, tiling_name, periodic, growth_iteration_number, number_of_vertices, number_of_edges) values ((?::uuid),?,?,?,?,?)"
             [pgTypeOid (undefined :: String)
             ,pgTypeOid (undefined :: String)
+            ,pgTypeOid (undefined :: Bool)
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ,pgTypeOid (undefined :: Int)
             ]
             [bindP $ lattice_id
             ,bindP $ tiling_name
+            ,bindP $ periodic
             ,bindP $ growth_iteration_number
             ,bindP $ (Bimap.size vertices)
             ,bindP $ (length edges)
@@ -202,7 +205,7 @@ storeLattice tiling_name growth_iteration_number (Lattice vertices edges) =
         return lattice_id
 -- @-node:gcross.20100312175547.1831:storeLattice
 -- @+node:gcross.20100312220352.1837:fetchLattice
-fetchLattice lattice_id =
+fetchLattice lattice_id = fmap PositionSpaceLattice $
     liftM2 Lattice
     (   fmap Bimap.fromList $
         doQuery

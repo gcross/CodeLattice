@@ -19,6 +19,8 @@ import Database.PostgreSQL.Enumerator
 
 import System.Environment
 
+import Text.Printf
+
 import CodeLattice
 import CodeLattice.Database
 import CodeLattice.Tilings
@@ -30,13 +32,13 @@ import CodeLattice.Tilings
 main =
     getArgs
     >>=
-    \(tiling_name:growth_iteration_number:_) -> (
+    \(tiling_name:periodic:growth_iteration_number:_) -> (
         makeConnection "builder"
         >>=
         (\connection ->
             withSession connection $
                 doQuery
-                    (sql $ "select lattice_id from lattices where tiling_name = '" ++ tiling_name ++ "' and growth_iteration_number = " ++ growth_iteration_number ++ ";")
+                    (sql $ printf "select lattice_id from lattices where tiling_name = '%s' and periodic = %s and growth_iteration_number = %s;" tiling_name periodic growth_iteration_number)
                     get1
                     Nothing
                 >>=

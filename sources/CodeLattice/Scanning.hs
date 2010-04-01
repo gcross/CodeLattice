@@ -83,8 +83,8 @@ solveNoisilyForLabeling config values =
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
-latticeToScanConfiguration :: Int -> Int -> Lattice -> ScanConfiguration
-latticeToScanConfiguration number_of_orientations number_of_rays (Lattice vertices edges) =
+latticeToScanConfiguration :: Int -> Int -> PositionSpaceLattice -> ScanConfiguration
+latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceLattice (Lattice vertices edges)) =
     ScanConfiguration
     {   scanNumberOfQubits = fromIntegral number_of_vertices
     ,   scanNumberOfOperators = fromIntegral number_of_edges

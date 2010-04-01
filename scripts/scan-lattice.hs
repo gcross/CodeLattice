@@ -37,7 +37,7 @@ import CodeLattice.Tilings
 -- @+others
 -- @+node:gcross.20100315191926.3210:main
 main = do
-    [tiling_name,growth_iteration_number_as_string] <- getArgs
+    [tiling_name,periodic,growth_iteration_number_as_string] <- getArgs
     (number_of_orientations,number_of_rays,lattice) <-
         makeConnection "reader"
         >>=
@@ -51,7 +51,7 @@ main = do
                             Nothing
                 lattice <-
                     doQuery
-                        (sql $ "select lattice_id from lattices where tiling_name = '" ++ tiling_name ++ "' and growth_iteration_number = " ++ growth_iteration_number_as_string ++ ";")
+                        (sql $ printf "select lattice_id from lattices where tiling_name = '%s' and periodic = %s and growth_iteration_number = %s;" tiling_name periodic growth_iteration_number_as_string)
                         get1
                         Nothing
                     >>=
