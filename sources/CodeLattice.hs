@@ -386,17 +386,21 @@ drawLattice (PositionSpaceLattice lattice)
 getLattice :: LatticeMonad Lattice
 getLattice = gets fst
 -- @-node:gcross.20100312175547.1839:getLattice
+-- @+node:gcross.20100331165456.1577:getPositionSpaceLattice
+getPositionSpaceLattice :: LatticeMonad PositionSpaceLattice
+getPositionSpaceLattice =
+    lift getMatchMaps
+    >>=
+    \[x_map,y_map,orientation_map] ->
+        fmap (mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
+-- @-node:gcross.20100331165456.1577:getPositionSpaceLattice
 -- @+node:gcross.20100312175547.1381:getLatticeSteps
 getLatticeSteps :: LatticeMonad [Step]
 getLatticeSteps = gets snd
 -- @-node:gcross.20100312175547.1381:getLatticeSteps
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
-getAndDrawLattice = 
-    lift getMatchMaps
-    >>=
-    \[x_map,y_map,orientation_map] ->
-        fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
+getAndDrawLattice = fmap drawLattice getPositionSpaceLattice
 -- @-node:gcross.20100310140947.1418:getAndDrawLattice
 -- @+node:gcross.20100310140947.1420:getAndDrawPrunedLattice
 getAndDrawPrunedLattice :: LatticeMonad String
