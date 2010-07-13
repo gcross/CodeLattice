@@ -77,13 +77,13 @@ main =
            (("","tests")
            ,[]
            ,["HUnit == 1.*"
-            ,"test-framework == 0.2.*"
+            ,"test-framework >= 0.2 && < 0.4"
             ,"test-framework-hunit == 0.2.*"
             ,"test-framework-quickcheck2 == 0.2.*"
             ,"QuickCheck == 2.1.*"
             ,"random == 1.*"
-            ,"array == 0.2.*"
-            ,"ChasingBottoms == 1.2.*"
+            ,"array >= 0.2 && < 0.4"
+            ,"ChasingBottoms >= 1.2 && < 1.4"
             ]
            )
         )
