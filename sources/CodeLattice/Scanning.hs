@@ -167,6 +167,11 @@ computeNumberOfLabelings
         *
         (product $ genericReplicate (number_of_orientations*(number_of_rays-2)) 3)
 -- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
+-- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
+canonicalizeVertexLabeling :: [Int] -> [Int]
+canonicalizeVertexLabeling old_labeling =
+    map ((+1) . fromJust . flip elemIndex (nub old_labeling)) old_labeling
+-- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs

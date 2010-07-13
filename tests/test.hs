@@ -538,6 +538,48 @@ main = defaultMain
                 -- @-others
                 ]
         -- @-node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
+        -- @+node:gcross.20100713003314.1569:canonicalizeLabeling
+        ,testGroup "canonicalizeLabeling"
+            -- @    @+others
+            -- @+node:gcross.20100713003314.1570:null case
+            [testCase "null case" $
+                assertEqual
+                    "Is the canonical labeling correct?"
+                    []
+                    (canonicalizeVertexLabeling [])
+            -- @-node:gcross.20100713003314.1570:null case
+            -- @+node:gcross.20100713003314.1571:singleton case
+            ,testProperty "singleton case" $
+                ((== [1]) . canonicalizeVertexLabeling . (:[]))
+            -- @-node:gcross.20100713003314.1571:singleton case
+            -- @+node:gcross.20100713003314.1572:first element of result is 1
+            ,testProperty "first element of result is 1" $
+                \(NonEmpty x) -> ((== 1) . head . canonicalizeVertexLabeling) x
+            -- @-node:gcross.20100713003314.1572:first element of result is 1
+            -- @+node:gcross.20100713003314.1574:test cases
+            ,testGroup "first element of result is 1" $
+                [testCase (show original_labeling)
+                 .
+                 assertEqual
+                    "Is the canonical labeling correct?"
+                    canonical_labeling
+                 .
+                 canonicalizeVertexLabeling
+                 $
+                 original_labeling
+                |(original_labeling,canonical_labeling) <-
+                    [([3,3],[1,1])
+                    ,([3,2],[1,2])
+                    ,([3,3,2,2,3],[1,1,2,2,1])
+                    ,([1,1,1,2,3,3,3,2,2],[1,1,1,2,3,3,3,2,2])
+                    ,([2,1,3],[1,2,3])
+                    ]
+                ]
+            -- @nonl
+            -- @-node:gcross.20100713003314.1574:test cases
+            -- @-others
+            ]
+        -- @-node:gcross.20100713003314.1569:canonicalizeLabeling
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
