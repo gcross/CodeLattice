@@ -23,6 +23,7 @@ import qualified Data.IntMap as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import Data.IORef
+import Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
@@ -580,6 +581,64 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100713003314.1569:canonicalizeLabeling
+        -- @+node:gcross.20100713115329.1574:generateVertexLabelings
+        ,testGroup "generateVertexLabelings"
+            -- @    @+others
+            -- @+node:gcross.20100713115329.1575:all labelings are canonical
+            [testGroup "all labelings are canonical"
+                [testCase (show number_of_rays) $
+                    mapM_ (\labeling ->
+                        assertEqual
+                            "Does the labeling match the canonical labeling?"
+                            (canonicalizeVertexLabeling labeling)
+                            labeling
+                    )
+                    .
+                    generateVertexLabelings
+                    $
+                    number_of_rays
+                | number_of_rays <- [1..5]
+                ]
+            -- @-node:gcross.20100713115329.1575:all labelings are canonical
+            -- @+node:gcross.20100713115329.1579:all labelings are unique
+            ,testGroup "all labelings are unique"
+                [testCase (show number_of_rays) $
+                    let labelings = generateVertexLabelings number_of_rays
+                    in assertEqual
+                        "Are the labelings unchanged after removing duplicates?"
+                        (nub labelings)
+                        labelings
+                | number_of_rays <- [1..5]
+                ]
+            -- @-node:gcross.20100713115329.1579:all labelings are unique
+            -- @+node:gcross.20100713115329.1577:the correct number of labelings are generated
+            ,testGroup "the correct number of labelings are generated"
+                [testCase (show number_of_rays) $
+                    assertEqual
+                        "Was the correct number of labelings generated?"
+                        (1 + (3^(number_of_rays-1)-1) `div` 2)
+                    .
+                    length
+                    .
+                    generateVertexLabelings
+                    $
+                    number_of_rays
+                | number_of_rays <- [2..5]
+                ]
+            -- @-node:gcross.20100713115329.1577:the correct number of labelings are generated
+            -- @+node:gcross.20100713115329.1581:all canonical labelings are generated
+            ,testGroup "all canonical labelings are generated"
+                [testCase (show number_of_rays) $
+                    assertEqual
+                        "Were the correct labelings generated?"
+                        (sort . nub . map canonicalizeVertexLabeling $ replicateM number_of_rays [1..3])
+                        (sort . generateVertexLabelings $ number_of_rays)
+                | number_of_rays <- [1..5]
+                ]
+            -- @-node:gcross.20100713115329.1581:all canonical labelings are generated
+            -- @-others
+            ]
+        -- @-node:gcross.20100713115329.1574:generateVertexLabelings
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

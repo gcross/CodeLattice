@@ -172,6 +172,29 @@ canonicalizeVertexLabeling :: [Int] -> [Int]
 canonicalizeVertexLabeling old_labeling =
     map ((+1) . fromJust . flip elemIndex (nub old_labeling)) old_labeling
 -- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
+-- @+node:gcross.20100713115329.1573:generateVertexLabelings
+generateVertexLabelings :: Int -> [[Int]]
+generateVertexLabelings = map (1:) . go . (\x -> x-1)
+  where
+    go 0 = [[]]
+    go n =
+        (map (1:) (go (n-1)))
+        ++
+        (map (2:) (replicateM (n-1) [1..3]))
+-- @-node:gcross.20100713115329.1573:generateVertexLabelings
+-- @+node:gcross.20100713115329.1584:generateGraphLabelings
+generateGraphLabelings :: Int -> Int -> [[[Int]]]
+generateGraphLabelings number_of_vertices number_of_rays =
+    replicateM number_of_vertices
+    .
+    generateVertexLabelings
+    $
+    number_of_rays
+-- @-node:gcross.20100713115329.1584:generateGraphLabelings
+-- @+node:gcross.20100713115329.1582:canonicalizeGraphLabeling
+canonicalizeGraphLabeling :: [[Int]] -> [[Int]]
+canonicalizeGraphLabeling = map canonicalizeVertexLabeling
+-- @-node:gcross.20100713115329.1582:canonicalizeGraphLabeling
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs
