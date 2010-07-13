@@ -2,6 +2,13 @@
 -- @+node:gcross.20100308112554.1292:@thin Tilings.hs
 -- @@language Haskell
 
+-- @<< Language extensions >>
+-- @+node:gcross.20100713115329.1585:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
+-- @nonl
+-- @-node:gcross.20100713115329.1585:<< Language extensions >>
+-- @nl
+
 module CodeLattice.Tilings where
 
 -- @<< Import needed modules >>
@@ -104,25 +111,27 @@ tilings =
 -- @-node:gcross.20100308112554.1296:Values
 -- @+node:gcross.20100308112554.1303:Functions
 -- @+node:gcross.20100308112554.1305:polygonInteriorAngle
-polygonInteriorAngle :: Int -> Double
+polygonInteriorAngle :: Int → Double
 polygonInteriorAngle n = (n_-2)*180/n_
   where
     n_ = fromIntegral n
+-- @nonl
 -- @-node:gcross.20100308112554.1305:polygonInteriorAngle
 -- @+node:gcross.20100308112554.1307:polygonsToEdgesAndAngles
-polygonsToEdgesAndAngles :: [Int] -> EdgesAndAngles
+polygonsToEdgesAndAngles :: [Int] → EdgesAndAngles
 polygonsToEdgesAndAngles polygons@(x1:x2:xs) =
     ((last xs,x1),0):go (polygonInteriorAngle x1) polygons
   where
     go angle (x1:x2:xs) = ((x1,x2),angle):go (angle + polygonInteriorAngle x2) (x2:xs)
     go _ _ = []
 polygonsToStepAngles _ = error "There needs to be at least two polygons adjoining a vertex!"
+-- @nonl
 -- @-node:gcross.20100308112554.1307:polygonsToEdgesAndAngles
 -- @+node:gcross.20100308112554.1309:lookupAngleOfEdge
-lookupAngleOfEdge :: EdgesAndAngles -> Edge -> Int -> Double
+lookupAngleOfEdge :: EdgesAndAngles → Edge → Int → Double
 lookupAngleOfEdge table edge disambiguation = go table disambiguation
   where
-    go :: EdgesAndAngles -> Int -> Double
+    go :: EdgesAndAngles → Int → Double
     go [] _ = error $
         "Error finding "
         ++ show disambiguation ++
@@ -137,12 +146,13 @@ lookupAngleOfEdge table edge disambiguation = go table disambiguation
                 else go rest (disambiguation-1)
         | otherwise
             = go rest disambiguation
+-- @nonl
 -- @-node:gcross.20100308112554.1309:lookupAngleOfEdge
 -- @+node:gcross.20100308112554.1311:tilingToSteps
-tilingToSteps :: Tiling -> [Step]
+tilingToSteps :: Tiling → [Step]
 tilingToSteps (Tiling _ polygons orientation_mode _) =
     case orientation_mode of
-        OnlyOneOrientation ->
+        OnlyOneOrientation →
             map (flip Step 0)
             .
             snd
@@ -150,7 +160,7 @@ tilingToSteps (Tiling _ polygons orientation_mode _) =
             unzip
             $
             edges_and_angles
-        FixedOrientationRotation rotation ->
+        FixedOrientationRotation rotation →
             map (flip Step rotation)
             .
             snd
@@ -158,19 +168,20 @@ tilingToSteps (Tiling _ polygons orientation_mode _) =
             unzip
             $
             edges_and_angles
-        PickFirstCompatableOrientation ->
+        PickFirstCompatableOrientation →
             [Step angle (modulo360 $ 180 + angle - lookupAngleOfEdge edges_and_angles (p2,p1) 0)
-            | ((p1,p2),angle) <- edges_and_angles
+            | ((p1,p2),angle) ← edges_and_angles
             ]
-        PickNthCompatableOrientation disambiguations ->
+        PickNthCompatableOrientation disambiguations →
             [Step angle (modulo360 $ 180 + angle - lookupAngleOfEdge edges_and_angles (p2,p1) disambiguation)
-            | (((p1,p2),angle),disambiguation) <- zip edges_and_angles disambiguations
+            | (((p1,p2),angle),disambiguation) ← zip edges_and_angles disambiguations
             ]
   where
     edges_and_angles = polygonsToEdgesAndAngles polygons
+-- @nonl
 -- @-node:gcross.20100308112554.1311:tilingToSteps
 -- @+node:gcross.20100308112554.1314:lookupTiling
-lookupTiling :: String -> Tiling
+lookupTiling :: String → Tiling
 lookupTiling name = go tilings
   where
     go [] = error $ "Unable to find tiling named " ++ name
@@ -179,13 +190,15 @@ lookupTiling name = go tilings
         = tiling
      | otherwise
         = go rest
+-- @nonl
 -- @-node:gcross.20100308112554.1314:lookupTiling
 -- @+node:gcross.20100309124842.1400:lookupTilingSteps
-lookupTilingSteps :: String -> [Step]
+lookupTilingSteps :: String → [Step]
 lookupTilingSteps = tilingSteps . lookupTiling
+-- @nonl
 -- @-node:gcross.20100309124842.1400:lookupTilingSteps
 -- @+node:gcross.20100309124842.1398:makeTiling
-makeTiling :: String -> [Int] -> OrientationMode -> Tiling
+makeTiling :: String → [Int] → OrientationMode → Tiling
 makeTiling name polygons orientation_mode = tiling
   where
     tiling =
@@ -194,17 +207,19 @@ makeTiling name polygons orientation_mode = tiling
             polygons
             orientation_mode
             (tilingToSteps tiling)
+-- @nonl
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
 -- @+node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
-growPositionSpaceLatticeFromTilingToBounds :: Tiling -> Bounds -> PositionSpaceLattice
+growPositionSpaceLatticeFromTilingToBounds :: Tiling → Bounds → PositionSpaceLattice
 growPositionSpaceLatticeFromTilingToBounds tiling bounds =
     mapKeysToPositionsInLattice x_map y_map orientation_map lattice
   where
     ((_,lattice),[x_map,y_map,orientation_map]) =
         runLatticeMonad (tilingSteps tiling) (growLatticeToBoundsFromOrigin bounds)
+-- @nonl
 -- @-node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others

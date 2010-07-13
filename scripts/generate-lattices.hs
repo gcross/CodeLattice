@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100312220352.1846:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100312220352.1846:<< Language extensions >>
 -- @nl
 
@@ -34,15 +35,15 @@ main =
                         map (mapKeysToPositionsInLattice x_map y_map o_map)
                             key_space_lattices
                 in zip3 (repeat tiling_name) [1..] position_space_lattices
-            | tiling_name <- map tilingName tilings
+            | tiling_name ← map tilingName tilings
             ]
     in  makeConnection "builder"
         >>=
-        \connection ->
+        \connection →
             withSession connection $
                 withTransaction ReadUncommitted $
                     forM_ lattices $ 
-                        \(tiling_name,growth_iteration_number,lattice) ->
+                        \(tiling_name,growth_iteration_number,lattice) →
                             (liftIO $ do
                                 putStrLn $
                                     "Storing tiling "
@@ -58,6 +59,7 @@ main =
                             fetchLattice
                             >>=
                             flip unless (error "Lattices not equal!") . (== lattice)
+-- @nonl
 -- @-node:gcross.20100312220352.1842:main
 -- @-others
 -- @-node:gcross.20100312220352.1841:@thin generate-lattices.hs

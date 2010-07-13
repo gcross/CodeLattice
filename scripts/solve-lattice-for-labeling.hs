@@ -5,6 +5,7 @@
 -- @<< Language extensions >>
 -- @+node:gcross.20100316133702.1489:<< Language extensions >>
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100316133702.1489:<< Language extensions >>
 -- @nl
 
@@ -37,19 +38,19 @@ import CodeLattice.Tilings
 -- @+others
 -- @+node:gcross.20100316133702.1491:main
 main = do
-    [tiling_name,periodic,growth_iteration_number_as_string,labeling_as_string] <- getArgs
-    (number_of_orientations,number_of_rays,lattice) <-
+    [tiling_name,periodic,growth_iteration_number_as_string,labeling_as_string] ← getArgs
+    (number_of_orientations,number_of_rays,lattice) ←
         makeConnection "reader"
         >>=
-        \connection ->
+        \connection →
             withSession connection $ do
-                (number_of_orientations,number_of_rays) <-
+                (number_of_orientations,number_of_rays) ←
                     fmap (fromMaybe $ error "Can't find a tiling with this name!") $
                         doQuery
                             (sql $ "select number_of_orientations,number_of_rays from tilings where tiling_name = '" ++ tiling_name ++ "'" ++ ";")
                             get2
                             Nothing
-                lattice <-
+                lattice ←
                     doQuery
                         (sql $ printf "select lattice_id from lattices where tiling_name = '%s' and periodic = %s and growth_iteration_number = %s;" tiling_name periodic growth_iteration_number_as_string)
                         get1
@@ -65,6 +66,7 @@ main = do
     putStrLn $ "Solving for labeling " ++ labeling_as_string ++ "..."
     solveNoisilyForLabeling config (read labeling_as_string)
     return ()
+-- @nonl
 -- @-node:gcross.20100316133702.1491:main
 -- @-others
 -- @-node:gcross.20100316133702.1488:@thin solve-lattice-for-labeling.hs

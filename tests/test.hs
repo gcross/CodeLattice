@@ -6,6 +6,7 @@
 -- @+node:gcross.20091217190104.1411:<< Language extensions >>
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20091217190104.1411:<< Language extensions >>
 -- @nl
 
@@ -51,9 +52,10 @@ import CodeLattice.Tilings
 echo x = trace (show x) x
 -- @-node:gcross.20091217190104.2176:echo
 -- @+node:gcross.20091218141305.1337:skipList
-skipList :: Int -> [a] -> [a]
+skipList :: Int → [a] → [a]
 skipList _ [] = []
 skipList n (x:xs) = x:skipList n (drop (n-1) xs)
+-- @nonl
 -- @-node:gcross.20091218141305.1337:skipList
 -- @-node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20100309124842.1410:Grown Lattices
@@ -73,11 +75,12 @@ grown_lattices =
                 grown_lattice_bound
              )
      )
-    | tiling_name <- map tilingName tilings
+    | tiling_name ← map tilingName tilings
     ]
+-- @nonl
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupGrownLattice
-lookupGrownLattice :: String -> Lattice
+lookupGrownLattice :: String → Lattice
 lookupGrownLattice =
     snd
     .
@@ -86,6 +89,7 @@ lookupGrownLattice =
     fromJust
     .
     flip Map.lookup grown_lattices
+-- @nonl
 -- @-node:gcross.20100309160622.1352:lookupGrownLattice
 -- @-node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100307122538.1301:Generators
@@ -130,8 +134,9 @@ main = defaultMain
         -- @    @+others
         -- @+node:gcross.20100302201317.1389:modulo360
         [testProperty "modulo360" $
-            \(n :: Integer) ->
+            \(n :: Integer) →
                 fromInteger (n `mod` 360) == modulo360 (fromInteger n)
+        -- @nonl
         -- @-node:gcross.20100302201317.1389:modulo360
         -- @+node:gcross.20100306220637.1289:stepFromRawVertex
         ,testGroup "stepFromRawVertex"
@@ -180,10 +185,10 @@ main = defaultMain
         -- @-node:gcross.20100306220637.1289:stepFromRawVertex
         -- @+node:gcross.20100307122538.1300:findStepNumberForRawVertex
         ,testProperty "findStepNumberForRawVertex" $ do
-            NonEmpty steps <- arbitrary
-            chosen_step_number <- choose (0,length steps-1)
+            NonEmpty steps ← arbitrary
+            chosen_step_number ← choose (0,length steps-1)
             let chosen_step = steps !! chosen_step_number
-            origin_vertex <- arbitrary
+            origin_vertex ← arbitrary
             let vertex_to_find = stepFromRawVertex origin_vertex chosen_step
                 found_step_number =
                     fst
@@ -194,6 +199,7 @@ main = defaultMain
                     $
                     origin_vertex
             return (chosen_step_number == found_step_number)
+        -- @nonl
         -- @-node:gcross.20100307122538.1300:findStepNumberForRawVertex
         -- @+node:gcross.20100307163258.1315:polygonsToEdgesAndAngles
         ,testGroup "polygonsToEdgesAndAngles" $
@@ -202,7 +208,7 @@ main = defaultMain
                     "Is the resulting list correct?"
                     correct_list
                     (polygonsToEdgesAndAngles polygons)
-            | (polygons,correct_list) <-
+            | (polygons,correct_list) ←
                 [([4,4,4,4]
                  ,[((4,4),0)
                   ,((4,4),90)
@@ -248,7 +254,7 @@ main = defaultMain
                     "Was the correct angle found?"
                     correct_angle
                     (lookupAngleOfEdge (zip edges [0..]) edge_to_find disambiguation)
-            | (test_number,(edges,edge_to_find,disambiguation,correct_angle)) <-
+            | (test_number,(edges,edge_to_find,disambiguation,correct_angle)) ←
                 zip [1..]
                 [([(0,0)
                   ]
@@ -294,6 +300,7 @@ main = defaultMain
                  )
                 ]
             ]
+        -- @nonl
         -- @-node:gcross.20100307163258.1320:lookupAngleOfEdge
         -- @+node:gcross.20100309124842.1394:processRawVertex
         ,testGroup "processRawVertex"
@@ -349,8 +356,8 @@ main = defaultMain
                                     )
                                     (lift . mapM resolveVertex $
                                         [RawVertex (x+i) (y+j) 0
-                                        | (x,y) <- [(0,1),(1,0),(0,-1),(-1,0)]
-                                        , (i,j) <- [(0,1),(1,0),(0,-1),(-1,0)]
+                                        | (x,y) ← [(0,1),(1,0),(0,-1),(-1,0)]
+                                        , (i,j) ← [(0,1),(1,0),(0,-1),(-1,0)]
                                         , (x+i,y+j) /= (0,0)
                                         ]
                                     )
@@ -379,12 +386,13 @@ main = defaultMain
                 --  (ray_number+1)) ray_number)
                 --                    (EdgeSide (head correct_vertices) 
                 --  ((ray_number+2) `mod` 4))
-                --              | ray_number <- [0..3]
+                --              | ray_number ← [0..3]
                 --              ]
                 --          )
                 --          (Set.fromList edges)
                 -- @-at
                 -- @@c
+                -- @nonl
                 -- @-node:gcross.20100309124842.1402:2 steps
                 -- @-others
                 ]
@@ -395,7 +403,7 @@ main = defaultMain
         -- @+node:gcross.20100316133702.1476:runThunkOverChoices
         ,testGroup "runThunkOverChoices" $
             let runWith input = do
-                    results_ref <- newIORef []
+                    results_ref ← newIORef []
                     runThunkOverChoices (modifyIORef results_ref . (:)) input
                     fmap reverse (readIORef results_ref)
             in
@@ -470,16 +478,17 @@ main = defaultMain
                 -- @-node:gcross.20100316133702.1483:replicate 3 [1,2]
                 -- @-others
                 ]
+        -- @nonl
         -- @-node:gcross.20100316133702.1476:runThunkOverChoices
         -- @+node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
         ,testGroup "periodizeLatticeGrownWithinRectangularBounds" $
             let arbitraryNonemptyPeriodizedLattice :: Gen Lattice
                 arbitraryNonemptyPeriodizedLattice = do
-                    tiling <- elements tilings
-                    minX <- choose (-10,0)
-                    minY <- choose (-10,0)
-                    maxX <- choose (0,10)
-                    maxY <- choose (0,10)
+                    tiling ← elements tilings
+                    minX ← choose (-10,0)
+                    minY ← choose (-10,0)
+                    maxX ← choose (0,10)
+                    maxY ← choose (0,10)
                     let lattice =
                             unwrapPositionSpaceLattice
                             .
@@ -500,7 +509,7 @@ main = defaultMain
                 -- @+node:gcross.20100331110052.1854:There exists an orientation 0 vertex at every grid point
                 ,testProperty "There exists an orientation 0 vertex at every grid point" $
                     fmap (
-                        \(Lattice vertices _) ->
+                        \(Lattice vertices _) →
                             let locations_with_zero_orientation =
                                     map vertexLocation
                                     .
@@ -511,7 +520,7 @@ main = defaultMain
                                     vertices
                                 getSetOfCoordinatesAlongBoundary locationA locationB =
                                     mapMaybe (
-                                        \location ->
+                                        \location →
                                             if locationA location == 0
                                                 then Just (locationB location)
                                                 else Nothing
@@ -520,7 +529,7 @@ main = defaultMain
                                     locations_with_zero_orientation
                                 top_boundary_x_values = getSetOfCoordinatesAlongBoundary locationY locationX
                                 left_boundary_y_values = getSetOfCoordinatesAlongBoundary locationX locationY
-                            in all (\(x,y) -> Bimap.memberR (Vertex (Location 0 0) 0) vertices) $
+                            in all (\(x,y) → Bimap.memberR (Vertex (Location 0 0) 0) vertices) $
                                 zip top_boundary_x_values
                                     left_boundary_y_values
                     ) arbitraryNonemptyPeriodizedLattice
@@ -529,15 +538,17 @@ main = defaultMain
                 -- @+node:gcross.20100331161014.1557:All vertices have same number of rays
                 ,testProperty "All vertices have same number of rays" $
                     fmap (
-                        (\(x:xs) -> all (==x) xs)
+                        (\(x:xs) → all (==x) xs)
                         .
                         IntMap.elems
                         .
                         computeVertexAdjacencies
                     ) arbitraryNonemptyPeriodizedLattice
+                -- @nonl
                 -- @-node:gcross.20100331161014.1557:All vertices have same number of rays
                 -- @-others
                 ]
+        -- @nonl
         -- @-node:gcross.20100331110052.1848:periodizeLatticeGrownWithinRectangularBounds
         -- @+node:gcross.20100713003314.1569:canonicalizeLabeling
         ,testGroup "canonicalizeLabeling"
@@ -555,7 +566,8 @@ main = defaultMain
             -- @-node:gcross.20100713003314.1571:singleton case
             -- @+node:gcross.20100713003314.1572:first element of result is 1
             ,testProperty "first element of result is 1" $
-                \(NonEmpty x) -> ((== 1) . head . canonicalizeVertexLabeling) x
+                \(NonEmpty x) → ((== 1) . head . canonicalizeVertexLabeling) x
+            -- @nonl
             -- @-node:gcross.20100713003314.1572:first element of result is 1
             -- @+node:gcross.20100713003314.1574:test cases
             ,testGroup "first element of result is 1" $
@@ -568,7 +580,7 @@ main = defaultMain
                  canonicalizeVertexLabeling
                  $
                  original_labeling
-                |(original_labeling,canonical_labeling) <-
+                |(original_labeling,canonical_labeling) ←
                     [([3,3],[1,1])
                     ,([3,2],[1,2])
                     ,([3,3,2,2,3],[1,1,2,2,1])
@@ -587,7 +599,7 @@ main = defaultMain
             -- @+node:gcross.20100713115329.1575:all labelings are canonical
             [testGroup "all labelings are canonical"
                 [testCase (show number_of_rays) $
-                    mapM_ (\labeling ->
+                    mapM_ (\labeling →
                         assertEqual
                             "Does the labeling match the canonical labeling?"
                             (canonicalizeVertexLabeling labeling)
@@ -597,8 +609,9 @@ main = defaultMain
                     generateVertexLabelings
                     $
                     number_of_rays
-                | number_of_rays <- [1..5]
+                | number_of_rays ← [1..5]
                 ]
+            -- @nonl
             -- @-node:gcross.20100713115329.1575:all labelings are canonical
             -- @+node:gcross.20100713115329.1579:all labelings are unique
             ,testGroup "all labelings are unique"
@@ -608,8 +621,9 @@ main = defaultMain
                         "Are the labelings unchanged after removing duplicates?"
                         (nub labelings)
                         labelings
-                | number_of_rays <- [1..5]
+                | number_of_rays ← [1..5]
                 ]
+            -- @nonl
             -- @-node:gcross.20100713115329.1579:all labelings are unique
             -- @+node:gcross.20100713115329.1577:the correct number of labelings are generated
             ,testGroup "the correct number of labelings are generated"
@@ -623,8 +637,9 @@ main = defaultMain
                     generateVertexLabelings
                     $
                     number_of_rays
-                | number_of_rays <- [2..5]
+                | number_of_rays ← [2..5]
                 ]
+            -- @nonl
             -- @-node:gcross.20100713115329.1577:the correct number of labelings are generated
             -- @+node:gcross.20100713115329.1581:all canonical labelings are generated
             ,testGroup "all canonical labelings are generated"
@@ -633,8 +648,9 @@ main = defaultMain
                         "Were the correct labelings generated?"
                         (sort . nub . map canonicalizeVertexLabeling $ replicateM number_of_rays [1..3])
                         (sort . generateVertexLabelings $ number_of_rays)
-                | number_of_rays <- [1..5]
+                | number_of_rays ← [1..5]
                 ]
+            -- @nonl
             -- @-node:gcross.20100713115329.1581:all canonical labelings are generated
             -- @-others
             ]
@@ -650,19 +666,21 @@ main = defaultMain
             -- @    @+others
             -- @+node:gcross.20100308112554.1322:different locations
             [testProperty "different locations" $
-                \v1 v2 ->
+                \v1 v2 →
                     (vertexLocation v1 /= vertexLocation v2) ==>
                         (vertexLocation v1 `compare` vertexLocation v2) == (v1 `compare` v2)
+            -- @nonl
             -- @-node:gcross.20100308112554.1322:different locations
             -- @+node:gcross.20100308112554.1326:same location
             ,testProperty "same location" $
-                \l o1 o2 ->
+                \l o1 o2 →
                     let v1 = Vertex l o1
                         v2 = Vertex l o2
                         v1_cmp_v2 = v1 `compare` v2
                     in if o1 == o2
                         then v1_cmp_v2 == EQ
                         else isBottom v1_cmp_v2
+            -- @nonl
             -- @-node:gcross.20100308112554.1326:same location
             -- @-others
             ]
@@ -672,19 +690,21 @@ main = defaultMain
             -- @    @+others
             -- @+node:gcross.20100308112554.1329:different locations
             [testProperty "different locations" $
-                \v1 v2 ->
+                \v1 v2 →
                     (vertexLocation v1 /= vertexLocation v2) ==>
                         (Set.fromList [v1,v2]) == (Set.fromList [v1] `Set.union` Set.fromList [v2])
+            -- @nonl
             -- @-node:gcross.20100308112554.1329:different locations
             -- @+node:gcross.20100308112554.1331:same location
             ,testProperty "same location, same orientation" $
-                \l o1 o2 ->
+                \l o1 o2 →
                     let v1 = Vertex l o1
                         v2 = Vertex l o2
                         merged_set = Set.fromList [v1] `Set.union` Set.fromList [v2]
                     in if o1 == o2
                         then merged_set == Set.fromList [v1]
                         else isBottom merged_set
+            -- @nonl
             -- @-node:gcross.20100308112554.1331:same location
             -- @-others
             ]
@@ -694,17 +714,19 @@ main = defaultMain
             -- @    @+others
             -- @+node:gcross.20100308112554.1340:different locations
             [testProperty "different locations" $
-                \v1 v2 ->
+                \v1 v2 →
                     (vertexLocation v1 /= vertexLocation v2) ==>
                         Set.notMember v2 (Set.fromList [v1])
+            -- @nonl
             -- @-node:gcross.20100308112554.1340:different locations
             -- @+node:gcross.20100308112554.1341:same location
             ,testProperty "same location, same orientation" $
-                \l o1 o2 ->
+                \l o1 o2 →
                     let contained = Set.member (Vertex l o2) (Set.fromList [Vertex l o1])
                     in if o1 == o2
                         then contained
                         else isBottom contained
+            -- @nonl
             -- @-node:gcross.20100308112554.1341:same location
             -- @-others
             ]
@@ -722,8 +744,9 @@ main = defaultMain
                     "Do the interior angles sum to 360?"
                     360
                     (sum . map polygonInteriorAngle $ polygons)
-            | Tiling name polygons _ _ <- tilings
+            | Tiling name polygons _ _ ← tilings
             ]
+        -- @nonl
         -- @-node:gcross.20100307133316.1313:sum to 360
         -- @+node:gcross.20100308112554.1313:correct steps
         ,testGroup "correct steps" $
@@ -732,15 +755,16 @@ main = defaultMain
                     "Do the interior angles sum to 360?"
                     correct_steps
                     (lookupTilingSteps name)
-            | (name,correct_steps) <-
+            | (name,correct_steps) ←
                 [("quadrille"
-                 ,[Step (90 * i) 0 | i <- [0..3]]
+                 ,[Step (90 * i) 0 | i ← [0..3]]
                  )
                 ,("deltille"
-                 ,[Step (60 * i) 0 | i <- [0..5]]
+                 ,[Step (60 * i) 0 | i ← [0..5]]
                  )
                 ]
             ]
+        -- @nonl
         -- @-node:gcross.20100308112554.1313:correct steps
         -- @+node:gcross.20100308112554.1317:invertible steps
         ,testGroup "invertible steps" $
@@ -755,8 +779,9 @@ main = defaultMain
                     findStepNumberForRawVertex (tilingSteps tiling) originRawVertex
                     .
                     stepFromRawVertex originRawVertex
-            | tiling <- tilings
+            | tiling ← tilings
             ]
+        -- @nonl
         -- @-node:gcross.20100308112554.1317:invertible steps
         -- @+node:gcross.20100309160622.1349:based on grown lattice
         ,testGroup ("based on " ++ show grown_lattice_size ++ "x" ++ show grown_lattice_size ++ " grown lattice") $
@@ -770,8 +795,9 @@ main = defaultMain
                     mapM_ evaluate outside_vertices
                     evaluate vertices
                     mapM_ evaluate edges
-                | name <- map tilingName tilings
+                | name ← map tilingName tilings
                 ]
+            -- @nonl
             -- @-node:gcross.20100309124842.1406:consistent
             -- @+node:gcross.20100309150650.1374:correct number of orientations
             ,testGroup "correct number of orientations" $
@@ -789,7 +815,7 @@ main = defaultMain
                         fromJust
                         $
                         Map.lookup name grown_lattices
-                | (name,correct_number_of_orientations) <-
+                | (name,correct_number_of_orientations) ←
                     [("quadrille",1)
                     ,("truncated quadrille",4)
                     ,("snub quadrille",4)
@@ -803,6 +829,7 @@ main = defaultMain
                     ,("isosnub quadrille",2)
                     ]
                 ]
+            -- @nonl
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
@@ -823,13 +850,14 @@ main = defaultMain
                 in
                     [testGroup "pre-prune" $
                         [testCase name $ checkAdjacenciesOf 0 . lookupGrownLattice $ name
-                        | name <- map tilingName tilings
+                        | name ← map tilingName tilings
                         ]
                     ,testGroup "post-prune" $
                         [testCase name $ checkAdjacenciesOf 1 . pruneLattice . lookupGrownLattice $ name
-                        | name <- map tilingName tilings
+                        | name ← map tilingName tilings
                         ]
                     ]
+            -- @nonl
             -- @-node:gcross.20100309160622.1348:valid adjacencies
             -- @-others
             ]
@@ -849,9 +877,9 @@ main = defaultMain
                                 >>
                                 getAndDrawLattice
                             ))
-                    | (bounds,correct_picture) <- bounds_and_correct_pictures
+                    | (bounds,correct_picture) ← bounds_and_correct_pictures
                     ]
-                | (name,bounds_and_correct_pictures) <-
+                | (name,bounds_and_correct_pictures) ←
                     -- @        @+others
                     -- @+node:gcross.20100310123433.1423:quadrille
                     [("quadrille"
@@ -1157,9 +1185,9 @@ main = defaultMain
                                 >>
                                 getAndDrawPrunedLattice
                             ))
-                    | (bounds,correct_picture) <- bounds_and_correct_pictures
+                    | (bounds,correct_picture) ← bounds_and_correct_pictures
                     ]
-                | (name,bounds_and_correct_pictures) <-
+                | (name,bounds_and_correct_pictures) ←
                     -- @        @+others
                     -- @+node:gcross.20100310140947.1408:quadrille
                     [("quadrille"
@@ -1390,6 +1418,7 @@ main = defaultMain
                     -- @-others
                     ]
                 ]
+            -- @nonl
             -- @-node:gcross.20100310140947.1407:after pruning
             -- @-others
             ]
@@ -1413,15 +1442,16 @@ main = defaultMain
                     "Were the correct number of lattices generated?"
                     8
                     (length lattices)
-                forM_ (zip lattices (tail lattices)) $ \(lattice1,lattice2) -> do
+                forM_ (zip lattices (tail lattices)) $ \(lattice1,lattice2) → do
                     assertBool
                         "Is the number of edges in the lattices monotonically increasing?"
                         ((length . latticeEdges) lattice2 > (length . latticeEdges) lattice1)
                     assertBool
                         "Is the number of vertices in the lattices monotonically increasing?"
                         ((Bimap.size . latticeVertices) lattice2 > (Bimap.size . latticeVertices) lattice1)
-            | tiling_name <- map tilingName tilings
+            | tiling_name ← map tilingName tilings
             ]
+        -- @nonl
         -- @-node:gcross.20100312175547.1383:iterable 20 times
         -- @-others
         ]

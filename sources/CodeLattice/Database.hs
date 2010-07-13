@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100312175547.1842:<< Language extensions >>
 -- @nl
 
@@ -39,35 +40,37 @@ import CodeLattice
 -- @+others
 -- @+node:gcross.20100312175547.1823:Enumerators
 -- @+node:gcross.20100312175547.1824:getX
-get1 :: (Monad m) => a -> IterAct m (Maybe a)
+get1 :: (Monad m) => a → IterAct m (Maybe a)
 get1 x _ = return $ Left $ Just $! x
 
-get2 :: (Monad m) => a -> b -> IterAct m (Maybe (a,b))
+get2 :: (Monad m) => a → b → IterAct m (Maybe (a,b))
 get2 x y _ = return $ Left $ Just $! (x,y)
 
-get3 :: (Monad m) => a -> b -> c -> IterAct m (Maybe (a,b,c))
+get3 :: (Monad m) => a → b → c → IterAct m (Maybe (a,b,c))
 get3 x y z _ = return $ Left $ Just $! (x,y,z)
 
-get4 :: (Monad m) => a -> b -> c -> d -> IterAct m (Maybe (a,b,c,d))
+get4 :: (Monad m) => a → b → c → d → IterAct m (Maybe (a,b,c,d))
 get4 x y z w _ = return $ Left $ Just $! (x,y,z,w)
+-- @nonl
 -- @-node:gcross.20100312175547.1824:getX
 -- @+node:gcross.20100312175547.1825:fetchX
-fetch1 :: (Monad m) => a -> IterAct m [a]
+fetch1 :: (Monad m) => a → IterAct m [a]
 fetch1 a accum = result' (a:accum) --'
 
-fetch2 :: (Monad m) => a -> b -> IterAct m [(a, b)]
+fetch2 :: (Monad m) => a → b → IterAct m [(a, b)]
 fetch2 a b accum = result' ((a, b):accum) --'
 
-fetch3 :: (Monad m) => a -> b -> c -> IterAct m [(a, b, c)]
+fetch3 :: (Monad m) => a → b → c → IterAct m [(a, b, c)]
 fetch3 a b c accum = result' ((a, b, c):accum) --'
 
-fetch4 :: (Monad m) => a -> b -> c -> d -> IterAct m [(a, b, c, d)]
+fetch4 :: (Monad m) => a → b → c → d → IterAct m [(a, b, c, d)]
 fetch4 a b c d accum = result' ((a, b, c, d):accum) --'
+-- @nonl
 -- @-node:gcross.20100312175547.1825:fetchX
 -- @-node:gcross.20100312175547.1823:Enumerators
 -- @+node:gcross.20100312175547.1817:Functions
 -- @+node:gcross.20100312220352.1834:edgeIteratee
-edgeIteratee :: (MonadIO m) => Int -> Int -> Int -> Int -> IterAct m [Edge]
+edgeIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [Edge]
 edgeIteratee
     vertex_number_1 ray_number_1
     vertex_number_2 ray_number_2
@@ -77,24 +80,26 @@ edgeIteratee
                   (EdgeSide vertex_number_2 ray_number_2)
             :edges
             )
+-- @nonl
 -- @-node:gcross.20100312220352.1834:edgeIteratee
 -- @+node:gcross.20100312220352.1836:vertexIteratee
-vertexIteratee :: (MonadIO m) => Int -> Int -> Int -> Int -> IterAct m [(Int,Vertex)]
+vertexIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [(Int,Vertex)]
 vertexIteratee vertex_number x y orientation vertices =
     result' ((vertex_number -- '
              ,Vertex (Location x y) orientation
              )
             :vertices
             )
+-- @nonl
 -- @-node:gcross.20100312220352.1836:vertexIteratee
 -- @+node:gcross.20100312175547.1819:makeConnection
 makeConnection heading = do
-    either_conn <- runErrorT $ do
-        cp <- join $ liftIO $ readfile emptyCP "connection.cfg"
-        host <- get cp "data source" "host"
-        database <- get cp "data source" "database"
-        user <- get cp heading "user"
-        password <- get cp heading "password"
+    either_conn ← runErrorT $ do
+        cp ← join $ liftIO $ readfile emptyCP "connection.cfg"
+        host ← get cp "data source" "host"
+        database ← get cp "data source" "database"
+        user ← get cp heading "user"
+        password ← get cp heading "password"
         return $ connect
             [   CAhost host
             ,   CAdbname database
@@ -102,10 +107,11 @@ makeConnection heading = do
             ,   CApassword password
             ]
     case either_conn of
-        Left err -> do
+        Left err → do
             print err
             exitFailure
-        Right conn -> return conn
+        Right conn → return conn
+-- @nonl
 -- @-node:gcross.20100312175547.1819:makeConnection
 -- @+node:gcross.20100312175547.1827:generateRandomUUIDAsString
 generateRandomUUIDAsString :: (MonadIO m) => m String
@@ -119,34 +125,35 @@ insertRow name statement type_ids = insertRows name statement type_ids . (:[])
 insertRows name statement type_ids rows =
     withPreparedStatement
         (prepareCommand name (sql statement) type_ids)
-        (\prepared_statement ->
+        (\prepared_statement →
             (forM rows $
-                \row -> withBoundStatement prepared_statement row $
-                    \bound_statement -> execDML bound_statement
+                \row → withBoundStatement prepared_statement row $
+                    \bound_statement → execDML bound_statement
             )
             >>=
             (return . sum)
         )
     >>=
-    \number_of_rows_inserted ->
+    \number_of_rows_inserted →
         unless (number_of_rows_inserted == length rows) . error $
             "Inserted "
             ++ show number_of_rows_inserted ++
             " rows, but had been given "
             ++ show (length rows) ++
             " rows."
+-- @nonl
 -- @-node:gcross.20100312175547.1833:insertRows
 -- @+node:gcross.20100312175547.1831:storeLattice
 storeLattice ::
-    String ->
-    Bool ->
-    Int ->
-    PositionSpaceLattice ->
+    String →
+    Bool →
+    Int →
+    PositionSpaceLattice →
     (forall mark . DBM mark Session String)
 storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice (Lattice vertices edges)) =
     generateRandomUUIDAsString
     >>=
-    \lattice_id -> do
+    \lattice_id → do
         insertRow
             "insert_lattice"
             "insert into lattices (lattice_id, tiling_name, periodic, growth_iteration_number, number_of_vertices, number_of_edges) values ((?::uuid),?,?,?,?,?)"
@@ -180,7 +187,7 @@ storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice 
                 ,bindP $ y
                 ,bindP $ orientation
                 ]
-            |   (vertex_number,Vertex (Location x y) orientation) <-
+            |   (vertex_number,Vertex (Location x y) orientation) ←
                     Bimap.toList vertices
             ]
 
@@ -200,9 +207,10 @@ storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice 
                 ,bindP $ ray_2
                 ]
             |   Edge (EdgeSide vertex_number_1 ray_1) (EdgeSide vertex_number_2 ray_2)
-                    <- edges
+                    ← edges
             ]
         return lattice_id
+-- @nonl
 -- @-node:gcross.20100312175547.1831:storeLattice
 -- @+node:gcross.20100312220352.1837:fetchLattice
 fetchLattice lattice_id = fmap PositionSpaceLattice $

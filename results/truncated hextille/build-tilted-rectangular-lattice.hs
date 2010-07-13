@@ -22,7 +22,7 @@ import TruncatedHextille
 main =
     fmap (map read) getArgs
     >>=
-    \[width,height] ->
+    \[width,height] →
         putEdges
         .
         concat
@@ -38,7 +38,6 @@ main =
         iterate (shift R)
         $
         edges
-
 -- @-node:gcross.20100316190653.1521:main
 -- @-others
 -- @-node:gcross.20100316190653.1508:@thin build-tilted-rectangular-lattice.hs

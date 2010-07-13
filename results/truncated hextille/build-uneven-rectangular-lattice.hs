@@ -24,7 +24,7 @@ import TruncatedHextille
 main =
     fmap (map read) getArgs
     >>=
-    \[width,height] ->
+    \[width,height] →
         putEdges
         .
         concat
@@ -40,6 +40,7 @@ main =
         [iterate (shift U) . concat . take (width-1) . iterate (shift R)
         ,iterate (shift U) . shift UL . concat . take width . iterate (shift R)
         ]        
+-- @nonl
 -- @-node:gcross.20100316190653.1558:main
 -- @-others
 -- @-node:gcross.20100316190653.1551:@thin build-uneven-rectangular-lattice.hs

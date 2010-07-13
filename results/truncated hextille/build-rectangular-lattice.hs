@@ -22,7 +22,7 @@ import TruncatedHextille
 main =
     fmap (map read) getArgs
     >>=
-    \[width,height] ->
+    \[width,height] →
         putEdges
         .
         concat
@@ -39,11 +39,12 @@ main =
         $
         edges
   where
-    goUp :: [Edge] -> [[Edge]]
+    goUp :: [Edge] → [[Edge]]
     goUp edges = edges : first_shift : goUp second_shift
       where
         first_shift = shift UL edges
         second_shift = shift UR first_shift
+-- @nonl
 -- @-node:gcross.20100316190653.1556:main
 -- @-others
 -- @-node:gcross.20100316190653.1542:@thin build-rectangular-lattice.hs

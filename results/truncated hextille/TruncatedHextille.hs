@@ -94,33 +94,36 @@ edges =
 -- @-node:gcross.20100316190653.1486:Values
 -- @+node:gcross.20100316190653.1488:Functions
 -- @+node:gcross.20100316190653.1489:shiftEdge
-shiftEdge :: Int -> Int -> Edge -> Edge
+shiftEdge :: Int → Int → Edge → Edge
 shiftEdge x_offset y_offset (Edge (EdgeSide x1 y1 o1) (EdgeSide x2 y2 o2)) =
     Edge (EdgeSide (x1+x_offset) (y1+y_offset) o1) (EdgeSide (x2+x_offset) (y2+y_offset) o2)
+-- @nonl
 -- @-node:gcross.20100316190653.1489:shiftEdge
 -- @+node:gcross.20100316190653.1490:shift
-shift :: Direction -> [Edge] -> [Edge]
+shift :: Direction → [Edge] → [Edge]
 shift direction = map (shiftEdge x_offset y_offset)
   where
     (x_offset,y_offset) =
         case direction of
-            L ->  (-6, 0)
-            R ->  ( 6, 0)
-            U ->  ( 0,-8)
-            D ->  ( 0, 8)
-            UL -> (-3,-4)
-            UR -> ( 3,-4)
-            DL -> (-3, 4)
-            DR -> ( 3, 4)
+            L →  (-6, 0)
+            R →  ( 6, 0)
+            U →  ( 0,-8)
+            D →  ( 0, 8)
+            UL → (-3,-4)
+            UR → ( 3,-4)
+            DL → (-3, 4)
+            DR → ( 3, 4)
+-- @nonl
 -- @-node:gcross.20100316190653.1490:shift
 -- @+node:gcross.20100316190653.1546:putEdges
-putEdges :: [Edge] -> IO ()
+putEdges :: [Edge] → IO ()
 putEdges =
     mapM_ (putStrLn . show)
     .
     Set.toList
     .
     Set.fromList
+-- @nonl
 -- @-node:gcross.20100316190653.1546:putEdges
 -- @-node:gcross.20100316190653.1488:Functions
 -- @-others

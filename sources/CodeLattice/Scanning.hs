@@ -6,6 +6,7 @@
 -- @+node:gcross.20100315120315.1445:<< Language extensions >>
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100315120315.1445:<< Language extensions >>
 -- @nl
 
@@ -55,13 +56,13 @@ data ScanConfiguration = ScanConfiguration
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
-foreign import ccall solve :: CInt -> CInt -> Ptr CInt -> Ptr CInt -> Bool -> IO CInt
+foreign import ccall solve :: CInt → CInt → Ptr CInt → Ptr CInt → Bool → IO CInt
 
-solveForLabeling :: ScanConfiguration -> [CInt] -> CInt
+solveForLabeling :: ScanConfiguration → [CInt] → CInt
 solveForLabeling config values =
     unsafePerformIO $
-    withNDArray (scanOperatorTable config) $ \p_operator_table ->
-    withArray values $ \p_values ->
+    withNDArray (scanOperatorTable config) $ \p_operator_table →
+    withArray values $ \p_values →
         solve
             (scanNumberOfQubits config)
             (scanNumberOfOperators config)
@@ -69,21 +70,22 @@ solveForLabeling config values =
             p_values
             False
 
-solveNoisilyForLabeling :: ScanConfiguration -> [CInt] -> IO CInt
+solveNoisilyForLabeling :: ScanConfiguration → [CInt] → IO CInt
 solveNoisilyForLabeling config values =
-    withNDArray (scanOperatorTable config) $ \p_operator_table ->
-    withArray values $ \p_values ->
+    withNDArray (scanOperatorTable config) $ \p_operator_table →
+    withArray values $ \p_values →
         solve
             (scanNumberOfQubits config)
             (scanNumberOfOperators config)
             p_operator_table
             p_values
             True
+-- @nonl
 -- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
-latticeToScanConfiguration :: Int -> Int -> PositionSpaceLattice -> ScanConfiguration
+latticeToScanConfiguration :: Int → Int → PositionSpaceLattice → ScanConfiguration
 latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceLattice (Lattice vertices edges)) =
     ScanConfiguration
     {   scanNumberOfQubits = fromIntegral number_of_vertices
@@ -97,7 +99,7 @@ latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceL
     vertex_map =
         IntMap.fromAscList
         .
-        map (\(qubit_number,(vertex_number,vertex)) ->
+        map (\(qubit_number,(vertex_number,vertex)) →
                 (vertex_number,(qubit_number,vertexOrientation vertex))
             )
         .
@@ -116,21 +118,22 @@ latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceL
         .
         map (\(Edge (EdgeSide vertex_number_1 ray_number_1)
                     (EdgeSide vertex_number_2 ray_number_2)
-              ) -> let (qubit_number_1, orientation_number_1) =
-                           fromJust $ IntMap.lookup vertex_number_1 vertex_map
-                       (qubit_number_2, orientation_number_2) =
-                           fromJust $ IntMap.lookup vertex_number_2 vertex_map
-                   in  [qubit_number_1
-                       ,ray_number_1 * number_of_orientations + orientation_number_1
-                       ,qubit_number_2
-                       ,ray_number_2 * number_of_orientations + orientation_number_2
-                       ]
+              ) →
+                let (qubit_number_1, orientation_number_1) =
+                        fromJust $ IntMap.lookup vertex_number_1 vertex_map
+                    (qubit_number_2, orientation_number_2) =
+                        fromJust $ IntMap.lookup vertex_number_2 vertex_map
+                in [qubit_number_1
+                   ,ray_number_1 * number_of_orientations + orientation_number_1
+                   ,qubit_number_2
+                   ,ray_number_2 * number_of_orientations + orientation_number_2
+                   ]
         )
         $
         edges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
 -- @+node:gcross.20100315120315.1425:scanOverLabelings
-scanOverLabelings :: Monad m => ScanConfiguration -> ([CInt] -> m ()) -> m ()
+scanOverLabelings :: Monad m => ScanConfiguration → ([CInt] → m ()) → m ()
 {-# INLINE scanOverLabelings #-}
 scanOverLabelings
     (ScanConfiguration
@@ -145,9 +148,10 @@ scanOverLabelings
         genericReplicate number_of_orientations [1,2]
         ++
         genericReplicate (number_of_orientations*(number_of_rays-2)) [1,2,3]
+-- @nonl
 -- @-node:gcross.20100315120315.1425:scanOverLabelings
 -- @+node:gcross.20100316133702.1467:runThunkOverChoices
-runThunkOverChoices :: Monad m => ([a] -> m ()) -> [[a]] -> m ()
+runThunkOverChoices :: Monad m => ([a] → m ()) → [[a]] → m ()
 {-# INLINE runThunkOverChoices #-}
 runThunkOverChoices thunk lists =
     go (reverse lists) []
@@ -155,9 +159,10 @@ runThunkOverChoices thunk lists =
     go [] stack = thunk stack
     go (values:rest_lists) stack =
         mapM_ (go rest_lists . (:stack)) values
+-- @nonl
 -- @-node:gcross.20100316133702.1467:runThunkOverChoices
 -- @+node:gcross.20100316133702.1465:computeNumberOfLabelings
-computeNumberOfLabelings :: ScanConfiguration -> Integer
+computeNumberOfLabelings :: ScanConfiguration → Integer
 computeNumberOfLabelings
     (ScanConfiguration
         {   scanNumberOfOrientations = number_of_orientations
@@ -166,34 +171,39 @@ computeNumberOfLabelings
     ) = (product $ genericReplicate number_of_orientations 2)
         *
         (product $ genericReplicate (number_of_orientations*(number_of_rays-2)) 3)
+-- @nonl
 -- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
 -- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
-canonicalizeVertexLabeling :: [Int] -> [Int]
+canonicalizeVertexLabeling :: [Int] → [Int]
 canonicalizeVertexLabeling old_labeling =
     map ((+1) . fromJust . flip elemIndex (nub old_labeling)) old_labeling
+-- @nonl
 -- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 -- @+node:gcross.20100713115329.1573:generateVertexLabelings
-generateVertexLabelings :: Int -> [[Int]]
-generateVertexLabelings = map (1:) . go . (\x -> x-1)
+generateVertexLabelings :: Int → [[Int]]
+generateVertexLabelings = map (1:) . go . (\x → x-1)
   where
     go 0 = [[]]
     go n =
         (map (1:) (go (n-1)))
         ++
         (map (2:) (replicateM (n-1) [1..3]))
+-- @nonl
 -- @-node:gcross.20100713115329.1573:generateVertexLabelings
 -- @+node:gcross.20100713115329.1584:generateGraphLabelings
-generateGraphLabelings :: Int -> Int -> [[[Int]]]
+generateGraphLabelings :: Int → Int → [[[Int]]]
 generateGraphLabelings number_of_vertices number_of_rays =
     replicateM number_of_vertices
     .
     generateVertexLabelings
     $
     number_of_rays
+-- @nonl
 -- @-node:gcross.20100713115329.1584:generateGraphLabelings
 -- @+node:gcross.20100713115329.1582:canonicalizeGraphLabeling
-canonicalizeGraphLabeling :: [[Int]] -> [[Int]]
+canonicalizeGraphLabeling :: [[Int]] → [[Int]]
 canonicalizeGraphLabeling = map canonicalizeVertexLabeling
+-- @nonl
 -- @-node:gcross.20100713115329.1582:canonicalizeGraphLabeling
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others

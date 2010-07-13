@@ -57,13 +57,14 @@ flag_mode = Optimized
 
 ghc_flags =
     case flag_mode of
-        Debug -> []
-        Optimized -> ["-O2","-fvia-C","-optc=-O3"]
+        Debug → []
+        Optimized → ["-O2","-fvia-C","-optc=-O3"]
 
 gcc_flags =
     case flag_mode of
-        Debug -> ["-g"]
-        Optimized -> ["-O3","-ffast-math","-funroll-loops"]
+        Debug → ["-g"]
+        Optimized → ["-O3","-ffast-math","-funroll-loops"]
+-- @nonl
 -- @-node:gcross.20100315191926.2401:Flags
 -- @-node:gcross.20100315191926.2399:Values
 -- @+node:gcross.20100315191926.2402:main

@@ -22,16 +22,17 @@ import TruncatedHextille
 main =
     fmap (map read) getArgs
     >>=
-    \[size] ->
+    \[size] →
         putEdges
         .
         concat
         .
         take size
         .
-        iterate (\edges -> concat . map ($ edges) . map shift $ [L,R,U,D,UL,UR,DL,DR])
+        iterate (\edges → concat . map ($ edges) . map shift $ [L,R,U,D,UL,UR,DL,DR])
         $
         edges
+-- @nonl
 -- @-node:gcross.20100316190653.1537:main
 -- @-others
 -- @-node:gcross.20100316190653.1534:@thin build-diamond-lattice.hs

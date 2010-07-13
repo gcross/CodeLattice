@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100316133702.1652:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100316133702.1652:<< Language extensions >>
 -- @nl
 
@@ -36,29 +37,29 @@ import CodeLattice.Tilings
 -- @+others
 -- @+node:gcross.20100316133702.1654:main
 main = do
-    [tiling_name,growth_iteration_number_as_string,labeling_as_string] <- getArgs
+    [tiling_name,periodic,growth_iteration_number,labeling_as_string] ← getArgs
     let labeling = read labeling_as_string
-    (number_of_orientations,lattice) <-
+    (number_of_orientations,PositionSpaceLattice lattice) ←
         makeConnection "reader"
         >>=
-        \connection ->
+        \connection →
             withSession connection $ do
-                number_of_orientations <-
+                number_of_orientations ←
                     fmap (fromMaybe $ error "Can't find a tiling with this name!") $
                         doQuery
                             (sql $ "select number_of_orientations from tilings where tiling_name = '" ++ tiling_name ++ "'" ++ ";")
                             get1
                             Nothing
-                lattice <-
+                lattice ←
                     doQuery
-                        (sql $ "select lattice_id from lattices where tiling_name = '" ++ tiling_name ++ "' and growth_iteration_number = " ++ growth_iteration_number_as_string ++ ";")
+                        (sql $ printf "select lattice_id from lattices where tiling_name = '%s' and periodic = %s and growth_iteration_number = %s;" tiling_name periodic growth_iteration_number)
                         get1
                         Nothing
                     >>=
                     maybe (error "Can't find a lattice with this tiling and growth iteration number!") fetchLattice
                 return (number_of_orientations,lattice)
-    mapM (\((orientation_1,label_1),(orientation_2,label_2)) ->
-            putStrLn $ printf "%i|%c --> %i|%c" orientation_1 label_1 orientation_2 label_2
+    mapM (\((orientation_1,label_1),(orientation_2,label_2)) →
+            putStrLn $ printf "%i|%c -→ %i|%c" orientation_1 label_1 orientation_2 label_2
         )
         .
         Set.toList
@@ -84,11 +85,12 @@ main = do
                 [(lookupOrientationAndLabeling side_1
                  ,lookupOrientationAndLabeling side_2
                  )
-                | Edge side_1 side_2 <- latticeEdges lattice
+                | Edge side_1 side_2 ← latticeEdges lattice
                 ]
                 >>=
-                \(a,b) -> [(a,b),(b,a)]
+                \(a,b) → [(a,b),(b,a)]
             )
+-- @nonl
 -- @-node:gcross.20100316133702.1654:main
 -- @-others
 -- @-node:gcross.20100316133702.1651:@thin show-lattice-edges-with-labelings.hs

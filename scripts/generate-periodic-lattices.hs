@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100331165456.1563:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100331165456.1563:<< Language extensions >>
 -- @nl
 
@@ -27,7 +28,7 @@ import CodeLattice.Tilings
 main =
     let lattices =
             concatMap (
-                \tiling_name ->
+                \tiling_name →
                     drop 1
                     .
                     zip3 (repeat tiling_name) [0..]
@@ -48,11 +49,11 @@ main =
             tilings
     in  makeConnection "builder"
         >>=
-        \connection ->
+        \connection →
             withSession connection $
                 withTransaction ReadUncommitted $
                     forM_ lattices $ 
-                        \(tiling_name,growth_iteration_number,lattice) ->
+                        \(tiling_name,growth_iteration_number,lattice) →
                             (liftIO $ do
                                 putStrLn $
                                     "Storing tiling "
@@ -68,6 +69,7 @@ main =
                             fetchLattice
                             >>=
                             flip unless (error "Lattices not equal!") . (== lattice)
+-- @nonl
 -- @-node:gcross.20100331165456.1565:main
 -- @-others
 -- @-node:gcross.20100331165456.1562:@thin generate-periodic-lattices.hs

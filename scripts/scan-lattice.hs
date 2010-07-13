@@ -5,6 +5,7 @@
 -- @<< Language extensions >>
 -- @+node:gcross.20100315191926.3208:<< Language extensions >>
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100315191926.3208:<< Language extensions >>
 -- @nl
 
@@ -37,19 +38,19 @@ import CodeLattice.Tilings
 -- @+others
 -- @+node:gcross.20100315191926.3210:main
 main = do
-    [tiling_name,periodic,growth_iteration_number_as_string] <- getArgs
-    (number_of_orientations,number_of_rays,lattice) <-
+    [tiling_name,periodic,growth_iteration_number_as_string] ← getArgs
+    (number_of_orientations,number_of_rays,lattice) ←
         makeConnection "reader"
         >>=
-        \connection ->
+        \connection →
             withSession connection $ do
-                (number_of_orientations,number_of_rays) <-
+                (number_of_orientations,number_of_rays) ←
                     fmap (fromMaybe $ error "Can't find a tiling with this name!") $
                         doQuery
                             (sql $ "select number_of_orientations,number_of_rays from tilings where tiling_name = '" ++ tiling_name ++ "'" ++ ";")
                             get2
                             Nothing
-                lattice <-
+                lattice ←
                     doQuery
                         (sql $ printf "select lattice_id from lattices where tiling_name = '%s' and periodic = %s and growth_iteration_number = %s;" tiling_name periodic growth_iteration_number_as_string)
                         get1
@@ -63,13 +64,13 @@ main = do
     putStrLn $ show number_of_qubits ++ " qubits"
     putStrLn $ show number_of_operators ++ " operators"
     let total_number_of_labelings = computeNumberOfLabelings config
-    current_number_ref <- newIORef (1 :: Integer)
-    scanOverLabelings config $ \values -> do
-        current_number <- readIORef current_number_ref
+    current_number_ref ← newIORef (1 :: Integer)
+    scanOverLabelings config $ \values → do
+        current_number ← readIORef current_number_ref
         putStr $ printf "[%i/%i]... " current_number total_number_of_labelings
         writeIORef current_number_ref (current_number+1)
         hFlush stdout
-        best_distance <- evaluate (solveForLabeling config values)
+        best_distance ← evaluate (solveForLabeling config values)
         if best_distance > 2
             then do
                 putStrLn "YEP!"
@@ -77,6 +78,7 @@ main = do
                 putStr ": "
                 putStrLn . show $ best_distance
             else putStrLn "nope"
+-- @nonl
 -- @-node:gcross.20100315191926.3210:main
 -- @-others
 -- @-node:gcross.20100315191926.3207:@thin scan-lattice.hs
