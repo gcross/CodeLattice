@@ -603,7 +603,7 @@ iteratePeriodicLattice starting_raw_vertices = do
     expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
 -- @nonl
 -- @-node:gcross.20100331165456.1579:iteratePeriodicLattice
--- @+node:gcross.20100331165456.1581:iterateLatticeRepeatedly
+-- @+node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
 iteratePeriodicLatticeRepeatedly :: [RawVertex] → Int → LatticeMonad ([PositionSpaceLattice],[RawVertex])
 iteratePeriodicLatticeRepeatedly raw_vertices =
     go [] raw_vertices
@@ -620,7 +620,7 @@ iteratePeriodicLatticeRepeatedly raw_vertices =
           \(lattice,next_raw_vertices) →
             go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
 -- @nonl
--- @-node:gcross.20100331165456.1581:iterateLatticeRepeatedly
+-- @-node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
