@@ -783,6 +783,34 @@ main = defaultMain
             ]
         -- @nonl
         -- @-node:gcross.20100308112554.1317:invertible steps
+        -- @+node:gcross.20100713173607.1583:ordered steps
+        ,testGroup "ordered steps" $
+            [testCase (tilingName tiling) $
+                let steps = tilingSteps tiling
+                in assertEqual
+                    "Are the steps ordered?"
+                    (sortBy (compare `on` stepAngle) steps)
+                    steps
+            | tiling ← tilings
+            ]
+        -- @-node:gcross.20100713173607.1583:ordered steps
+        -- @+node:gcross.20100713173607.1586:zero-based steps
+        ,testGroup "zero-based steps" $
+            [testCase (tilingName tiling) $
+                assertEqual
+                    "Are the steps ordered?"
+                    0
+                .
+                stepAngle
+                .
+                head
+                .
+                tilingSteps
+                $
+                tiling
+            | tiling ← tilings
+            ]
+        -- @-node:gcross.20100713173607.1586:zero-based steps
         -- @+node:gcross.20100309160622.1349:based on grown lattice
         ,testGroup ("based on " ++ show grown_lattice_size ++ "x" ++ show grown_lattice_size ++ " grown lattice") $
             -- @    @+others
