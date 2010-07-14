@@ -53,6 +53,12 @@ data ScanConfiguration = ScanConfiguration
     ,   scanOperatorTable :: Array2D CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
+-- @+node:gcross.20100713173607.1613:VertexLabeling
+type VertexLabeling = [Int]
+-- @-node:gcross.20100713173607.1613:VertexLabeling
+-- @+node:gcross.20100713173607.1614:GraphLabeling
+type GraphLabeling = [VertexLabeling]
+-- @-node:gcross.20100713173607.1614:GraphLabeling
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
@@ -174,13 +180,13 @@ computeNumberOfLabelings
 -- @nonl
 -- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
 -- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
-canonicalizeVertexLabeling :: [Int] → [Int]
+canonicalizeVertexLabeling :: VertexLabeling → VertexLabeling
 canonicalizeVertexLabeling old_labeling =
     map ((+1) . fromJust . flip elemIndex (nub old_labeling)) old_labeling
 -- @nonl
 -- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 -- @+node:gcross.20100713115329.1573:generateVertexLabelings
-generateVertexLabelings :: Int → [[Int]]
+generateVertexLabelings :: Int → [VertexLabeling]
 generateVertexLabelings = map (1:) . go . (\x → x-1)
   where
     go 0 = [[]]
@@ -191,7 +197,7 @@ generateVertexLabelings = map (1:) . go . (\x → x-1)
 -- @nonl
 -- @-node:gcross.20100713115329.1573:generateVertexLabelings
 -- @+node:gcross.20100713115329.1584:generateGraphLabelings
-generateGraphLabelings :: Int → Int → [[[Int]]]
+generateGraphLabelings :: Int → Int → [GraphLabeling]
 generateGraphLabelings number_of_vertices number_of_rays =
     replicateM number_of_vertices
     .
@@ -201,7 +207,7 @@ generateGraphLabelings number_of_vertices number_of_rays =
 -- @nonl
 -- @-node:gcross.20100713115329.1584:generateGraphLabelings
 -- @+node:gcross.20100713115329.1582:canonicalizeGraphLabeling
-canonicalizeGraphLabeling :: [[Int]] → [[Int]]
+canonicalizeGraphLabeling :: GraphLabeling → GraphLabeling
 canonicalizeGraphLabeling = map canonicalizeVertexLabeling
 -- @nonl
 -- @-node:gcross.20100713115329.1582:canonicalizeGraphLabeling
