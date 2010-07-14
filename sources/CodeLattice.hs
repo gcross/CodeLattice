@@ -691,6 +691,10 @@ processRawVertices = fmap concat . mapM processRawVertex
 -- @-node:gcross.20100308212437.1468:processRawVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100713173607.1588:Rays
+-- @+node:gcross.20100713173607.1590:stepsToRays
+stepsToRays :: [Step] → Rays
+stepsToRays = Rays . sort . zipWith (flip Ray) [0..] . map stepAngle
+-- @-node:gcross.20100713173607.1590:stepsToRays
 -- @+node:gcross.20100713173607.1597:mapRays
 mapRays :: (Ray → Ray) → Rays → Rays
 mapRays f =
@@ -709,7 +713,6 @@ modifyRayAngleBy f (Ray angle number) = Ray (f angle) number
 -- @+node:gcross.20100713173607.1612:modifyRayAnglesBy
 modifyRayAnglesBy :: (Double → Double) → Rays → Rays
 modifyRayAnglesBy = mapRays . modifyRayAngleBy
--- @nonl
 -- @-node:gcross.20100713173607.1612:modifyRayAnglesBy
 -- @+node:gcross.20100713173607.1589:rotateRays
 rotateRays :: Double → Rays → Rays
