@@ -108,6 +108,18 @@ instance Arbitrary RawVertex where
             arbitrary
             (fmap modulo360 arbitrary)
 -- @-node:gcross.20100307133316.1307:RawVertex
+-- @+node:gcross.20100713173607.1599:Ray
+instance Arbitrary Ray where
+    arbitrary =
+        liftM2 Ray
+            (fmap modulo360 arbitrary)
+            arbitrary
+-- @-node:gcross.20100713173607.1599:Ray
+-- @+node:gcross.20100713173607.1601:Rays
+instance Arbitrary Rays where
+    arbitrary = fmap (Rays . sort) arbitrary
+
+-- @-node:gcross.20100713173607.1601:Rays
 -- @+node:gcross.20100307122538.1302:Step
 instance Arbitrary Step where
     arbitrary =
@@ -655,6 +667,33 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100713115329.1574:generateVertexLabelings
+        -- @+node:gcross.20100713173607.1602:reflectRays
+        ,testGroup "reflectRays"
+            -- @    @+others
+            -- @+node:gcross.20100713173607.1603:squares to identity
+            [testProperty "squares to identity" $
+                \angle →
+                    let f = reflectRays . modulo360 $ angle
+                    in (f . f)  <^(==)^> id
+            -- @-node:gcross.20100713173607.1603:squares to identity
+            -- @+node:gcross.20100713173607.1610:x then y reflections == rotation by 180
+            ,testProperty "x then y reflections == rotation by 180" $
+                (reflectRays 90 . reflectRays 0) <^(==)^> (rotateRays 180)
+            -- @-node:gcross.20100713173607.1610:x then y reflections == rotation by 180
+            -- @-others
+            ]
+        -- @-node:gcross.20100713173607.1602:reflectRays
+        -- @+node:gcross.20100713173607.1607:rotateRays
+        ,testGroup "rotateRays"
+            -- @    @+others
+            -- @+node:gcross.20100713173607.1608:invertible
+            [testProperty "invertible" $
+                \angle → (rotateRays (-angle) . rotateRays angle) <^(==)^> id
+
+            -- @-node:gcross.20100713173607.1608:invertible
+            -- @-others
+            ]
+        -- @-node:gcross.20100713173607.1607:rotateRays
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

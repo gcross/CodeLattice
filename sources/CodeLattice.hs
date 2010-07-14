@@ -13,6 +13,7 @@ module CodeLattice where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100302164430.1307:<< Import needed modules >>
+import Control.Applicative
 import Control.Applicative.Infix
 import Control.Arrow
 import Control.Monad
@@ -92,6 +93,16 @@ data RawVertex = RawVertex
     } deriving (Eq,Ord,Show)
 
 -- @-node:gcross.20100302164430.1242:RawVertex
+-- @+node:gcross.20100713173607.1587:Ray
+data Ray = Ray
+    {   rayAngle :: Double
+    ,   rayNumber :: Int
+    } deriving (Ord,Show)
+-- @-node:gcross.20100713173607.1587:Ray
+-- @+node:gcross.20100713173607.1595:Rays
+newtype Rays = Rays { unwrapRays :: [Ray] } deriving (Eq,Ord,Show)
+-- @nonl
+-- @-node:gcross.20100713173607.1595:Rays
 -- @+node:gcross.20100302201317.1254:ResolverMonad
 type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @-node:gcross.20100302201317.1254:ResolverMonad
@@ -110,6 +121,10 @@ data Vertex = Vertex
 -- @-node:gcross.20100302164430.1235:Vertex
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
+-- @+node:gcross.20100713173607.1604:Eq Ray
+instance Eq Ray where
+    Ray angle1 _ == Ray angle2 _ = abs (angle1-angle2) < 1e-5
+-- @-node:gcross.20100713173607.1604:Eq Ray
 -- @+node:gcross.20100308212437.1384:Ord Vertex
 instance Ord Vertex where
     compare v1@(Vertex l1 o1) v2@(Vertex l2 o2)
@@ -134,6 +149,9 @@ instance Eq Lattice where
 -- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100308212437.1393:Miscellaneous
+-- @+node:gcross.20100713173607.1596:(>+<)
+angle1 >+< angle2 = modulo360 (angle1 + angle2)
+-- @-node:gcross.20100713173607.1596:(>+<)
 -- @+node:gcross.20100302201317.1255:modulo360
 modulo360 :: Double → Double
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
@@ -672,6 +690,36 @@ processRawVertices = fmap concat . mapM processRawVertex
 -- @nonl
 -- @-node:gcross.20100308212437.1468:processRawVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
+-- @+node:gcross.20100713173607.1588:Rays
+-- @+node:gcross.20100713173607.1597:mapRays
+mapRays :: (Ray → Ray) → Rays → Rays
+mapRays f =
+    Rays
+    .
+    sort
+    .
+    map f
+    .
+    unwrapRays
+-- @-node:gcross.20100713173607.1597:mapRays
+-- @+node:gcross.20100713173607.1598:modifyRayAngleBy
+modifyRayAngleBy :: (Double → Double) → Ray → Ray
+modifyRayAngleBy f (Ray angle number) = Ray (f angle) number
+-- @-node:gcross.20100713173607.1598:modifyRayAngleBy
+-- @+node:gcross.20100713173607.1612:modifyRayAnglesBy
+modifyRayAnglesBy :: (Double → Double) → Rays → Rays
+modifyRayAnglesBy = mapRays . modifyRayAngleBy
+-- @nonl
+-- @-node:gcross.20100713173607.1612:modifyRayAnglesBy
+-- @+node:gcross.20100713173607.1589:rotateRays
+rotateRays :: Double → Rays → Rays
+rotateRays = modifyRayAnglesBy . (>+<)
+-- @-node:gcross.20100713173607.1589:rotateRays
+-- @+node:gcross.20100713173607.1594:reflectRays
+reflectRays :: Double → Rays → Rays
+reflectRays = modifyRayAnglesBy . (modulo360 .) . (-) . (*2)
+-- @-node:gcross.20100713173607.1594:reflectRays
+-- @-node:gcross.20100713173607.1588:Rays
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
