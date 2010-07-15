@@ -7,7 +7,7 @@ module Data.EpsilonMatcher.Multiple where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100714141137.2413:<< Import needed modules >>
 import Control.Arrow
-import Control.Monad.State.Strict
+import Control.Monad.Trans.State.Strict
 
 import Data.EpsilonMatcher
 import Data.IntMap (IntMap)
@@ -48,7 +48,7 @@ lookupMatchIn ::
     Int ->
     valueType ->
     MultipleEpsilonMatcherState valueType Int
-lookupMatchIn matcher_index = State . matchIn matcher_index
+lookupMatchIn matcher_index = state . matchIn matcher_index
 -- @-node:gcross.20100714141137.2421:lookupMatchIn
 -- @+node:gcross.20100714141137.2422:runEpsilonMatcher
 runMultipleEpsilonMatchers ::

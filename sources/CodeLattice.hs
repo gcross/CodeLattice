@@ -18,7 +18,8 @@ import Control.Applicative
 import Control.Applicative.Infix
 import Control.Arrow
 import Control.Monad
-import Control.Monad.State.Strict
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State.Strict
 
 import Data.Bimap (Bimap)
 import qualified Data.Bimap as Bimap
@@ -708,7 +709,43 @@ processRawVertices = fmap concat . mapM processRawVertex
 (|⇆) :: Double → Double → Double
 reflection_axis_angle |⇆ angle = 2*reflection_axis_angle - angle
 -- @-node:gcross.20100713173607.1594:(|⇆)
--- @-node:gcross.20100713173607.1588:Rays
+-- @+node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
+-- @+at
+--  getOriginVertexClassModifiedBy :: (Double → Double) → LatticeMonad 
+--  VertexClass
+--  getOriginVertexClassModifiedBy f =
+--      getLatticeSteps
+--      >>=
+--      fmap VertexClass
+--      .
+--      mapM (
+--          lift
+--          .
+--          resolveAngle
+--          .
+--          f
+--          .
+--          stepAngle
+--      )
+-- @-at
+-- @-node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
+-- @+node:gcross.20100714141137.2290:getAllVertexClassesRotatedBy
+-- @+at
+--  getAllVertexClassesModifiedBy :: (Double → Double) → LatticeMonad 
+--  VertexClasses
+--  getAllVertexClassesModifiedBy f =
+--      lift getMatchMaps
+--      >>=
+--      fmap VertexClasses
+--      .
+--      mapM (getOriginVertexClassModifiedBy . (f .) . (+))
+--      .
+--      IntMap.elems
+--      .
+--      (!! 2)
+-- @-at
+-- @-node:gcross.20100714141137.2290:getAllVertexClassesRotatedBy
+-- @-node:gcross.20100713173607.1588:Angle matching
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs

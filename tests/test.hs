@@ -15,7 +15,7 @@
 import Control.Applicative.Infix
 import Control.Exception
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.Trans.Class
 
 import qualified Data.Bimap as Bimap
 import Data.Function

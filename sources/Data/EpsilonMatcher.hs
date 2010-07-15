@@ -7,7 +7,7 @@ module Data.EpsilonMatcher where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100714141137.2395:<< Import needed modules >>
 import Control.Arrow
-import Control.Monad.State.Strict
+import Control.Monad.Trans.State.Strict
 
 import qualified Data.COrdering as COrdering
 import Data.IntMap (IntMap)
@@ -109,7 +109,7 @@ lookupMatch ::
     (Ord valueType, Num valueType) =>
     valueType ->
     EpsilonMatcherState valueType Int
-lookupMatch = State . match
+lookupMatch = state . match
 -- @-node:gcross.20100714141137.2410:lookupMatch
 -- @+node:gcross.20100714141137.2411:runEpsilonMatcher
 runEpsilonMatcher ::

@@ -11,7 +11,7 @@ Library
                     base >= 4.1 && < 5,
                     containers >= 0.2 && < 0.4,
                     random == 1.0.*,
-                    mtl == 1.1.*,
+                    transformers >= 0.2 && < 0.3,
                     array >= 0.2 && < 0.4,
                     bimap == 0.2.*,
                     uuid == 1.*,
