@@ -54,10 +54,12 @@ data ScanConfiguration = ScanConfiguration
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
 -- @+node:gcross.20100713173607.1613:VertexLabeling
-type VertexLabeling = [Int]
+newtype VertexLabeling = VertexLabeling { unwrapVertexLabeling :: [Int] } deriving (Eq,Ord,Show)
+
+
 -- @-node:gcross.20100713173607.1613:VertexLabeling
 -- @+node:gcross.20100713173607.1614:GraphLabeling
-type GraphLabeling = [VertexLabeling]
+newtype GraphLabeling = GraphLabeling { unwrapGraphLabeling :: [VertexLabeling] } deriving (Eq,Ord,Show)
 -- @-node:gcross.20100713173607.1614:GraphLabeling
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
@@ -181,36 +183,50 @@ computeNumberOfLabelings
 -- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
 -- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 canonicalizeVertexLabeling :: VertexLabeling → VertexLabeling
-canonicalizeVertexLabeling old_labeling =
-    map ((+1) . fromJust . flip elemIndex (nub old_labeling)) old_labeling
--- @nonl
+canonicalizeVertexLabeling (VertexLabeling old_labeling) =
+    VertexLabeling
+    .
+    map ((+1) . fromJust . flip elemIndex (nub old_labeling))
+    $
+    old_labeling
 -- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 -- @+node:gcross.20100713115329.1573:generateVertexLabelings
 generateVertexLabelings :: Int → [VertexLabeling]
-generateVertexLabelings = map (1:) . go . (\x → x-1)
+generateVertexLabelings = map (VertexLabeling . (1:)) . go . (\x → x-1)
   where
     go 0 = [[]]
     go n =
         (map (1:) (go (n-1)))
         ++
         (map (2:) (replicateM (n-1) [1..3]))
--- @nonl
 -- @-node:gcross.20100713115329.1573:generateVertexLabelings
 -- @+node:gcross.20100713115329.1584:generateGraphLabelings
 generateGraphLabelings :: Int → Int → [GraphLabeling]
 generateGraphLabelings number_of_vertices number_of_rays =
+    map GraphLabeling
+    .
     replicateM number_of_vertices
     .
     generateVertexLabelings
     $
     number_of_rays
--- @nonl
 -- @-node:gcross.20100713115329.1584:generateGraphLabelings
 -- @+node:gcross.20100713115329.1582:canonicalizeGraphLabeling
 canonicalizeGraphLabeling :: GraphLabeling → GraphLabeling
-canonicalizeGraphLabeling = map canonicalizeVertexLabeling
--- @nonl
+canonicalizeGraphLabeling = GraphLabeling . map canonicalizeVertexLabeling . unwrapGraphLabeling
 -- @-node:gcross.20100713115329.1582:canonicalizeGraphLabeling
+-- @+node:gcross.20100714141137.1609:permuteVertexLabeling
+permuteVertexLabeling ::  VertexLabeling → [Int] → VertexLabeling
+permuteVertexLabeling (VertexLabeling old_labeling) = VertexLabeling . map (old_labeling !!)
+-- @-node:gcross.20100714141137.1609:permuteVertexLabeling
+-- @+node:gcross.20100714141137.1611:permuteGraphLabeling
+permuteGraphLabeling ::  GraphLabeling → [(Int,[Int])] → GraphLabeling
+permuteGraphLabeling (GraphLabeling old_labeling) =
+    GraphLabeling
+    .
+    map (uncurry (permuteVertexLabeling . (old_labeling !!)))
+-- @nonl
+-- @-node:gcross.20100714141137.1611:permuteGraphLabeling
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs

@@ -47,6 +47,18 @@ import CodeLattice.Tilings
 -- @nl
 
 -- @+others
+-- @+node:gcross.20100714141137.2288:AlmostEq
+class AlmostEq a where
+    (≈) :: a → a → Bool
+
+instance AlmostEq Double where
+    x ≈ y = (abs x + abs y < 1e-11) || (abs (x-y) / abs(x+y) * 2 < 1e-7)
+
+instance (AlmostEq a) => AlmostEq [a] where
+    x ≈ y = all (uncurry (≈)) $ zip x y
+
+x /≈ y = not (x ≈ y)
+-- @-node:gcross.20100714141137.2288:AlmostEq
 -- @+node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20091217190104.2176:echo
 echo x = trace (show x) x
@@ -108,18 +120,6 @@ instance Arbitrary RawVertex where
             arbitrary
             (fmap modulo360 arbitrary)
 -- @-node:gcross.20100307133316.1307:RawVertex
--- @+node:gcross.20100713173607.1599:Ray
-instance Arbitrary Ray where
-    arbitrary =
-        liftM2 Ray
-            (fmap modulo360 arbitrary)
-            arbitrary
--- @-node:gcross.20100713173607.1599:Ray
--- @+node:gcross.20100713173607.1601:Rays
-instance Arbitrary Rays where
-    arbitrary = fmap (Rays . sort) arbitrary
-
--- @-node:gcross.20100713173607.1601:Rays
 -- @+node:gcross.20100307122538.1302:Step
 instance Arbitrary Step where
     arbitrary =
@@ -569,17 +569,27 @@ main = defaultMain
             [testCase "null case" $
                 assertEqual
                     "Is the canonical labeling correct?"
-                    []
-                    (canonicalizeVertexLabeling [])
+                    (VertexLabeling [])
+                    (canonicalizeVertexLabeling (VertexLabeling []))
             -- @-node:gcross.20100713003314.1570:null case
             -- @+node:gcross.20100713003314.1571:singleton case
             ,testProperty "singleton case" $
-                ((== [1]) . canonicalizeVertexLabeling . (:[]))
+                ((== VertexLabeling [1]) . canonicalizeVertexLabeling . VertexLabeling . (:[]))
             -- @-node:gcross.20100713003314.1571:singleton case
             -- @+node:gcross.20100713003314.1572:first element of result is 1
             ,testProperty "first element of result is 1" $
-                \(NonEmpty x) → ((== 1) . head . canonicalizeVertexLabeling) x
-            -- @nonl
+                \(NonEmpty x) →
+                    (== 1)
+                    .
+                    head
+                    .
+                    unwrapVertexLabeling
+                    .
+                    canonicalizeVertexLabeling
+                    .
+                    VertexLabeling
+                    $
+                    x
             -- @-node:gcross.20100713003314.1572:first element of result is 1
             -- @+node:gcross.20100713003314.1574:test cases
             ,testGroup "first element of result is 1" $
@@ -589,7 +599,11 @@ main = defaultMain
                     "Is the canonical labeling correct?"
                     canonical_labeling
                  .
+                 unwrapVertexLabeling
+                 .
                  canonicalizeVertexLabeling
+                 .
+                 VertexLabeling
                  $
                  original_labeling
                 |(original_labeling,canonical_labeling) ←
@@ -600,7 +614,6 @@ main = defaultMain
                     ,([2,1,3],[1,2,3])
                     ]
                 ]
-            -- @nonl
             -- @-node:gcross.20100713003314.1574:test cases
             -- @-others
             ]
@@ -658,42 +671,30 @@ main = defaultMain
                 [testCase (show number_of_rays) $
                     assertEqual
                         "Were the correct labelings generated?"
-                        (sort . nub . map canonicalizeVertexLabeling $ replicateM number_of_rays [1..3])
+                        (sort . nub . map (canonicalizeVertexLabeling . VertexLabeling) $ replicateM number_of_rays [1..3])
                         (sort . generateVertexLabelings $ number_of_rays)
                 | number_of_rays ← [1..5]
                 ]
-            -- @nonl
             -- @-node:gcross.20100713115329.1581:all canonical labelings are generated
             -- @-others
             ]
         -- @-node:gcross.20100713115329.1574:generateVertexLabelings
-        -- @+node:gcross.20100713173607.1602:reflectRays
-        ,testGroup "reflectRays"
+        -- @+node:gcross.20100713173607.1602:(|⇆)
+        ,testGroup "(reflection operator)"
             -- @    @+others
             -- @+node:gcross.20100713173607.1603:squares to identity
             [testProperty "squares to identity" $
-                \angle →
-                    let f = reflectRays . modulo360 $ angle
-                    in (f . f)  <^(==)^> id
+                \reflection_angle →
+                    let f = (reflection_angle |⇆)
+                    in (f . f) <^(≈)^> id
             -- @-node:gcross.20100713173607.1603:squares to identity
             -- @+node:gcross.20100713173607.1610:x then y reflections == rotation by 180
             ,testProperty "x then y reflections == rotation by 180" $
-                (reflectRays 90 . reflectRays 0) <^(==)^> (rotateRays 180)
+                (modulo360 . (90|⇆) . (0|⇆)) <^(==)^> (>+< 180)
             -- @-node:gcross.20100713173607.1610:x then y reflections == rotation by 180
             -- @-others
             ]
-        -- @-node:gcross.20100713173607.1602:reflectRays
-        -- @+node:gcross.20100713173607.1607:rotateRays
-        ,testGroup "rotateRays"
-            -- @    @+others
-            -- @+node:gcross.20100713173607.1608:invertible
-            [testProperty "invertible" $
-                \angle → (rotateRays (-angle) . rotateRays angle) <^(==)^> id
-
-            -- @-node:gcross.20100713173607.1608:invertible
-            -- @-others
-            ]
-        -- @-node:gcross.20100713173607.1607:rotateRays
+        -- @-node:gcross.20100713173607.1602:(|⇆)
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions

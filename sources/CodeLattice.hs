@@ -5,6 +5,7 @@
 -- @<< Language extensions >>
 -- @+node:gcross.20100312220352.1855:<< Language extensions >>
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100312220352.1855:<< Language extensions >>
 -- @nl
@@ -93,16 +94,6 @@ data RawVertex = RawVertex
     } deriving (Eq,Ord,Show)
 
 -- @-node:gcross.20100302164430.1242:RawVertex
--- @+node:gcross.20100713173607.1587:Ray
-data Ray = Ray
-    {   rayAngle :: Double
-    ,   rayNumber :: Int
-    } deriving (Ord,Show)
--- @-node:gcross.20100713173607.1587:Ray
--- @+node:gcross.20100713173607.1595:Rays
-newtype Rays = Rays { unwrapRays :: [Ray] } deriving (Eq,Ord,Show)
--- @nonl
--- @-node:gcross.20100713173607.1595:Rays
 -- @+node:gcross.20100302201317.1254:ResolverMonad
 type ResolverMonad resultType = MultipleEpsilonMatcherState Double resultType
 -- @-node:gcross.20100302201317.1254:ResolverMonad
@@ -121,10 +112,6 @@ data Vertex = Vertex
 -- @-node:gcross.20100302164430.1235:Vertex
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
--- @+node:gcross.20100713173607.1604:Eq Ray
-instance Eq Ray where
-    Ray angle1 _ == Ray angle2 _ = abs (angle1-angle2) < 1e-5
--- @-node:gcross.20100713173607.1604:Eq Ray
 -- @+node:gcross.20100308212437.1384:Ord Vertex
 instance Ord Vertex where
     compare v1@(Vertex l1 o1) v2@(Vertex l2 o2)
@@ -149,9 +136,10 @@ instance Eq Lattice where
 -- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100308212437.1393:Miscellaneous
--- @+node:gcross.20100713173607.1596:(>+<)
-angle1 >+< angle2 = modulo360 (angle1 + angle2)
--- @-node:gcross.20100713173607.1596:(>+<)
+-- @+node:gcross.20100714141137.1686:(>+<)
+(>+<) :: Double → Double → Double
+a >+< b = modulo360 (a+b)
+-- @-node:gcross.20100714141137.1686:(>+<)
 -- @+node:gcross.20100302201317.1255:modulo360
 modulo360 :: Double → Double
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
@@ -171,6 +159,10 @@ originRawVertex = RawVertex 0 0 0
 -- @-node:gcross.20100309124842.1409:originRawVertex
 -- @-node:gcross.20100308212437.1393:Miscellaneous
 -- @+node:gcross.20100308212437.1392:Resolving
+-- @+node:gcross.20100714141137.1681:resolveAngle
+resolveAngle :: Double → ResolverMonad Angle
+resolveAngle = lookupMatchIn 2 . modulo360
+-- @-node:gcross.20100714141137.1681:resolveAngle
 -- @+node:gcross.20100302164430.1306:resolveVertex
 resolveVertex :: RawVertex → ResolverMonad Vertex
 resolveVertex (RawVertex x y angle) =
@@ -179,8 +171,7 @@ resolveVertex (RawVertex x y angle) =
             (lookupMatchIn 0 x)
             (lookupMatchIn 1 y)
         )
-        (lookupMatchIn 2 . modulo360 $ angle)
--- @nonl
+        (resolveAngle angle)
 -- @-node:gcross.20100302164430.1306:resolveVertex
 -- @+node:gcross.20100306220637.1354:runResolverMonad
 runResolverMonad :: ResolverMonad resultType → (resultType,[IntMap Int])
@@ -691,37 +682,28 @@ processRawVertices = fmap concat . mapM processRawVertex
 -- @-node:gcross.20100308212437.1468:processRawVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100713173607.1588:Rays
--- @+node:gcross.20100713173607.1590:stepsToRays
-stepsToRays :: [Step] → Rays
-stepsToRays = Rays . sort . zipWith (flip Ray) [0..] . map stepAngle
--- @-node:gcross.20100713173607.1590:stepsToRays
--- @+node:gcross.20100713173607.1597:mapRays
-mapRays :: (Ray → Ray) → Rays → Rays
-mapRays f =
-    Rays
+-- @+node:gcross.20100714141137.1604:(?→?)
+(?→?) :: [Angle] → [Angle] → Maybe [Int]
+(?→?) rays = sequence . map (flip elemIndex rays)
+-- @-node:gcross.20100714141137.1604:(?→?)
+-- @+node:gcross.20100714141137.1607:(??→?)
+(??→?) :: [[Angle]] → [Angle] → Maybe (Int,[Int])
+groups ??→? angles =
+    msum
     .
-    sort
-    .
-    map f
-    .
-    unwrapRays
--- @-node:gcross.20100713173607.1597:mapRays
--- @+node:gcross.20100713173607.1598:modifyRayAngleBy
-modifyRayAngleBy :: (Double → Double) → Ray → Ray
-modifyRayAngleBy f (Ray angle number) = Ray (f angle) number
--- @-node:gcross.20100713173607.1598:modifyRayAngleBy
--- @+node:gcross.20100713173607.1612:modifyRayAnglesBy
-modifyRayAnglesBy :: (Double → Double) → Rays → Rays
-modifyRayAnglesBy = mapRays . modifyRayAngleBy
--- @-node:gcross.20100713173607.1612:modifyRayAnglesBy
--- @+node:gcross.20100713173607.1589:rotateRays
-rotateRays :: Double → Rays → Rays
-rotateRays = modifyRayAnglesBy . (>+<)
--- @-node:gcross.20100713173607.1589:rotateRays
--- @+node:gcross.20100713173607.1594:reflectRays
-reflectRays :: Double → Rays → Rays
-reflectRays = modifyRayAnglesBy . (modulo360 .) . (-) . (*2)
--- @-node:gcross.20100713173607.1594:reflectRays
+    zipWith (\index group_angles → fmap (index,) (group_angles ?→? angles))
+        [0..]
+    $
+    groups
+-- @-node:gcross.20100714141137.1607:(??→?)
+-- @+node:gcross.20100714141137.1605:(??→??)
+(??→??) :: [[Angle]] → [[Angle]] → Maybe [(Int,[Int])]
+(??→??) vertex_classes = sequence . map (vertex_classes ??→?)
+-- @-node:gcross.20100714141137.1605:(??→??)
+-- @+node:gcross.20100713173607.1594:(|⇆)
+(|⇆) :: Double → Double → Double
+reflection_axis_angle |⇆ angle = 2*reflection_axis_angle - angle
+-- @-node:gcross.20100713173607.1594:(|⇆)
 -- @-node:gcross.20100713173607.1588:Rays
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
