@@ -240,34 +240,6 @@ findStepNumberForRawVertex steps vertex_to_find vertex_to_step_from = do
 -- @-node:gcross.20100302201317.1253:findStepNumberForRawVertex
 -- @-node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100308212437.1395:Lattice
--- @+node:gcross.20100309124842.1330:emptyLattice
-emptyLattice :: Lattice
-emptyLattice = Lattice Bimap.empty []
--- @-node:gcross.20100309124842.1330:emptyLattice
--- @+node:gcross.20100331110052.1851:isEmptyLattice
-isEmptyLattice :: Lattice → Bool
-isEmptyLattice = (Bimap.null . latticeVertices) <^(||)^> (null . latticeEdges)
--- @nonl
--- @-node:gcross.20100331110052.1851:isEmptyLattice
--- @+node:gcross.20100331110052.1852:latticeNumberOfEdges
-latticeNumberOfEdges :: Lattice → Int
-latticeNumberOfEdges = length . latticeEdges
--- @nonl
--- @-node:gcross.20100331110052.1852:latticeNumberOfEdges
--- @+node:gcross.20100331110052.1853:latticeNumberOfVertices
-latticeNumberOfVertices :: Lattice → Int
-latticeNumberOfVertices = Bimap.size . latticeVertices
--- @nonl
--- @-node:gcross.20100331110052.1853:latticeNumberOfVertices
--- @+node:gcross.20100308212437.1397:latticeHasVertex
-latticeHasVertex :: Vertex → LatticeMonad Bool
-latticeHasVertex vertex = fmap (Bimap.memberR vertex . latticeVertices) (gets fst)
--- @-node:gcross.20100308212437.1397:latticeHasVertex
--- @+node:gcross.20100312175547.1840:modifyLattice
-modifyLattice :: (Lattice → Lattice) → LatticeMonad ()
-modifyLattice = modify . first
--- @nonl
--- @-node:gcross.20100312175547.1840:modifyLattice
 -- @+node:gcross.20100308212437.1399:addEdgeToLattice
 addEdgeToLattice :: Vertex → Int → Vertex → Int → LatticeMonad ()
 addEdgeToLattice vertex1 ray1 vertex2 ray2 =
@@ -285,11 +257,6 @@ addEdgeToLattice vertex1 ray1 vertex2 ray2 =
         )
 -- @nonl
 -- @-node:gcross.20100308212437.1399:addEdgeToLattice
--- @+node:gcross.20100312175547.1838:getVertexNumberInLattice
-getVertexNumberInLattice :: Vertex → LatticeMonad Int
-getVertexNumberInLattice vertex = fmap (fromJust . Bimap.lookupR vertex . latticeVertices) getLattice
--- @nonl
--- @-node:gcross.20100312175547.1838:getVertexNumberInLattice
 -- @+node:gcross.20100308212437.1401:addVertexToLattice
 addVertexToLattice :: Vertex → LatticeMonad ()
 addVertexToLattice vertex =
@@ -302,35 +269,6 @@ addVertexToLattice vertex =
     )
 -- @nonl
 -- @-node:gcross.20100308212437.1401:addVertexToLattice
--- @+node:gcross.20100309124842.1331:runLatticeMonad
-runLatticeMonad :: [Step] → LatticeMonad resultType → ((resultType,Lattice),[IntMap Int])
-runLatticeMonad steps = (first . second $ fst) . runResolverMonad . flip runStateT (emptyLattice,steps)
--- @nonl
--- @-node:gcross.20100309124842.1331:runLatticeMonad
--- @+node:gcross.20100309124842.1403:growLatticeToBounds
-growLatticeToBounds :: Bounds → [RawVertex] → LatticeMonad [RawVertex]
-growLatticeToBounds bounds = uncurry go . partitionRawVertices
-  where
-    partitionRawVertices = partitionEithers . map placeRawVertex
-
-    placeRawVertex raw_vertex =
-        if withinBounds bounds raw_vertex
-            then Right raw_vertex
-            else Left raw_vertex
-
-    go outside_raw_vertices [] = return outside_raw_vertices
-    go outside_raw_vertices next_raw_vertices =
-        fmap partitionRawVertices (processRawVertices next_raw_vertices)
-        >>=
-        \(new_outside_vertices,new_next_vertices) →
-            go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
--- @nonl
--- @-node:gcross.20100309124842.1403:growLatticeToBounds
--- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
-growLatticeToBoundsFromOrigin :: Bounds → LatticeMonad [RawVertex]
-growLatticeToBoundsFromOrigin bounds = growLatticeToBounds bounds [RawVertex 0 0 0]
--- @nonl
--- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice → IntMap Int
 computeVertexAdjacencies (Lattice vertices edges) =
@@ -348,37 +286,6 @@ computeVertexAdjacencies (Lattice vertices edges) =
     increment (Just n) = Just (n+1)
 -- @nonl
 -- @-node:gcross.20100309160622.1347:computeVertexAdjacencies
--- @+node:gcross.20100309160622.1351:pruneLattice
-pruneLattice :: Lattice → Lattice
-pruneLattice lattice@(Lattice vertices edges)
-    | (length . latticeEdges $ new_lattice) < length edges
-        = pruneLattice new_lattice
-    | (Bimap.size . latticeVertices $ new_lattice) < Bimap.size vertices
-        = pruneLattice new_lattice
-    | otherwise
-        = lattice
-  where
-    vertices_to_remove =
-        IntMap.filter (< 2)
-        .
-        computeVertexAdjacencies
-        $
-        lattice
-
-    new_lattice =
-        lattice
-            {   latticeVertices = 
-                    foldl' (flip Bimap.delete) vertices . IntMap.keys $ vertices_to_remove -- '
-            ,   latticeEdges =
-                    filter (
-                        \(Edge (EdgeSide v1 _) (EdgeSide v2 _)) →
-                            (IntMap.notMember v1 vertices_to_remove)
-                            &&
-                            (IntMap.notMember v2 vertices_to_remove)
-                    ) edges
-            }
--- @nonl
--- @-node:gcross.20100309160622.1351:pruneLattice
 -- @+node:gcross.20100310123433.1421:drawLattice
 drawLattice :: PositionSpaceLattice → String
 drawLattice (PositionSpaceLattice lattice)
@@ -415,23 +322,10 @@ drawLattice (PositionSpaceLattice lattice)
     removeBlankLines = filter (any (/= ' '))
 -- @nonl
 -- @-node:gcross.20100310123433.1421:drawLattice
--- @+node:gcross.20100312175547.1839:getLattice
-getLattice :: LatticeMonad Lattice
-getLattice = gets fst
--- @-node:gcross.20100312175547.1839:getLattice
--- @+node:gcross.20100331165456.1577:getPositionSpaceLattice
-getPositionSpaceLattice :: LatticeMonad PositionSpaceLattice
-getPositionSpaceLattice =
-    lift getMatchMaps
-    >>=
-    \[x_map,y_map,orientation_map] →
-        fmap (mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
--- @nonl
--- @-node:gcross.20100331165456.1577:getPositionSpaceLattice
--- @+node:gcross.20100312175547.1381:getLatticeSteps
-getLatticeSteps :: LatticeMonad [Step]
-getLatticeSteps = gets snd
--- @-node:gcross.20100312175547.1381:getLatticeSteps
+-- @+node:gcross.20100309124842.1330:emptyLattice
+emptyLattice :: Lattice
+emptyLattice = Lattice Bimap.empty []
+-- @-node:gcross.20100309124842.1330:emptyLattice
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
 getAndDrawLattice = fmap drawLattice getPositionSpaceLattice
@@ -445,11 +339,62 @@ getAndDrawPrunedLattice =
         fmap (drawLattice . mapKeysToPositionsInLattice x_map y_map orientation_map . pruneLattice) getLattice
 -- @nonl
 -- @-node:gcross.20100310140947.1420:getAndDrawPrunedLattice
+-- @+node:gcross.20100312175547.1839:getLattice
+getLattice :: LatticeMonad Lattice
+getLattice = gets fst
+-- @-node:gcross.20100312175547.1839:getLattice
+-- @+node:gcross.20100312175547.1381:getLatticeSteps
+getLatticeSteps :: LatticeMonad [Step]
+getLatticeSteps = gets snd
+-- @-node:gcross.20100312175547.1381:getLatticeSteps
 -- @+node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 getNumberOfEdgesInLattice, getNumberOfVerticesInLattice :: LatticeMonad Int
 getNumberOfEdgesInLattice = fmap (length . latticeEdges) getLattice
 getNumberOfVerticesInLattice = fmap (Bimap.size . latticeVertices) getLattice
 -- @-node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
+-- @+node:gcross.20100331165456.1577:getPositionSpaceLattice
+getPositionSpaceLattice :: LatticeMonad PositionSpaceLattice
+getPositionSpaceLattice =
+    lift getMatchMaps
+    >>=
+    \[x_map,y_map,orientation_map] →
+        fmap (mapKeysToPositionsInLattice x_map y_map orientation_map) getLattice
+-- @nonl
+-- @-node:gcross.20100331165456.1577:getPositionSpaceLattice
+-- @+node:gcross.20100312175547.1838:getVertexNumberInLattice
+getVertexNumberInLattice :: Vertex → LatticeMonad Int
+getVertexNumberInLattice vertex = fmap (fromJust . Bimap.lookupR vertex . latticeVertices) getLattice
+-- @nonl
+-- @-node:gcross.20100312175547.1838:getVertexNumberInLattice
+-- @+node:gcross.20100309124842.1403:growLatticeToBounds
+growLatticeToBounds :: Bounds → [RawVertex] → LatticeMonad [RawVertex]
+growLatticeToBounds bounds = uncurry go . partitionRawVertices
+  where
+    partitionRawVertices = partitionEithers . map placeRawVertex
+
+    placeRawVertex raw_vertex =
+        if withinBounds bounds raw_vertex
+            then Right raw_vertex
+            else Left raw_vertex
+
+    go outside_raw_vertices [] = return outside_raw_vertices
+    go outside_raw_vertices next_raw_vertices =
+        fmap partitionRawVertices (processRawVertices next_raw_vertices)
+        >>=
+        \(new_outside_vertices,new_next_vertices) →
+            go (new_outside_vertices ++ outside_raw_vertices) new_next_vertices
+-- @nonl
+-- @-node:gcross.20100309124842.1403:growLatticeToBounds
+-- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
+growLatticeToBoundsFromOrigin :: Bounds → LatticeMonad [RawVertex]
+growLatticeToBoundsFromOrigin bounds = growLatticeToBounds bounds [RawVertex 0 0 0]
+-- @nonl
+-- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
+-- @+node:gcross.20100331110052.1851:isEmptyLattice
+isEmptyLattice :: Lattice → Bool
+isEmptyLattice = (Bimap.null . latticeVertices) <^(||)^> (null . latticeEdges)
+-- @nonl
+-- @-node:gcross.20100331110052.1851:isEmptyLattice
 -- @+node:gcross.20100312133145.1378:iterateLattice
 iterateLattice :: [RawVertex] → LatticeMonad (Lattice,[RawVertex])
 iterateLattice starting_raw_vertices = do
@@ -488,6 +433,58 @@ iterateLatticeRepeatedly raw_vertices =
             go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
 -- @nonl
 -- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
+-- @+node:gcross.20100331165456.1579:iteratePeriodicLattice
+iteratePeriodicLattice :: [RawVertex] → LatticeMonad (PositionSpaceLattice,[RawVertex])
+iteratePeriodicLattice starting_raw_vertices = do
+    steps ← getLatticeSteps
+    starting_number_of_vertices ← getNumberOfVerticesInLattice
+    starting_number_of_edges ← getNumberOfEdgesInLattice
+    let go bounds raw_vertices = do
+            next_raw_vertices ← growLatticeToBounds bounds raw_vertices
+            pruned_lattice ← fmap periodizeLatticeGrownWithinRectangularBounds getPositionSpaceLattice
+            case ((Bimap.size . latticeVertices . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_vertices
+                 ,(length . latticeEdges . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_edges
+                 ) of
+                (_,True) → return (pruned_lattice,next_raw_vertices)
+                (True,False) → error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
+                (False,False) → go (expandBounds bounds) next_raw_vertices
+    go (Bounds (-1) (-1) 1 1) starting_raw_vertices
+  where
+    expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
+-- @nonl
+-- @-node:gcross.20100331165456.1579:iteratePeriodicLattice
+-- @+node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
+iteratePeriodicLatticeRepeatedly :: [RawVertex] → Int → LatticeMonad ([PositionSpaceLattice],[RawVertex])
+iteratePeriodicLatticeRepeatedly raw_vertices =
+    go [] raw_vertices
+    >=>
+    \(lattices,raw_vertices) →
+        return (reverse lattices,raw_vertices)
+  where
+    go lattices current_raw_vertices number_of_iterations_remaining
+     | number_of_iterations_remaining <= 0
+        = return (lattices,current_raw_vertices)
+     | otherwise
+        = iteratePeriodicLattice current_raw_vertices
+          >>=
+          \(lattice,next_raw_vertices) →
+            go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
+-- @nonl
+-- @-node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
+-- @+node:gcross.20100308212437.1397:latticeHasVertex
+latticeHasVertex :: Vertex → LatticeMonad Bool
+latticeHasVertex vertex = fmap (Bimap.memberR vertex . latticeVertices) (gets fst)
+-- @-node:gcross.20100308212437.1397:latticeHasVertex
+-- @+node:gcross.20100331110052.1852:latticeNumberOfEdges
+latticeNumberOfEdges :: Lattice → Int
+latticeNumberOfEdges = length . latticeEdges
+-- @nonl
+-- @-node:gcross.20100331110052.1852:latticeNumberOfEdges
+-- @+node:gcross.20100331110052.1853:latticeNumberOfVertices
+latticeNumberOfVertices :: Lattice → Int
+latticeNumberOfVertices = Bimap.size . latticeVertices
+-- @nonl
+-- @-node:gcross.20100331110052.1853:latticeNumberOfVertices
 -- @+node:gcross.20100312175547.1828:mapKeysToPositionInLattice
 mapKeysToPositionsInLattice :: MatchMap → MatchMap → MatchMap → Lattice → PositionSpaceLattice
 mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
@@ -514,6 +511,11 @@ mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
         orientation = fromJust (IntMap.lookup orientation_key orientation_map)
 -- @nonl
 -- @-node:gcross.20100312175547.1828:mapKeysToPositionInLattice
+-- @+node:gcross.20100312175547.1840:modifyLattice
+modifyLattice :: (Lattice → Lattice) → LatticeMonad ()
+modifyLattice = modify . first
+-- @nonl
+-- @-node:gcross.20100312175547.1840:modifyLattice
 -- @+node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice → PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
@@ -597,44 +599,42 @@ periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vert
               in Just $ Edge interior_edge_side (EdgeSide wrapped_vertex_number exterior_ray_number)
 -- @nonl
 -- @-node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
--- @+node:gcross.20100331165456.1579:iteratePeriodicLattice
-iteratePeriodicLattice :: [RawVertex] → LatticeMonad (PositionSpaceLattice,[RawVertex])
-iteratePeriodicLattice starting_raw_vertices = do
-    steps ← getLatticeSteps
-    starting_number_of_vertices ← getNumberOfVerticesInLattice
-    starting_number_of_edges ← getNumberOfEdgesInLattice
-    let go bounds raw_vertices = do
-            next_raw_vertices ← growLatticeToBounds bounds raw_vertices
-            pruned_lattice ← fmap periodizeLatticeGrownWithinRectangularBounds getPositionSpaceLattice
-            case ((Bimap.size . latticeVertices . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_vertices
-                 ,(length . latticeEdges . unwrapPositionSpaceLattice) pruned_lattice > starting_number_of_edges
-                 ) of
-                (_,True) → return (pruned_lattice,next_raw_vertices)
-                (True,False) → error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
-                (False,False) → go (expandBounds bounds) next_raw_vertices
-    go (Bounds (-1) (-1) 1 1) starting_raw_vertices
+-- @+node:gcross.20100309160622.1351:pruneLattice
+pruneLattice :: Lattice → Lattice
+pruneLattice lattice@(Lattice vertices edges)
+    | (length . latticeEdges $ new_lattice) < length edges
+        = pruneLattice new_lattice
+    | (Bimap.size . latticeVertices $ new_lattice) < Bimap.size vertices
+        = pruneLattice new_lattice
+    | otherwise
+        = lattice
   where
-    expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
+    vertices_to_remove =
+        IntMap.filter (< 2)
+        .
+        computeVertexAdjacencies
+        $
+        lattice
+
+    new_lattice =
+        lattice
+            {   latticeVertices = 
+                    foldl' (flip Bimap.delete) vertices . IntMap.keys $ vertices_to_remove -- '
+            ,   latticeEdges =
+                    filter (
+                        \(Edge (EdgeSide v1 _) (EdgeSide v2 _)) →
+                            (IntMap.notMember v1 vertices_to_remove)
+                            &&
+                            (IntMap.notMember v2 vertices_to_remove)
+                    ) edges
+            }
 -- @nonl
--- @-node:gcross.20100331165456.1579:iteratePeriodicLattice
--- @+node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
-iteratePeriodicLatticeRepeatedly :: [RawVertex] → Int → LatticeMonad ([PositionSpaceLattice],[RawVertex])
-iteratePeriodicLatticeRepeatedly raw_vertices =
-    go [] raw_vertices
-    >=>
-    \(lattices,raw_vertices) →
-        return (reverse lattices,raw_vertices)
-  where
-    go lattices current_raw_vertices number_of_iterations_remaining
-     | number_of_iterations_remaining <= 0
-        = return (lattices,current_raw_vertices)
-     | otherwise
-        = iteratePeriodicLattice current_raw_vertices
-          >>=
-          \(lattice,next_raw_vertices) →
-            go (lattice:lattices) next_raw_vertices (number_of_iterations_remaining-1)
+-- @-node:gcross.20100309160622.1351:pruneLattice
+-- @+node:gcross.20100309124842.1331:runLatticeMonad
+runLatticeMonad :: [Step] → LatticeMonad resultType → ((resultType,Lattice),[IntMap Int])
+runLatticeMonad steps = (first . second $ fst) . runResolverMonad . flip runStateT (emptyLattice,steps)
 -- @nonl
--- @-node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
+-- @-node:gcross.20100309124842.1331:runLatticeMonad
 -- @-node:gcross.20100308212437.1395:Lattice
 -- @+node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100308212437.1404:processRawVertex
