@@ -53,8 +53,11 @@ extern "C" void solve(
     (*number_of_gauge_qubits) = code.gauge_qubits.size();
     (*number_of_logical_qubits) = code.logical_qubits.size();
     (*logical_qubit_distances) = (int*) calloc((*number_of_logical_qubits),sizeof(int));
-    for (int i = 0; i < (*number_of_logical_qubits); ++i)
-        (*logical_qubit_distances)[i] = code.logical_qubit_error_distances[i];
+    int* distance_ptr = (*logical_qubit_distances) + (*number_of_logical_qubits) - 1;
+    BOOST_FOREACH(size_t& distance, code.logical_qubit_error_distances) {
+        (*distance_ptr) = distance;
+        --distance_ptr;
+    }
 }
 //@-node:gcross.20100315191926.2794:solve
 //@+node:gcross.20100316133702.1646:<<
