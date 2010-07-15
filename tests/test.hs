@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20091217190104.1411:<< Language extensions >>
+{-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -1675,6 +1676,137 @@ main = defaultMain
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
+    -- @+node:gcross.20100715150143.1659:Solving
+    ,testGroup "Solving" $
+        [let scan_configuration =
+                latticeToScanConfiguration
+                .
+                PositionSpaceLattice
+                $
+                lattice
+         in testGroup lattice_name
+            [testCase (show test_index)
+                .
+                assertEqual
+                    "Was the correct solution obtained by the solver?"
+                    correct_solution
+                .
+                solveForLabeling scan_configuration
+                .
+                LatticeLabeling
+                .
+                map VertexLabeling
+                $
+                labeling
+            | test_index ← [1..]
+            | (labeling,correct_solution) ← test_cases
+            ]
+        |(lattice_name,lattice,test_cases) ←
+            -- @        @+others
+            -- @+node:gcross.20100715150143.1660:4-qubit square, one orientation
+            [("4-qubit square, one orientation"
+             ,Lattice
+              {   latticeVertices =
+                      Bimap.fromList $ zip
+                          [0..]
+                          [Vertex (Location i j) 0 | i ← [0,1], j ← [0,1]]
+              ,   latticeEdges =
+                      [Edge (EdgeSide 0 0) (EdgeSide 2 1)
+                      ,Edge (EdgeSide 0 1) (EdgeSide 1 0)
+                      ,Edge (EdgeSide 3 0) (EdgeSide 1 1)
+                      ,Edge (EdgeSide 3 1) (EdgeSide 2 0)
+                      ]
+              }
+             ,
+              -- @  @+others
+              -- @+node:gcross.20100715150143.1661:1
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) X (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) X (1,0) X
+              -- @-at
+              -- @@c
+              [([[1,1]],Solution 3 0 1 [1])
+              -- @-node:gcross.20100715150143.1661:1
+              -- @+node:gcross.20100715150143.1824:2
+              -- @+at
+              --  (0,0) X (1,0) Z
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) Z
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100715150143.1824:2
+              -- @-others
+              ]
+             )
+            -- @-node:gcross.20100715150143.1660:4-qubit square, one orientation
+            -- @+node:gcross.20100715150143.1828:4-qubit square, two orientations
+            ,("4-qubit square, two orientations"
+             ,Lattice
+              {   latticeVertices =
+                      Bimap.fromList $ zip
+                          [0..]
+                          [Vertex (Location i j) ((i+j) `mod` 2) | i ← [0,1], j ← [0,1]]
+              ,   latticeEdges =
+                      [Edge (EdgeSide 0 0) (EdgeSide 2 1)
+                      ,Edge (EdgeSide 0 1) (EdgeSide 1 0)
+                      ,Edge (EdgeSide 3 0) (EdgeSide 1 1)
+                      ,Edge (EdgeSide 3 1) (EdgeSide 2 0)
+                      ]
+              }
+             ,
+              -- @  @+others
+              -- @+node:gcross.20100715150143.1829:1
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) X (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) X (1,0) X
+              -- @-at
+              -- @@c
+              [([[1,1],[1,1]],Solution 3 0 1 [1])
+              -- @-node:gcross.20100715150143.1829:1
+              -- @+node:gcross.20100715150143.1830:2
+              -- @+at
+              --  (0,0) X (1,0) Z
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) Z
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2],[1,2]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100715150143.1830:2
+              -- @+node:gcross.20100715150143.1835:3
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) Z (0,1) Z
+              --  (1,1) X (0,1) X
+              --  (1,1) Z (1,0) Z
+              -- @-at
+              -- @@c
+              ,([[1,2],[2,1]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100715150143.1835:3
+              -- @+node:gcross.20100715150143.1837:4
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2],[1,1]],Solution 0 2 2 [1,1])
+              -- @-node:gcross.20100715150143.1837:4
+              -- @-others
+              ]
+             )
+            -- @-node:gcross.20100715150143.1828:4-qubit square, two orientations
+            -- @-others
+            ]
+        ]
+    -- @-node:gcross.20100715150143.1659:Solving
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl
