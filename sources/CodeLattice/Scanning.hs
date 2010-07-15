@@ -51,8 +51,6 @@ import CodeLattice
 data ScanConfiguration = ScanConfiguration
     {   scanNumberOfQubits :: CInt
     ,   scanNumberOfOperators :: CInt
-    ,   scanNumberOfOrientations :: CInt
-    ,   scanNumberOfRays :: CInt
     ,   scanOperatorTable :: Array2D CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
@@ -148,17 +146,16 @@ flattenLatticeLabeling =
     unwrapLatticeLabeling
 -- @-node:gcross.20100714222047.1669:flattenLatticeLabeling
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
-latticeToScanConfiguration :: Int → Int → PositionSpaceLattice → ScanConfiguration
-latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceLattice (Lattice vertices edges)) =
+latticeToScanConfiguration :: PositionSpaceLattice → ScanConfiguration
+latticeToScanConfiguration (PositionSpaceLattice lattice@(Lattice vertices edges)) =
     ScanConfiguration
     {   scanNumberOfQubits = fromIntegral number_of_vertices
     ,   scanNumberOfOperators = fromIntegral number_of_edges
-    ,   scanNumberOfOrientations = fromIntegral number_of_orientations
-    ,   scanNumberOfRays = fromIntegral number_of_rays
     ,   scanOperatorTable = operator_table
     }
   where
     number_of_vertices = Bimap.size vertices
+    number_of_orientations = numberOfOrientationsInLattice lattice
     vertex_map =
         IntMap.fromAscList
         .
@@ -195,18 +192,6 @@ latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceL
         $
         edges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
--- @+node:gcross.20100316133702.1465:computeNumberOfLabelings
-computeNumberOfLabelings :: ScanConfiguration → Integer
-computeNumberOfLabelings
-    (ScanConfiguration
-        {   scanNumberOfOrientations = number_of_orientations
-        ,   scanNumberOfRays = number_of_rays
-        }
-    ) = (product $ genericReplicate number_of_orientations 2)
-        *
-        (product $ genericReplicate (number_of_orientations*(number_of_rays-2)) 3)
--- @nonl
--- @-node:gcross.20100316133702.1465:computeNumberOfLabelings
 -- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 canonicalizeVertexLabeling :: VertexLabeling → VertexLabeling
 canonicalizeVertexLabeling (VertexLabeling old_labeling) =

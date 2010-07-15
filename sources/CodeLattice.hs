@@ -513,12 +513,29 @@ latticeNumberOfVertices = Bimap.size . latticeVertices
 -- @+node:gcross.20100714141137.2543:latticeOrientations
 latticeOrientations :: Lattice → [Angle]
 latticeOrientations =
+    IntSet.toList
+    .
+    IntSet.fromList
+    .
     map vertexOrientation
     .
     Bimap.elems
     .
     latticeVertices
 -- @-node:gcross.20100714141137.2543:latticeOrientations
+-- @+node:gcross.20100715150143.1833:latticeRays
+latticeRays :: Lattice → [Int]
+latticeRays =
+    IntSet.toList
+    .
+    IntSet.fromList
+    .
+    concat
+    .
+    map (\(Edge (EdgeSide _ ray1) (EdgeSide _ ray2)) → [ray1,ray2])
+    .
+    latticeEdges
+-- @-node:gcross.20100715150143.1833:latticeRays
 -- @+node:gcross.20100312175547.1828:mapKeysToPositionInLattice
 mapKeysToPositionsInLattice :: MatchMap → MatchMap → MatchMap → Lattice → PositionSpaceLattice
 mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
@@ -553,13 +570,17 @@ modifyLattice = modify . first
 -- @+node:gcross.20100714141137.2539:numberOfOrientationsInLattice
 numberOfOrientationsInLattice :: Lattice → Int
 numberOfOrientationsInLattice =
-    IntSet.size
-    .
-    IntSet.fromList
+    length
     .
     latticeOrientations
-
 -- @-node:gcross.20100714141137.2539:numberOfOrientationsInLattice
+-- @+node:gcross.20100715150143.1832:numberOfRaysInLattice
+numberOfRaysInLattice :: Lattice → Int
+numberOfRaysInLattice =
+    length
+    .
+    latticeRays
+-- @-node:gcross.20100715150143.1832:numberOfRaysInLattice
 -- @+node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice → PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
