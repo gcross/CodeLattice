@@ -94,6 +94,17 @@ match lookup_value matcher@(EpsilonMatcher match_tree next_index tolerance) =
             else COrdering.Gt
 -- @nonl
 -- @-node:gcross.20100714141137.2405:match
+-- @+node:gcross.20100714141137.2545:reverseMatchMap
+reverseMatchMap :: EpsilonMatcher valueType → IntMap valueType
+reverseMatchMap =
+    IntMap.fromList
+    .
+    map (matchKey &&& matchValue)
+    .
+    AVL.asListL
+    .
+    epsilonMatcherTree
+-- @-node:gcross.20100714141137.2545:reverseMatchMap
 -- @+node:gcross.20100714141137.2406:allMatchValues
 allMatchValues :: EpsilonMatcher valueType → [valueType]
 allMatchValues =
@@ -114,6 +125,10 @@ getMatchMap = gets computeMatchMap
 getAllMatchValues :: EpsilonMatcherState valueType [valueType]
 getAllMatchValues = gets allMatchValues
 -- @-node:gcross.20100714141137.2409:getAllMatchValues
+-- @+node:gcross.20100714141137.2546:getReverseMatchMap
+getReverseMatchMap :: EpsilonMatcherState valueType (IntMap valueType)
+getReverseMatchMap = gets reverseMatchMap
+-- @-node:gcross.20100714141137.2546:getReverseMatchMap
 -- @+node:gcross.20100714141137.2410:lookupMatch
 lookupMatch ::
     (Ord valueType, Num valueType) =>

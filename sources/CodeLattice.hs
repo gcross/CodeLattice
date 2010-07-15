@@ -30,6 +30,7 @@ import Data.EpsilonMatcher.Multiple
 import Data.Function
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import qualified Data.IntSet as IntSet
 import Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -72,7 +73,6 @@ data Lattice = Lattice
     {   latticeVertices :: Bimap Int Vertex
     ,   latticeEdges :: [Edge]
     } deriving (Typeable)
-
 -- @-node:gcross.20100308212437.1389:Lattice
 -- @+node:gcross.20100308212437.1391:LatticeMonad
 type LatticeMonad resultType = StateT (Lattice,[Step]) (State (IntMap (EpsilonMatcher Double))) resultType
@@ -115,6 +115,16 @@ data Vertex = Vertex
 newtype VertexClass = VertexClass { unwrapVertexClass :: [Angle] }
 newtype VertexClasses = VertexClasses { unwrapVertexClasses :: [VertexClass] }
 -- @-node:gcross.20100714141137.2291:VertexClass(es)
+-- @+node:gcross.20100714141137.2533:VertexLabelingPermutation
+newtype VertexLabelingPermutation = VertexLabelingPermutation
+    { unwrapVertexLabelingPermutation :: [Int]
+    } deriving (Eq)
+-- @-node:gcross.20100714141137.2533:VertexLabelingPermutation
+-- @+node:gcross.20100714141137.2534:LatticeLabelingPermutation
+newtype LatticeLabelingPermutation = LatticeLabelingPermutation
+    { unwrapLatticeLabelingPermutation :: [(Int,VertexLabelingPermutation)]
+    } deriving (Eq)
+-- @-node:gcross.20100714141137.2534:LatticeLabelingPermutation
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100308212437.1384:Ord Vertex
@@ -326,6 +336,21 @@ drawLattice (PositionSpaceLattice lattice)
 emptyLattice :: Lattice
 emptyLattice = Lattice Bimap.empty []
 -- @-node:gcross.20100309124842.1330:emptyLattice
+-- @+node:gcross.20100714141137.2542:getAllOrientations
+getAllOrientations :: LatticeMonad [Angle]
+getAllOrientations = gets (latticeOrientations . fst)
+-- @-node:gcross.20100714141137.2542:getAllOrientations
+-- @+node:gcross.20100714141137.2540:getAllOrientationAngles
+getAllOrientationAngles :: LatticeMonad [Double]
+getAllOrientationAngles = do
+    orientations ← getAllOrientations
+    reverse_matches ← lift (getReverseMatchMapIn 2)
+    return
+        .
+        map (fromJust . flip IntMap.lookup reverse_matches)
+        $
+        orientations
+-- @-node:gcross.20100714141137.2540:getAllOrientationAngles
 -- @+node:gcross.20100310140947.1418:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
 getAndDrawLattice = fmap drawLattice getPositionSpaceLattice
@@ -485,6 +510,15 @@ latticeNumberOfVertices :: Lattice → Int
 latticeNumberOfVertices = Bimap.size . latticeVertices
 -- @nonl
 -- @-node:gcross.20100331110052.1853:latticeNumberOfVertices
+-- @+node:gcross.20100714141137.2543:latticeOrientations
+latticeOrientations :: Lattice → [Angle]
+latticeOrientations =
+    map vertexOrientation
+    .
+    Bimap.elems
+    .
+    latticeVertices
+-- @-node:gcross.20100714141137.2543:latticeOrientations
 -- @+node:gcross.20100312175547.1828:mapKeysToPositionInLattice
 mapKeysToPositionsInLattice :: MatchMap → MatchMap → MatchMap → Lattice → PositionSpaceLattice
 mapKeysToPositionsInLattice x_map y_map orientation_map lattice =
@@ -516,6 +550,16 @@ modifyLattice :: (Lattice → Lattice) → LatticeMonad ()
 modifyLattice = modify . first
 -- @nonl
 -- @-node:gcross.20100312175547.1840:modifyLattice
+-- @+node:gcross.20100714141137.2539:numberOfOrientationsInLattice
+numberOfOrientationsInLattice :: Lattice → Int
+numberOfOrientationsInLattice =
+    IntSet.size
+    .
+    IntSet.fromList
+    .
+    latticeOrientations
+
+-- @-node:gcross.20100714141137.2539:numberOfOrientationsInLattice
 -- @+node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice → PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
@@ -688,11 +732,18 @@ processRawVertices = fmap concat . mapM processRawVertex
 -- @-node:gcross.20100308212437.1402:Processing Vertices
 -- @+node:gcross.20100713173607.1588:Angle matching
 -- @+node:gcross.20100714141137.1604:(?→?)
-(?→?) :: VertexClass → VertexClass → Maybe [Int]
-(?→?) (VertexClass angles) = sequence . map (flip elemIndex angles) . unwrapVertexClass
+(?→?) :: VertexClass → VertexClass → Maybe VertexLabelingPermutation
+(?→?) (VertexClass angles) =
+    fmap VertexLabelingPermutation
+    .
+    sequence
+    .
+    map (flip elemIndex angles)
+    .
+    unwrapVertexClass
 -- @-node:gcross.20100714141137.1604:(?→?)
 -- @+node:gcross.20100714141137.1607:(??→?)
-(??→?) :: VertexClasses → VertexClass → Maybe (Int,[Int])
+(??→?) :: VertexClasses → VertexClass → Maybe (Int,VertexLabelingPermutation)
 (VertexClasses vcs) ??→? vc2 =
     msum
     .
@@ -702,49 +753,67 @@ processRawVertices = fmap concat . mapM processRawVertex
     vcs
 -- @-node:gcross.20100714141137.1607:(??→?)
 -- @+node:gcross.20100714141137.1605:(??→??)
-(??→??) :: VertexClasses → VertexClasses → Maybe [(Int,[Int])]
-(??→??) vertex_classes = sequence . map (vertex_classes ??→?) . unwrapVertexClasses
+(??→??) :: VertexClasses → VertexClasses → Maybe LatticeLabelingPermutation
+(??→??) vertex_classes =
+    fmap LatticeLabelingPermutation
+    .
+    sequence
+    .
+    map (vertex_classes ??→?)
+    .
+    unwrapVertexClasses
 -- @-node:gcross.20100714141137.1605:(??→??)
 -- @+node:gcross.20100713173607.1594:(|⇆)
 (|⇆) :: Double → Double → Double
 reflection_axis_angle |⇆ angle = 2*reflection_axis_angle - angle
 -- @-node:gcross.20100713173607.1594:(|⇆)
 -- @+node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
--- @+at
---  getOriginVertexClassModifiedBy :: (Double → Double) → LatticeMonad 
---  VertexClass
---  getOriginVertexClassModifiedBy f =
---      getLatticeSteps
---      >>=
---      fmap VertexClass
---      .
---      mapM (
---          lift
---          .
---          resolveAngle
---          .
---          f
---          .
---          stepAngle
---      )
--- @-at
+getOriginVertexClassModifiedBy :: (Double → Double) → LatticeMonad VertexClass
+getOriginVertexClassModifiedBy f =
+    getLatticeSteps
+    >>=
+    fmap VertexClass
+    .
+    mapM (
+        lift
+        .
+        resolveAngle
+        .
+        f
+        .
+        stepAngle
+    )
 -- @-node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
--- @+node:gcross.20100714141137.2290:getAllVertexClassesRotatedBy
--- @+at
---  getAllVertexClassesModifiedBy :: (Double → Double) → LatticeMonad 
---  VertexClasses
---  getAllVertexClassesModifiedBy f =
---      lift getMatchMaps
---      >>=
---      fmap VertexClasses
---      .
---      mapM (getOriginVertexClassModifiedBy . (f .) . (+))
---      .
---      IntMap.elems
---      .
---      (!! 2)
--- @-at
--- @-node:gcross.20100714141137.2290:getAllVertexClassesRotatedBy
+-- @+node:gcross.20100714141137.2290:getAllVertexClassesModifiedBy
+getAllVertexClassesModifiedBy :: (Double → Double) → LatticeMonad VertexClasses
+getAllVertexClassesModifiedBy f =
+    getAllOrientationAngles
+    >>=
+    fmap VertexClasses
+    .
+    mapM (getOriginVertexClassModifiedBy . (f .) . (+))
+-- @-node:gcross.20100714141137.2290:getAllVertexClassesModifiedBy
+-- @+node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
+getAllSymmetricLatticeLabelingPermutations :: LatticeMonad [LatticeLabelingPermutation]
+getAllSymmetricLatticeLabelingPermutations =
+    getAllVertexClassesModifiedBy id
+    >>=
+    \original_vertex_classes →
+        fmap (nub . catMaybes)
+        .
+        mapM (
+            fmap (original_vertex_classes ??→??)
+            .
+            getAllVertexClassesModifiedBy
+        )
+        $
+        liftM2 (.)
+            reflections
+            rotations
+  where
+    reflections = id : map (|⇆) [0,90]
+    rotations = map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360]
+-- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
 -- @-node:gcross.20100713173607.1588:Angle matching
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others

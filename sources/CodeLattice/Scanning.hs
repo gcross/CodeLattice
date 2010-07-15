@@ -58,9 +58,10 @@ newtype VertexLabeling = VertexLabeling { unwrapVertexLabeling :: [Int] } derivi
 
 
 -- @-node:gcross.20100713173607.1613:VertexLabeling
--- @+node:gcross.20100713173607.1614:GraphLabeling
-newtype GraphLabeling = GraphLabeling { unwrapGraphLabeling :: [VertexLabeling] } deriving (Eq,Ord,Show)
--- @-node:gcross.20100713173607.1614:GraphLabeling
+-- @+node:gcross.20100713173607.1614:LatticeLabeling
+newtype LatticeLabeling = LatticeLabeling { unwrapLatticeLabeling :: [VertexLabeling] } deriving (Eq,Ord,Show)
+-- @nonl
+-- @-node:gcross.20100713173607.1614:LatticeLabeling
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
@@ -200,33 +201,42 @@ generateVertexLabelings = map (VertexLabeling . (1:)) . go . (\x → x-1)
         ++
         (map (2:) (replicateM (n-1) [1..3]))
 -- @-node:gcross.20100713115329.1573:generateVertexLabelings
--- @+node:gcross.20100713115329.1584:generateGraphLabelings
-generateGraphLabelings :: Int → Int → [GraphLabeling]
-generateGraphLabelings number_of_vertices number_of_rays =
-    map GraphLabeling
+-- @+node:gcross.20100713115329.1584:generateLatticeLabelings
+generateLatticeLabelings :: Int → Int → [LatticeLabeling]
+generateLatticeLabelings number_of_vertices number_of_rays =
+    map LatticeLabeling
     .
     replicateM number_of_vertices
     .
     generateVertexLabelings
     $
     number_of_rays
--- @-node:gcross.20100713115329.1584:generateGraphLabelings
--- @+node:gcross.20100713115329.1582:canonicalizeGraphLabeling
-canonicalizeGraphLabeling :: GraphLabeling → GraphLabeling
-canonicalizeGraphLabeling = GraphLabeling . map canonicalizeVertexLabeling . unwrapGraphLabeling
--- @-node:gcross.20100713115329.1582:canonicalizeGraphLabeling
+-- @nonl
+-- @-node:gcross.20100713115329.1584:generateLatticeLabelings
+-- @+node:gcross.20100713115329.1582:canonicalizeLatticeLabeling
+canonicalizeLatticeLabeling :: LatticeLabeling → LatticeLabeling
+canonicalizeLatticeLabeling = LatticeLabeling . map canonicalizeVertexLabeling . unwrapLatticeLabeling
+-- @nonl
+-- @-node:gcross.20100713115329.1582:canonicalizeLatticeLabeling
 -- @+node:gcross.20100714141137.1609:permuteVertexLabeling
-permuteVertexLabeling ::  VertexLabeling → [Int] → VertexLabeling
-permuteVertexLabeling (VertexLabeling old_labeling) = VertexLabeling . map (old_labeling !!)
+permuteVertexLabeling ::  VertexLabeling → VertexLabelingPermutation → VertexLabeling
+permuteVertexLabeling (VertexLabeling old_labeling) =
+    VertexLabeling
+    .
+    map (old_labeling !!)
+    .
+    unwrapVertexLabelingPermutation
+
 -- @-node:gcross.20100714141137.1609:permuteVertexLabeling
--- @+node:gcross.20100714141137.1611:permuteGraphLabeling
-permuteGraphLabeling ::  GraphLabeling → [(Int,[Int])] → GraphLabeling
-permuteGraphLabeling (GraphLabeling old_labeling) =
-    GraphLabeling
+-- @+node:gcross.20100714141137.1611:permuteLatticeLabeling
+permuteLatticeLabeling ::  LatticeLabeling → LatticeLabelingPermutation → LatticeLabeling
+permuteLatticeLabeling (LatticeLabeling old_labeling) =
+    LatticeLabeling
     .
     map (uncurry (permuteVertexLabeling . (old_labeling !!)))
--- @nonl
--- @-node:gcross.20100714141137.1611:permuteGraphLabeling
+    .
+    unwrapLatticeLabelingPermutation
+-- @-node:gcross.20100714141137.1611:permuteLatticeLabeling
 -- @-node:gcross.20100314233604.1670:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs

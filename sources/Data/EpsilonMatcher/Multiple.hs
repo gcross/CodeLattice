@@ -43,12 +43,29 @@ matchIn matcher_index lookup_value matchers =
     in (match_key,IntMap.insert matcher_index new_matcher matchers)
 -- @nonl
 -- @-node:gcross.20100714141137.2418:matchIn
+-- @+node:gcross.20100714141137.2530:allMatchValuesIn
+allMatchValuesIn :: Int → IntMap (EpsilonMatcher valueType) → [valueType]
+allMatchValuesIn matcher_index = allMatchValues . fromJust . IntMap.lookup matcher_index
+-- @-node:gcross.20100714141137.2530:allMatchValuesIn
+-- @+node:gcross.20100714141137.2548:reverseMatchMapIn
+reverseMatchMapIn :: Int → IntMap (EpsilonMatcher valueType) → IntMap valueType
+reverseMatchMapIn matcher_index = reverseMatchMap . fromJust . IntMap.lookup matcher_index
+-- @-node:gcross.20100714141137.2548:reverseMatchMapIn
 -- @-node:gcross.20100714141137.2417:Pure
 -- @+node:gcross.20100714141137.2419:Monadic
 -- @+node:gcross.20100714141137.2420:getMatchMaps
 getMatchMaps :: MultipleEpsilonMatcherState valueType [MatchMap]
-getMatchMaps = fmap (map computeMatchMap . IntMap.elems) get
+getMatchMaps = gets (map computeMatchMap . IntMap.elems)
 -- @-node:gcross.20100714141137.2420:getMatchMaps
+-- @+node:gcross.20100714141137.2531:getAllMatchValuesIn
+getAllMatchValuesIn :: Int → MultipleEpsilonMatcherState valueType [valueType]
+getAllMatchValuesIn = gets . allMatchValuesIn
+
+-- @-node:gcross.20100714141137.2531:getAllMatchValuesIn
+-- @+node:gcross.20100714141137.2550:getReverseMatchMapIn
+getReverseMatchMapIn :: Int → MultipleEpsilonMatcherState valueType (IntMap valueType)
+getReverseMatchMapIn = gets . reverseMatchMapIn
+-- @-node:gcross.20100714141137.2550:getReverseMatchMapIn
 -- @+node:gcross.20100714141137.2421:lookupMatchIn
 lookupMatchIn ::
     (Ord valueType, Num valueType) =>
