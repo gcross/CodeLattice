@@ -13,7 +13,6 @@ Library
                     random == 1.0.*,
                     mtl == 1.1.*,
                     array >= 0.2 && < 0.4,
-                    EpsilonMatcher == 0.1,
                     bimap == 0.2.*,
                     uuid == 1.*,
                     Takusen == 0.8.*,
@@ -21,10 +20,10 @@ Library
                     Vec == 0.9.*,
                     NDArray == 0.1,
                     filepath == 1.1.*,
-                    InfixApplicative == 1.*
+                    InfixApplicative == 1.*,
+                    COrdering >= 2.3 && < 2.4,
+                    AvlTree >= 4.2 && < 4.3
 
     Extra-Libraries: stdc++
-
-
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
 -- @-leo
