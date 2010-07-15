@@ -97,10 +97,10 @@ foreign import ccall solve ::
     Ptr CInt → Ptr (Ptr CInt) →
     IO CInt
 
-solveForLabelingWithVerbosity :: Bool → ScanConfiguration → [CInt] → IO Solution
-solveForLabelingWithVerbosity verbosity config values =
+solveForLabelingWithVerbosity :: Bool → ScanConfiguration → LatticeLabeling → IO Solution
+solveForLabelingWithVerbosity verbosity config labeling =
     withNDArray (scanOperatorTable config) $ \p_operator_table →
-    withArray (map fromIntegral values) $ \p_values →
+    withArray ((map fromIntegral . flattenLatticeLabeling) labeling) $ \p_values →
     alloca $ \p_number_of_stabilizers →
     alloca $ \p_number_of_gauge_qubits →
     alloca $ \p_number_of_logical_qubits →
@@ -125,17 +125,28 @@ solveForLabelingWithVerbosity verbosity config values =
         free p_logical_qubit_distances
         return solution
 
-solveForLabeling :: ScanConfiguration → [CInt] → Solution
-solveForLabeling config values =
+solveForLabeling :: ScanConfiguration → LatticeLabeling → Solution
+solveForLabeling config labeling =
     unsafePerformIO
     $
-    solveForLabelingWithVerbosity False config values
+    solveForLabelingWithVerbosity False config labeling
 
-solveForLabelingNoisily :: ScanConfiguration → [CInt] → IO Solution
+solveForLabelingNoisily :: ScanConfiguration → LatticeLabeling → IO Solution
 solveForLabelingNoisily = solveForLabelingWithVerbosity True
 -- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
+-- @+node:gcross.20100714222047.1669:flattenLatticeLabeling
+flattenLatticeLabeling :: LatticeLabeling → [Int]
+flattenLatticeLabeling =
+    concat
+    .
+    transpose
+    .
+    map unwrapVertexLabeling
+    .
+    unwrapLatticeLabeling
+-- @-node:gcross.20100714222047.1669:flattenLatticeLabeling
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
 latticeToScanConfiguration :: Int → Int → PositionSpaceLattice → ScanConfiguration
 latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceLattice (Lattice vertices edges)) =
@@ -184,35 +195,6 @@ latticeToScanConfiguration number_of_orientations number_of_rays (PositionSpaceL
         $
         edges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
--- @+node:gcross.20100315120315.1425:scanOverLabelings
-scanOverLabelings :: Monad m => ScanConfiguration → ([CInt] → m ()) → m ()
-{-# INLINE scanOverLabelings #-}
-scanOverLabelings
-    (ScanConfiguration
-        {   scanNumberOfOrientations = number_of_orientations
-        ,   scanNumberOfRays = number_of_rays
-        }
-    )
-    thunk
-    = runThunkOverChoices thunk $
-        genericReplicate number_of_orientations [1]
-        ++
-        genericReplicate number_of_orientations [1,2]
-        ++
-        genericReplicate (number_of_orientations*(number_of_rays-2)) [1,2,3]
--- @nonl
--- @-node:gcross.20100315120315.1425:scanOverLabelings
--- @+node:gcross.20100316133702.1467:runThunkOverChoices
-runThunkOverChoices :: Monad m => ([a] → m ()) → [[a]] → m ()
-{-# INLINE runThunkOverChoices #-}
-runThunkOverChoices thunk lists =
-    go (reverse lists) []
-  where
-    go [] stack = thunk stack
-    go (values:rest_lists) stack =
-        mapM_ (go rest_lists . (:stack)) values
--- @nonl
--- @-node:gcross.20100316133702.1467:runThunkOverChoices
 -- @+node:gcross.20100316133702.1465:computeNumberOfLabelings
 computeNumberOfLabelings :: ScanConfiguration → Integer
 computeNumberOfLabelings
