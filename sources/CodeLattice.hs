@@ -110,6 +110,10 @@ data Vertex = Vertex
     ,   vertexOrientation :: Angle
     } deriving (Show,Eq)
 -- @-node:gcross.20100302164430.1235:Vertex
+-- @+node:gcross.20100714141137.2291:VertexClass(es)
+newtype VertexClass = VertexClass { unwrapVertexClass :: [Angle] }
+newtype VertexClasses = VertexClasses { unwrapVertexClasses :: [VertexClass] }
+-- @-node:gcross.20100714141137.2291:VertexClass(es)
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100308212437.1384:Ord Vertex
@@ -681,24 +685,24 @@ processRawVertices = fmap concat . mapM processRawVertex
 -- @nonl
 -- @-node:gcross.20100308212437.1468:processRawVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
--- @+node:gcross.20100713173607.1588:Rays
+-- @+node:gcross.20100713173607.1588:Angle matching
 -- @+node:gcross.20100714141137.1604:(?→?)
-(?→?) :: [Angle] → [Angle] → Maybe [Int]
-(?→?) rays = sequence . map (flip elemIndex rays)
+(?→?) :: VertexClass → VertexClass → Maybe [Int]
+(?→?) (VertexClass angles) = sequence . map (flip elemIndex angles) . unwrapVertexClass
 -- @-node:gcross.20100714141137.1604:(?→?)
 -- @+node:gcross.20100714141137.1607:(??→?)
-(??→?) :: [[Angle]] → [Angle] → Maybe (Int,[Int])
-groups ??→? angles =
+(??→?) :: VertexClasses → VertexClass → Maybe (Int,[Int])
+(VertexClasses vcs) ??→? vc2 =
     msum
     .
-    zipWith (\index group_angles → fmap (index,) (group_angles ?→? angles))
+    zipWith (\index vc1 → fmap (index,) (vc1 ?→? vc2))
         [0..]
     $
-    groups
+    vcs
 -- @-node:gcross.20100714141137.1607:(??→?)
 -- @+node:gcross.20100714141137.1605:(??→??)
-(??→??) :: [[Angle]] → [[Angle]] → Maybe [(Int,[Int])]
-(??→??) vertex_classes = sequence . map (vertex_classes ??→?)
+(??→??) :: VertexClasses → VertexClasses → Maybe [(Int,[Int])]
+(??→??) vertex_classes = sequence . map (vertex_classes ??→?) . unwrapVertexClasses
 -- @-node:gcross.20100714141137.1605:(??→??)
 -- @+node:gcross.20100713173607.1594:(|⇆)
 (|⇆) :: Double → Double → Double
