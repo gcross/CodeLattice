@@ -794,8 +794,8 @@ getAllVertexClassesModifiedBy f =
     mapM (getOriginVertexClassModifiedBy . (f .) . (+))
 -- @-node:gcross.20100714141137.2290:getAllVertexClassesModifiedBy
 -- @+node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
-getAllSymmetricLatticeLabelingPermutations :: LatticeMonad [LatticeLabelingPermutation]
-getAllSymmetricLatticeLabelingPermutations =
+getAllSymmetricLatticeLabelingPermutations :: Bool → LatticeMonad [LatticeLabelingPermutation]
+getAllSymmetricLatticeLabelingPermutations has_reflective_symmetries =
     getAllVertexClassesModifiedBy id
     >>=
     \original_vertex_classes →
@@ -808,11 +808,8 @@ getAllSymmetricLatticeLabelingPermutations =
         )
         $
         liftM2 (.)
-            reflections
-            rotations
-  where
-    reflections = id : map (|⇆) [0,90]
-    rotations = map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360]
+            (id : if has_reflective_symmetries then map (|⇆) [0,90] else [])
+            (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
 -- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
 -- @-node:gcross.20100713173607.1588:Angle matching
 -- @-node:gcross.20100302164430.1305:Functions

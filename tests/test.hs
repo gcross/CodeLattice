@@ -12,6 +12,7 @@
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20091217190104.1412:<< Import needed modules >>
+import Control.Arrow
 import Control.Applicative.Infix
 import Control.Exception
 import Control.Monad
@@ -89,9 +90,9 @@ grown_lattices =
                 grown_lattice_bound
                 grown_lattice_bound
              )
-        getAllSymmetricLatticeLabelingPermutations
+        getAllSymmetricLatticeLabelingPermutations has_reflective_symmetry
      )
-    | tiling_name ← map tilingName tilings
+    | (tiling_name,has_reflective_symmetry) ← map (tilingName &&& tilingHasReflectiveSymmetry) tilings
     ]
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupGrownLattice
@@ -983,7 +984,7 @@ main = defaultMain
                     "Do the interior angles sum to 360?"
                     360
                     (sum . map polygonInteriorAngle $ polygons)
-            | Tiling name polygons _ _ ← tilings
+            | Tiling name polygons _ _ _ ← tilings
             ]
         -- @nonl
         -- @-node:gcross.20100307133316.1313:sum to 360
@@ -1116,19 +1117,16 @@ main = defaultMain
                         Map.lookup name grown_lattices
                 | (name,correct_number_of_symmetric_permutations) ←
                     [("quadrille",8)
-            -- @+at
-            --          ,("truncated quadrille",4)
-            --          ,("snub quadrille",4)
-            --          ,("hextille",2)
-            --          ,("hexadeltille",3)
-            --          ,("truncated hextille",6)
-            --          ,("deltille",1)
-            --          ,("rhombihexadeltille",6)
-            --          -- ,("truncated hexadeltille",12)
-            --          ,("snub hexatille",6)
-            --          ,("isosnub quadrille",2)
-            -- @-at
-            -- @@c
+                    ,("truncated quadrille",8)
+                    ,("snub quadrille",8)
+                    ,("hextille",12)
+                    ,("hexadeltille",12)
+                    ,("truncated hextille",12)
+                    ,("deltille",12)
+                    ,("rhombihexadeltille",12)
+                    -- ,("truncated hexadeltille",12)
+                    ,("snub hexatille",6)
+                    ,("isosnub quadrille",4)
                     ]
                 ]
             -- @-node:gcross.20100714141137.2538:correct number of permutations
