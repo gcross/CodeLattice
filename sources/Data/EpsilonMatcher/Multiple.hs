@@ -2,6 +2,12 @@
 -- @+node:gcross.20100714141137.2412:@thin EpsilonMatcher/Multiple.hs
 -- @@language Haskell
 
+-- @<< Language extensions >>
+-- @+node:gcross.20100714141137.2528:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
+-- @-node:gcross.20100714141137.2528:<< Language extensions >>
+-- @nl
+
 module Data.EpsilonMatcher.Multiple where
 
 -- @<< Import needed modules >>
@@ -27,14 +33,15 @@ type MultipleEpsilonMatcherState valueType resultType = State (IntMap (EpsilonMa
 -- @+node:gcross.20100714141137.2418:matchIn
 matchIn ::
     (Ord valueType, Num valueType) =>
-    Int ->
-    valueType ->
-    IntMap (EpsilonMatcher valueType) ->
+    Int →
+    valueType →
+    IntMap (EpsilonMatcher valueType) →
     (Int,IntMap (EpsilonMatcher valueType))
 matchIn matcher_index lookup_value matchers =
     let old_matcher = fromJust . IntMap.lookup matcher_index $ matchers
         (match_key,new_matcher) = match lookup_value old_matcher
     in (match_key,IntMap.insert matcher_index new_matcher matchers)
+-- @nonl
 -- @-node:gcross.20100714141137.2418:matchIn
 -- @-node:gcross.20100714141137.2417:Pure
 -- @+node:gcross.20100714141137.2419:Monadic
@@ -45,15 +52,16 @@ getMatchMaps = fmap (map computeMatchMap . IntMap.elems) get
 -- @+node:gcross.20100714141137.2421:lookupMatchIn
 lookupMatchIn ::
     (Ord valueType, Num valueType) =>
-    Int ->
-    valueType ->
+    Int →
+    valueType →
     MultipleEpsilonMatcherState valueType Int
 lookupMatchIn matcher_index = state . matchIn matcher_index
+-- @nonl
 -- @-node:gcross.20100714141137.2421:lookupMatchIn
 -- @+node:gcross.20100714141137.2422:runEpsilonMatcher
 runMultipleEpsilonMatchers ::
-    [valueType] ->
-    MultipleEpsilonMatcherState valueType resultType ->
+    [valueType] →
+    MultipleEpsilonMatcherState valueType resultType →
     (resultType,[MatchMap])
 runMultipleEpsilonMatchers tolerances stateRunner =
     second (map computeMatchMap . IntMap.elems)
@@ -67,6 +75,7 @@ runMultipleEpsilonMatchers tolerances stateRunner =
     map newEpsilonMatcher
     $
     tolerances
+-- @nonl
 -- @-node:gcross.20100714141137.2422:runEpsilonMatcher
 -- @-node:gcross.20100714141137.2419:Monadic
 -- @-node:gcross.20100714141137.2416:Functions

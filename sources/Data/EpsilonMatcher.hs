@@ -2,6 +2,12 @@
 -- @+node:gcross.20100714141137.2394:@thin EpsilonMatcher.hs
 -- @@language Haskell
 
+-- @<< Language extensions >>
+-- @+node:gcross.20100714141137.2529:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
+-- @-node:gcross.20100714141137.2529:<< Language extensions >>
+-- @nl
+
 module Data.EpsilonMatcher where
 
 -- @<< Import needed modules >>
@@ -43,11 +49,12 @@ type EpsilonMatcherState valueType resultType = State (EpsilonMatcher valueType)
 -- @+node:gcross.20100714141137.2401:Functions
 -- @+node:gcross.20100714141137.2402:Pure
 -- @+node:gcross.20100714141137.2403:newEpsilonMatcher
-newEpsilonMatcher :: valueType -> EpsilonMatcher valueType
+newEpsilonMatcher :: valueType → EpsilonMatcher valueType
 newEpsilonMatcher tolerance = EpsilonMatcher AVL.empty 0 tolerance
+-- @nonl
 -- @-node:gcross.20100714141137.2403:newEpsilonMatcher
 -- @+node:gcross.20100714141137.2404:computeMatchMap
-computeMatchMap :: EpsilonMatcher valueType -> MatchMap
+computeMatchMap :: EpsilonMatcher valueType → MatchMap
 computeMatchMap =
     IntMap.fromList
     .
@@ -58,17 +65,18 @@ computeMatchMap =
     AVL.asListL
     .
     epsilonMatcherTree
+-- @nonl
 -- @-node:gcross.20100714141137.2404:computeMatchMap
 -- @+node:gcross.20100714141137.2405:match
 match ::
     (Ord valueType, Num valueType) =>
-    valueType ->
-    EpsilonMatcher valueType ->
+    valueType →
+    EpsilonMatcher valueType →
     (Int,EpsilonMatcher valueType)
 match lookup_value matcher@(EpsilonMatcher match_tree next_index tolerance) =
     case AVL.tryRead match_tree comparer of
-        Just match_key -> (match_key,matcher)
-        Nothing ->
+        Just match_key → (match_key,matcher)
+        Nothing →
             (next_index
             ,EpsilonMatcher
                 (AVL.push comparer2 (Match lookup_value next_index) match_tree)
@@ -84,15 +92,17 @@ match lookup_value matcher@(EpsilonMatcher match_tree next_index tolerance) =
         if lookup_value < match_value
             then COrdering.Lt
             else COrdering.Gt
+-- @nonl
 -- @-node:gcross.20100714141137.2405:match
 -- @+node:gcross.20100714141137.2406:allMatchValues
-allMatchValues :: EpsilonMatcher valueType -> [valueType]
+allMatchValues :: EpsilonMatcher valueType → [valueType]
 allMatchValues =
     map matchValue
     .
     AVL.asListL
     .
     epsilonMatcherTree
+-- @nonl
 -- @-node:gcross.20100714141137.2406:allMatchValues
 -- @-node:gcross.20100714141137.2402:Pure
 -- @+node:gcross.20100714141137.2407:Monadic
@@ -107,14 +117,15 @@ getAllMatchValues = gets allMatchValues
 -- @+node:gcross.20100714141137.2410:lookupMatch
 lookupMatch ::
     (Ord valueType, Num valueType) =>
-    valueType ->
+    valueType →
     EpsilonMatcherState valueType Int
 lookupMatch = state . match
+-- @nonl
 -- @-node:gcross.20100714141137.2410:lookupMatch
 -- @+node:gcross.20100714141137.2411:runEpsilonMatcher
 runEpsilonMatcher ::
-    valueType ->
-    EpsilonMatcherState valueType resultType ->
+    valueType →
+    EpsilonMatcherState valueType resultType →
     (resultType, MatchMap)
 runEpsilonMatcher tolerance stateRunner =
     second computeMatchMap
@@ -124,6 +135,7 @@ runEpsilonMatcher tolerance stateRunner =
     newEpsilonMatcher
     $
     tolerance
+-- @nonl
 -- @-node:gcross.20100714141137.2411:runEpsilonMatcher
 -- @-node:gcross.20100714141137.2407:Monadic
 -- @-node:gcross.20100714141137.2401:Functions
