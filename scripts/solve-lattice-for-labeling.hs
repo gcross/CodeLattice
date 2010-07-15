@@ -64,7 +64,7 @@ main = do
     putStrLn $ show number_of_qubits ++ " qubits"
     putStrLn $ show number_of_operators ++ " operators"
     putStrLn $ "Solving for labeling " ++ labeling_as_string ++ "..."
-    solveNoisilyForLabeling config (read labeling_as_string)
+    solveForLabelingNoisily config (read labeling_as_string)
     return ()
 -- @nonl
 -- @-node:gcross.20100316133702.1491:main

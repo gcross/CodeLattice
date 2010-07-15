@@ -21,6 +21,7 @@ module CodeLattice.Scanning where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100314233604.1667:<< Import needed modules >>
 import Control.Arrow
+import Control.Applicative
 import Control.Monad
 
 import qualified Data.Bimap as Bimap
@@ -33,8 +34,10 @@ import Data.Vec ((:.)(..))
 import qualified Data.Vec as V
 
 import Foreign.C
+import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
+import Foreign.Storable
 
 import System.IO.Unsafe
 
@@ -53,6 +56,14 @@ data ScanConfiguration = ScanConfiguration
     ,   scanOperatorTable :: Array2D CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
+-- @+node:gcross.20100714222047.1668:Solution
+data Solution = Solution
+    {   solutionNumberOfStabilizers :: CInt
+    ,   solutionNumberOfGaugeQubits :: CInt
+    ,   solutionNumberOfLogicalQubits :: CInt
+    ,   solutionLogicalQubitDistances :: [CInt]
+    } deriving (Eq,Show)
+-- @-node:gcross.20100714222047.1668:Solution
 -- @+node:gcross.20100713173607.1613:VertexLabeling
 newtype VertexLabeling = VertexLabeling { unwrapVertexLabeling :: [Int] } deriving (Eq,Ord,Show)
 
@@ -65,26 +76,62 @@ newtype LatticeLabeling = LatticeLabeling { unwrapLatticeLabeling :: [VertexLabe
 -- @-node:gcross.20100314233604.1668:Types
 -- @+node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
-foreign import ccall solve :: CInt → CInt → Ptr CInt → Ptr CInt → Bool → IO CInt
+-- @+at
+--  extern "C" void solve(
+--      int number_of_qubits, int number_of_operators,
+--      int* restrict operator_table, int* restrict values,
+--      bool noisy,
+--      int* restrict number_of_stabilizers, int* restrict 
+--  number_of_gauge_qubits,
+--      int* restrict number_of_logical_qubits, int ** restrict 
+--  logical_qubit_distances
+--  )
+-- @-at
+-- @@c
 
-solveForLabelingWithVerbosity :: Bool → ScanConfiguration → [CInt] → IO CInt
+foreign import ccall solve ::
+    CInt → CInt →
+    Ptr CInt → Ptr CInt →
+    Bool →
+    Ptr CInt → Ptr CInt →
+    Ptr CInt → Ptr (Ptr CInt) →
+    IO CInt
+
+solveForLabelingWithVerbosity :: Bool → ScanConfiguration → [CInt] → IO Solution
 solveForLabelingWithVerbosity verbosity config values =
     withNDArray (scanOperatorTable config) $ \p_operator_table →
     withArray (map fromIntegral values) $ \p_values →
+    alloca $ \p_number_of_stabilizers →
+    alloca $ \p_number_of_gauge_qubits →
+    alloca $ \p_number_of_logical_qubits →
+    alloca $ \p_p_logical_qubit_distances → do
         solve
-            (scanNumberOfQubits config)
-            (scanNumberOfOperators config)
-            p_operator_table
-            p_values
+            (scanNumberOfQubits config) (scanNumberOfOperators config)
+            p_operator_table p_values
             verbosity
+            p_number_of_stabilizers p_number_of_gauge_qubits
+            p_number_of_logical_qubits p_p_logical_qubit_distances
+        number_of_logical_qubits ← peek p_number_of_logical_qubits
+        p_logical_qubit_distances ← peek p_p_logical_qubit_distances
+        solution ←
+            Solution
+            <$> (peek p_number_of_stabilizers)
+            <*> (peek p_number_of_gauge_qubits)
+            <*> (pure number_of_logical_qubits)
+            <*> (peekArray
+                    (fromIntegral number_of_logical_qubits)
+                    p_logical_qubit_distances
+                )
+        free p_logical_qubit_distances
+        return solution
 
-solveForLabeling :: ScanConfiguration → [CInt] → CInt
+solveForLabeling :: ScanConfiguration → [CInt] → Solution
 solveForLabeling config values =
     unsafePerformIO
     $
     solveForLabelingWithVerbosity False config values
 
-solveForLabelingNoisily :: ScanConfiguration → [CInt] → IO CInt
+solveForLabelingNoisily :: ScanConfiguration → [CInt] → IO Solution
 solveForLabelingNoisily = solveForLabelingWithVerbosity True
 -- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions

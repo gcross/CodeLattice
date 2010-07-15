@@ -12,6 +12,7 @@ Library
                     containers >= 0.2 && < 0.4,
                     random == 1.0.*,
                     transformers >= 0.2 && < 0.3,
+                    mtl >= 1.1 && < 1.2,
                     array >= 0.2 && < 0.4,
                     bimap == 0.2.*,
                     uuid == 1.*,

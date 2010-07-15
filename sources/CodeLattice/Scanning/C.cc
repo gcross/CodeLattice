@@ -23,10 +23,12 @@ typedef qec<operator_t> qec_t;
 //@-node:gcross.20100315191926.1594:Type aliases
 //@+node:gcross.20100315191926.1439:Functions
 //@+node:gcross.20100315191926.2794:solve
-extern "C" int solve(
+extern "C" void solve(
     int number_of_qubits, int number_of_operators,
     int* restrict operator_table, int* restrict values,
-    bool noisy
+    bool noisy,
+    int* restrict number_of_stabilizers, int* restrict number_of_gauge_qubits,
+    int* restrict number_of_logical_qubits, int ** restrict logical_qubit_distances
 ) {
     operator_vector_t operators;
     operators.resize(number_of_operators);
@@ -47,10 +49,12 @@ extern "C" int solve(
         }
         cout << endl;
     }
-    if(code.logical_qubits.size() == 0)
-        return 0;
-    else
-        return code.logical_qubit_error_distances.back();
+    (*number_of_stabilizers) = code.stabilizers.size();
+    (*number_of_gauge_qubits) = code.gauge_qubits.size();
+    (*number_of_logical_qubits) = code.logical_qubits.size();
+    (*logical_qubit_distances) = (int*) calloc((*number_of_logical_qubits),sizeof(int));
+    for (int i = 0; i < (*number_of_logical_qubits); ++i)
+        (*logical_qubit_distances)[i] = code.logical_qubit_error_distances[i];
 }
 //@-node:gcross.20100315191926.2794:solve
 //@+node:gcross.20100316133702.1646:<<

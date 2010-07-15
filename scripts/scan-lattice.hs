@@ -70,7 +70,12 @@ main = do
         putStr $ printf "[%i/%i]... " current_number total_number_of_labelings
         writeIORef current_number_ref (current_number+1)
         hFlush stdout
-        best_distance ← evaluate (solveForLabeling config values)
+        let best_distance =
+                last
+                .
+                solutionLogicalQubitDistances
+                $
+                solveForLabeling config values
         if best_distance > 2
             then do
                 putStrLn "YEP!"
@@ -78,7 +83,6 @@ main = do
                 putStr ": "
                 putStrLn . show $ best_distance
             else putStrLn "nope"
--- @nonl
 -- @-node:gcross.20100315191926.3210:main
 -- @-others
 -- @-node:gcross.20100315191926.3207:@thin scan-lattice.hs
