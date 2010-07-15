@@ -67,29 +67,25 @@ newtype LatticeLabeling = LatticeLabeling { unwrapLatticeLabeling :: [VertexLabe
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 foreign import ccall solve :: CInt → CInt → Ptr CInt → Ptr CInt → Bool → IO CInt
 
+solveForLabelingWithVerbosity :: Bool → ScanConfiguration → [CInt] → IO CInt
+solveForLabelingWithVerbosity verbosity config values =
+    withNDArray (scanOperatorTable config) $ \p_operator_table →
+    withArray (map fromIntegral values) $ \p_values →
+        solve
+            (scanNumberOfQubits config)
+            (scanNumberOfOperators config)
+            p_operator_table
+            p_values
+            verbosity
+
 solveForLabeling :: ScanConfiguration → [CInt] → CInt
 solveForLabeling config values =
-    unsafePerformIO $
-    withNDArray (scanOperatorTable config) $ \p_operator_table →
-    withArray values $ \p_values →
-        solve
-            (scanNumberOfQubits config)
-            (scanNumberOfOperators config)
-            p_operator_table
-            p_values
-            False
+    unsafePerformIO
+    $
+    solveForLabelingWithVerbosity False config values
 
-solveNoisilyForLabeling :: ScanConfiguration → [CInt] → IO CInt
-solveNoisilyForLabeling config values =
-    withNDArray (scanOperatorTable config) $ \p_operator_table →
-    withArray values $ \p_values →
-        solve
-            (scanNumberOfQubits config)
-            (scanNumberOfOperators config)
-            p_operator_table
-            p_values
-            True
--- @nonl
+solveForLabelingNoisily :: ScanConfiguration → [CInt] → IO CInt
+solveForLabelingNoisily = solveForLabelingWithVerbosity True
 -- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @-node:gcross.20100315191926.2795:C Functions
 -- @+node:gcross.20100314233604.1670:Functions
