@@ -478,6 +478,12 @@ iteratePeriodicLattice starting_raw_vertices = do
     expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
 -- @nonl
 -- @-node:gcross.20100331165456.1579:iteratePeriodicLattice
+-- @+node:gcross.20100715150143.1845:iteratePeriodicLatticeFromOrigin
+iteratePeriodicLatticeFromOrigin = iteratePeriodicLattice [originRawVertex]
+-- @-node:gcross.20100715150143.1845:iteratePeriodicLatticeFromOrigin
+-- @+node:gcross.20100715150143.1849:iteratePeriodicLatticeFromOriginRepeatedly
+iteratePeriodicLatticeFromOriginRepeatedly = iteratePeriodicLatticeRepeatedly [originRawVertex]
+-- @-node:gcross.20100715150143.1849:iteratePeriodicLatticeFromOriginRepeatedly
 -- @+node:gcross.20100331165456.1581:iteratePeriodicLatticeRepeatedly
 iteratePeriodicLatticeRepeatedly :: [RawVertex] → Int → LatticeMonad ([PositionSpaceLattice],[RawVertex])
 iteratePeriodicLatticeRepeatedly raw_vertices =
@@ -584,6 +590,8 @@ numberOfRaysInLattice =
 -- @+node:gcross.20100330162705.1550:periodizeLatticeGrownWithinRectangularBounds
 periodizeLatticeGrownWithinRectangularBounds :: PositionSpaceLattice → PositionSpaceLattice
 periodizeLatticeGrownWithinRectangularBounds (PositionSpaceLattice (Lattice vertices edges))
+  | Bimap.size vertices == 0 || length edges == 0
+    = PositionSpaceLattice $ emptyLattice
   | period_width == 0 || period_height == 0
     = PositionSpaceLattice $ emptyLattice
   | otherwise
@@ -829,8 +837,9 @@ getAllSymmetricLatticeLabelingPermutations has_reflective_symmetries =
         )
         $
         liftM2 (.)
-            (id : if has_reflective_symmetries then map (|⇆) [0,90] else [])
-            (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
+            [id] -- (id : if has_reflective_symmetries then map (|⇆) [0,90] else [])
+            -- (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
+            (map (+) . delete 360 . nub $ [0,45..360])
 -- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
 -- @-node:gcross.20100713173607.1588:Angle matching
 -- @-node:gcross.20100302164430.1305:Functions

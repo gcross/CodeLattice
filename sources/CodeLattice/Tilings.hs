@@ -23,6 +23,7 @@ import CodeLattice
             ,Bounds
             ,PositionSpaceLattice
             ,mapKeysToPositionsInLattice
+            ,RawVertex(..)
             )
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
@@ -43,6 +44,7 @@ data Tiling = Tiling
     {   tilingName :: String
     ,   tilingPolygons :: [Int]
     ,   tilingOrientationMode :: OrientationMode
+    ,   tilingSeedRawVertex :: RawVertex
     ,   tilingHasReflectiveSymmetry :: Bool
     ,   tilingSteps :: [Step]
     }
@@ -64,58 +66,61 @@ tilings =
         "quadrille"
         [4,4,4,4]
         OnlyOneOrientation
+        (RawVertex (-0.5) (-0.5) 0)
         True
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
         PickFirstCompatableOrientation
+        (RawVertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
         True
     ,makeTiling
         "snub quadrille"
         [3,4,3,4,3]
         (PickNthCompatableOrientation [0,0,0,1,1])
+        (RawVertex (-0.5) (-0.5) 0)
         True
     ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
+        (RawVertex (-0.5) (-sqrt 3/2) 0)
         True
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
         (PickNthCompatableOrientation [1,1,0,0])
+        (RawVertex (-0.5) (-sqrt 3/2) 0)
         True
     ,makeTiling
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
+        (RawVertex 0 0 0)
         True
     ,makeTiling
         "deltille"
         (replicate 6 3)
         OnlyOneOrientation
+        (RawVertex 0 0 0)
         True
     ,makeTiling
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
+        (RawVertex 0 0 0)
         True
--- @+at
---      ,makeTiling
---          "truncated hexadeltille"
---          [12,6,4]
---          PickFirstCompatableOrientation
--- @-at
--- @@c
     ,makeTiling
         "snub hexatille"
         [6,3,3,3,3]
         (PickNthCompatableOrientation [0,0,1,0,2])
+        (RawVertex 0 0 0)
         False
     ,makeTiling
         "isosnub quadrille"
         [4,4,3,3,3]
         (PickNthCompatableOrientation [0,0,0,0,1])
+        (RawVertex 0 0 0)
         True
     ]
 -- @-node:gcross.20100308112554.1297:Tilings
@@ -209,14 +214,15 @@ lookupTilingSteps = tilingSteps . lookupTiling
 -- @nonl
 -- @-node:gcross.20100309124842.1400:lookupTilingSteps
 -- @+node:gcross.20100309124842.1398:makeTiling
-makeTiling :: String → [Int] → OrientationMode → Bool → Tiling
-makeTiling name polygons orientation_mode has_reflective_symmetry = tiling
+makeTiling :: String → [Int] → OrientationMode → RawVertex → Bool → Tiling
+makeTiling name polygons orientation_mode origin has_reflective_symmetry = tiling
   where
     tiling =
         Tiling
             name
             polygons
             orientation_mode
+            origin
             has_reflective_symmetry
             (tilingToSteps tiling)
 -- @-node:gcross.20100309124842.1398:makeTiling

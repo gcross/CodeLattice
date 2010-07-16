@@ -7,6 +7,7 @@
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20091217190104.1411:<< Language extensions >>
 -- @nl
@@ -64,6 +65,16 @@ instance (AlmostEq a) => AlmostEq [a] where
 
 x /≈ y = not (x ≈ y)
 -- @-node:gcross.20100714141137.2288:AlmostEq
+-- @+node:gcross.20100715150143.1846:Types
+-- @+node:gcross.20100715150143.1847:GrownLattice
+data GrownLattice = GrownLattice
+    {   grownLatticeTilingName :: !String
+    ,   grownLattice :: !Lattice
+    ,   grownPositionSpaceLattice :: !PositionSpaceLattice
+    ,   grownLatticeSymmetricPermutations :: ![LatticeLabelingPermutation]
+    }
+-- @-node:gcross.20100715150143.1847:GrownLattice
+-- @-node:gcross.20100715150143.1846:Types
 -- @+node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20091217190104.2176:echo
 echo x = trace (show x) x
@@ -77,36 +88,32 @@ skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @-node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100309124842.1411:grown_lattices
-grown_lattice_size = 20
-grown_lattice_bound = grown_lattice_size / 2
-
 grown_lattices =
-    Map.fromList
-    [(tiling_name
-     ,runLatticeMonadForTiling tiling_name $ do
-        growLatticeToBoundsFromOrigin
-            (Bounds
-                (-grown_lattice_bound)
-                (-grown_lattice_bound)
-                grown_lattice_bound
-                grown_lattice_bound
-             )
-        getAllSymmetricLatticeLabelingPermutations has_reflective_symmetry
+    [(tilingName
+     ,fst . fst . runLatticeMonadForTiling tilingName $ do
+        position_space_lattice ←
+            fmap (last . fst)
+            .
+            iteratePeriodicLatticeRepeatedly [tilingSeedRawVertex]
+            $
+            1
+        permutations ← getAllSymmetricLatticeLabelingPermutations tilingHasReflectiveSymmetry
+        return $
+            GrownLattice
+                tilingName
+                (unwrapPositionSpaceLattice position_space_lattice)
+                position_space_lattice
+                permutations        
      )
-    | (tiling_name,has_reflective_symmetry) ← map (tilingName &&& tilingHasReflectiveSymmetry) tilings
+    | Tiling{..} ← tilings
     ]
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupGrownLattice
-lookupGrownLattice :: String → Lattice
+lookupGrownLattice :: String → GrownLattice
 lookupGrownLattice =
-    snd
-    .
-    fst
-    .
     fromJust
     .
-    flip Map.lookup grown_lattices
--- @nonl
+    flip lookup grown_lattices
 -- @-node:gcross.20100309160622.1352:lookupGrownLattice
 -- @-node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100307122538.1301:Generators
@@ -140,6 +147,36 @@ instance Arbitrary Vertex where
             arbitrary
 -- @-node:gcross.20100308112554.1324:Vertex
 -- @-node:gcross.20100307122538.1301:Generators
+-- @+node:gcross.20100715150143.1839:Generator functions
+-- @+node:gcross.20100715150143.1840:arbitraryVertexLabeling
+arbitraryVertexLabeling :: Int → Gen VertexLabeling
+arbitraryVertexLabeling number_of_rays =
+    fmap (
+        canonicalizeVertexLabeling
+        .
+        VertexLabeling
+    )
+    .
+    vectorOf number_of_rays
+    .
+    elements
+    $
+    [1,2,3]
+-- @-node:gcross.20100715150143.1840:arbitraryVertexLabeling
+-- @+node:gcross.20100715150143.1838:arbitraryLatticeLabeling
+arbitraryLatticeLabeling :: Lattice → Gen LatticeLabeling
+arbitraryLatticeLabeling lattice =
+    fmap LatticeLabeling
+    .
+    vectorOf (numberOfOrientationsInLattice lattice)
+    .
+    arbitraryVertexLabeling
+    .
+    numberOfRaysInLattice
+    $
+    lattice
+-- @-node:gcross.20100715150143.1838:arbitraryLatticeLabeling
+-- @-node:gcross.20100715150143.1839:Generator functions
 -- @-others
 
 main = defaultMain
@@ -900,12 +937,12 @@ main = defaultMain
         -- @    @+others
         -- @+node:gcross.20100307133316.1313:sum to 360
         [testGroup "sum to 360" $
-            [testCase name $
+            [testCase tilingName $
                 assertEqual
                     "Do the interior angles sum to 360?"
                     360
-                    (sum . map polygonInteriorAngle $ polygons)
-            | Tiling name polygons _ _ _ ← tilings
+                    (sum . map polygonInteriorAngle $ tilingPolygons)
+            | Tiling{..} ← tilings
             ]
         -- @nonl
         -- @-node:gcross.20100307133316.1313:sum to 360
@@ -973,20 +1010,19 @@ main = defaultMain
             ]
         -- @-node:gcross.20100713173607.1586:zero-based steps
         -- @+node:gcross.20100309160622.1349:based on grown lattice
-        ,testGroup ("based on " ++ show grown_lattice_size ++ "x" ++ show grown_lattice_size ++ " grown lattice") $
+        ,testGroup ("based on grown periodic lattice with one iteration") $
             -- @    @+others
             -- @+node:gcross.20100309124842.1406:consistent
             [testGroup "consistent" $
-                [testCase name $ do
-                    let ((outside_vertices,Lattice vertices edges),_) =
-                            fromJust $
-                                Map.lookup name grown_lattices
-                    mapM_ evaluate outside_vertices
-                    evaluate vertices
-                    mapM_ evaluate edges
-                | name ← map tilingName tilings
+                [testCase (grownLatticeTilingName grown_lattice)
+                    .
+                    fmap (const ())
+                    .
+                    evaluate
+                    $
+                    grown_lattice
+                | grown_lattice ← map snd grown_lattices
                 ]
-            -- @nonl
             -- @-node:gcross.20100309124842.1406:consistent
             -- @+node:gcross.20100309150650.1374:correct number of orientations
             ,testGroup "correct number of orientations" $
@@ -997,13 +1033,11 @@ main = defaultMain
                         .
                         numberOfOrientationsInLattice
                         .
-                        snd
+                        grownLattice
                         .
-                        fst
-                        .
-                        fromJust
+                        lookupGrownLattice
                         $
-                        Map.lookup name grown_lattices
+                        name
                 | (name,correct_number_of_orientations) ←
                     [("quadrille",1)
                     ,("truncated quadrille",4)
@@ -1029,13 +1063,11 @@ main = defaultMain
                         .
                         length
                         .
-                        fst
+                        grownLatticeSymmetricPermutations
                         .
-                        fst
-                        .
-                        fromJust
+                        lookupGrownLattice
                         $
-                        Map.lookup name grown_lattices
+                        name
                 | (name,correct_number_of_symmetric_permutations) ←
                     [("quadrille",8)
                     ,("truncated quadrille",8)
@@ -1069,21 +1101,20 @@ main = defaultMain
                         adjacency_map = computeVertexAdjacencies lattice
                 in
                     [testGroup "pre-prune" $
-                        [testCase name $ checkAdjacenciesOf 0 . lookupGrownLattice $ name
+                        [testCase name $ checkAdjacenciesOf 0 . grownLattice . lookupGrownLattice $ name
                         | name ← map tilingName tilings
                         ]
                     ,testGroup "post-prune" $
-                        [testCase name $ checkAdjacenciesOf 1 . pruneLattice . lookupGrownLattice $ name
+                        [testCase name $ checkAdjacenciesOf 1 . pruneLattice . grownLattice . lookupGrownLattice $ name
                         | name ← map tilingName tilings
                         ]
                     ]
-            -- @nonl
             -- @-node:gcross.20100309160622.1348:valid adjacencies
             -- @-others
             ]
         -- @-node:gcross.20100309160622.1349:based on grown lattice
         -- @+node:gcross.20100310140947.1395:correct pictures
-        ,testGroup "correct pictures" $
+        ,testGroup "correct pictures" . const [] $
             -- @    @+others
             -- @+node:gcross.20100310123433.1422:before pruning
             [testGroup "before pruning" $
@@ -1807,6 +1838,22 @@ main = defaultMain
             ]
         ]
     -- @-node:gcross.20100715150143.1659:Solving
+    -- @+node:gcross.20100715150143.1843:Symmetries
+    ,testGroup "Symmetries" $
+        [ testProperty grownLatticeTilingName $
+            arbitraryLatticeLabeling grownLattice
+            >>=
+            \labeling → return $
+                let (first_solution:rest_solutions) =
+                        map (
+                            solveForLabeling (latticeToScanConfiguration grownPositionSpaceLattice)
+                            .
+                            permuteLatticeLabeling labeling
+                        ) grownLatticeSymmetricPermutations
+                in all (== first_solution) rest_solutions
+        | GrownLattice{..} ← map (lookupGrownLattice . tilingName) tilings
+        ]
+    -- @-node:gcross.20100715150143.1843:Symmetries
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl
