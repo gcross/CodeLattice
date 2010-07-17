@@ -395,12 +395,7 @@ getVertexNumberInLattice vertex = fmap (fromJust . Bimap.lookupR vertex . lattic
 growLatticeToBounds :: Bounds → [RawVertex] → LatticeMonad [RawVertex]
 growLatticeToBounds bounds = uncurry go . partitionRawVertices
   where
-    partitionRawVertices = partitionEithers . map placeRawVertex
-
-    placeRawVertex raw_vertex =
-        if withinBounds bounds raw_vertex
-            then Right raw_vertex
-            else Left raw_vertex
+    partitionRawVertices = partition (not . withinBounds bounds)
 
     go outside_raw_vertices [] = return outside_raw_vertices
     go outside_raw_vertices next_raw_vertices =
