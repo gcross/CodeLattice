@@ -38,6 +38,7 @@ type MatchMap = IntMap Int
 -- @+node:gcross.20100714141137.2399:EpsilonMatcher
 data EpsilonMatcher valueType = EpsilonMatcher
     {   epsilonMatcherTree :: AVL (Match valueType)
+    ,   epsilonMatcherReverseMap :: IntMap valueType
     ,   epsilonMatcherNextIndex :: Int
     ,   epsilonMatcherTolerance :: valueType
     }
@@ -50,8 +51,7 @@ type EpsilonMatcherState valueType resultType = State (EpsilonMatcher valueType)
 -- @+node:gcross.20100714141137.2402:Pure
 -- @+node:gcross.20100714141137.2403:newEpsilonMatcher
 newEpsilonMatcher :: valueType → EpsilonMatcher valueType
-newEpsilonMatcher tolerance = EpsilonMatcher AVL.empty 0 tolerance
--- @nonl
+newEpsilonMatcher tolerance = EpsilonMatcher AVL.empty IntMap.empty 0 tolerance
 -- @-node:gcross.20100714141137.2403:newEpsilonMatcher
 -- @+node:gcross.20100714141137.2404:computeMatchMap
 computeMatchMap :: EpsilonMatcher valueType → MatchMap
@@ -65,7 +65,6 @@ computeMatchMap =
     AVL.asListL
     .
     epsilonMatcherTree
--- @nonl
 -- @-node:gcross.20100714141137.2404:computeMatchMap
 -- @+node:gcross.20100714141137.2405:match
 match ::
@@ -73,13 +72,14 @@ match ::
     valueType →
     EpsilonMatcher valueType →
     (Int,EpsilonMatcher valueType)
-match lookup_value matcher@(EpsilonMatcher match_tree next_index tolerance) =
+match lookup_value matcher@(EpsilonMatcher match_tree reverse_map next_index tolerance) =
     case AVL.tryRead match_tree comparer of
         Just match_key → (match_key,matcher)
         Nothing →
             (next_index
             ,EpsilonMatcher
                 (AVL.push comparer2 (Match lookup_value next_index) match_tree)
+                (IntMap.insert next_index lookup_value reverse_map)
                 (next_index+1)
                 tolerance
             )
@@ -96,14 +96,7 @@ match lookup_value matcher@(EpsilonMatcher match_tree next_index tolerance) =
 -- @-node:gcross.20100714141137.2405:match
 -- @+node:gcross.20100714141137.2545:reverseMatchMap
 reverseMatchMap :: EpsilonMatcher valueType → IntMap valueType
-reverseMatchMap =
-    IntMap.fromList
-    .
-    map (matchKey &&& matchValue)
-    .
-    AVL.asListL
-    .
-    epsilonMatcherTree
+reverseMatchMap = epsilonMatcherReverseMap
 -- @-node:gcross.20100714141137.2545:reverseMatchMap
 -- @+node:gcross.20100714141137.2406:allMatchValues
 allMatchValues :: EpsilonMatcher valueType → [valueType]
