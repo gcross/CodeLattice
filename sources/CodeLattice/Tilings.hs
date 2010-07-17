@@ -96,7 +96,7 @@ tilings =
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
-        (RawVertex 0 0 0)
+        (RawVertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
         True
     ,makeTiling
         "deltille"
@@ -108,19 +108,19 @@ tilings =
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
-        (RawVertex 0 0 0)
+        (RawVertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
         True
     ,makeTiling
         "snub hexatille"
         [6,3,3,3,3]
         (PickNthCompatableOrientation [0,0,1,0,2])
-        (RawVertex 0 0 0)
+        (RawVertex (-0.5) (-sqrt 3/2) 0)
         False
     ,makeTiling
         "isosnub quadrille"
         [4,4,3,3,3]
         (PickNthCompatableOrientation [0,0,0,0,1])
-        (RawVertex 0 0 0)
+        (RawVertex (-0.5) (-0.5) 0)
         True
     ]
 -- @-node:gcross.20100308112554.1297:Tilings
