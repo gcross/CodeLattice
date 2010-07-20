@@ -30,7 +30,7 @@ main =
             concat
             [   let (((key_space_lattices,_),_),[x_map,y_map,o_map]) =
                         runLatticeMonadForTiling tiling_name $
-                            iterateLatticeRepeatedly [originRawVertex] 20
+                            iterateLatticeRepeatedly [originVertex] 20
                     position_space_lattices =
                         map (mapKeysToPositionsInLattice x_map y_map o_map)
                             key_space_lattices

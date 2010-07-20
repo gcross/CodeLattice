@@ -22,8 +22,7 @@ Library
                     NDArray == 0.1,
                     filepath == 1.1.*,
                     InfixApplicative == 1.*,
-                    COrdering >= 2.3 && < 2.4,
-                    AvlTree >= 4.2 && < 4.3
+                    approximate-equality >= 1.0 && < 1.1
 
     Extra-Libraries: stdc++
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal

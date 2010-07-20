@@ -4,8 +4,9 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100315120315.1445:<< Language extensions >>
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100315120315.1445:<< Language extensions >>
 -- @nl
@@ -30,6 +31,7 @@ import Data.List
 import Data.Maybe
 import Data.NDArray hiding ((!))
 import Data.NDArray.Classes
+import qualified Data.Sequence as Seq
 import Data.Vec ((:.)(..))
 import qualified Data.Vec as V
 
@@ -42,6 +44,7 @@ import Foreign.Storable
 import System.IO.Unsafe
 
 import CodeLattice
+import CodeLattice.Discrete
 -- @-node:gcross.20100314233604.1667:<< Import needed modules >>
 -- @nl
 
@@ -146,29 +149,28 @@ flattenLatticeLabeling =
     unwrapLatticeLabeling
 -- @-node:gcross.20100714222047.1669:flattenLatticeLabeling
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
-latticeToScanConfiguration :: PositionSpaceLattice → ScanConfiguration
-latticeToScanConfiguration (PositionSpaceLattice lattice@(Lattice vertices edges)) =
+latticeToScanConfiguration :: DiscreteLattice → ScanConfiguration
+latticeToScanConfiguration lattice@DiscreteLattice{..} =
     ScanConfiguration
     {   scanNumberOfQubits = fromIntegral number_of_vertices
     ,   scanNumberOfOperators = fromIntegral number_of_edges
     ,   scanOperatorTable = operator_table
     }
   where
-    number_of_vertices = Bimap.size vertices
-    number_of_orientations = numberOfOrientationsInLattice lattice
-    vertex_map =
-        IntMap.fromAscList
-        .
-        map (\(qubit_number,(vertex_number,vertex)) →
-                (vertex_number,(qubit_number,vertexOrientation vertex))
-            )
-        .
-        zip [0..]
-        .
-        Bimap.toAscList
-        $
-        vertices
-    number_of_edges = length edges
+    number_of_vertices = numberOfVerticesInDiscreteLattice lattice
+    number_of_orientations = numberOfOrientationsInDiscreteLattice lattice
+    number_of_edges = numberOfEdgesInDiscreteLattice lattice
+
+    computeLabelIndex vertex_number ray_number =
+        ray_number * number_of_orientations
+        +
+        (   discreteVertexOrientation
+            .
+            Seq.index discreteLatticeVertices
+            $
+            vertex_number
+        )
+
     operator_table =
         fromListWithShape (number_of_edges :. 4 :. ())
         .
@@ -176,21 +178,18 @@ latticeToScanConfiguration (PositionSpaceLattice lattice@(Lattice vertices edges
         .
         concat
         .
-        map (\(Edge (EdgeSide vertex_number_1 ray_number_1)
-                    (EdgeSide vertex_number_2 ray_number_2)
+        map (\(DiscreteEdge
+                (DiscreteEdgeSide vertex_number_1 ray_number_1)
+                (DiscreteEdgeSide vertex_number_2 ray_number_2)
               ) →
-                let (qubit_number_1, orientation_number_1) =
-                        fromJust $ IntMap.lookup vertex_number_1 vertex_map
-                    (qubit_number_2, orientation_number_2) =
-                        fromJust $ IntMap.lookup vertex_number_2 vertex_map
-                in [qubit_number_1
-                   ,ray_number_1 * number_of_orientations + orientation_number_1
-                   ,qubit_number_2
-                   ,ray_number_2 * number_of_orientations + orientation_number_2
-                   ]
+                [vertex_number_1
+                ,computeLabelIndex vertex_number_1 ray_number_1
+                ,vertex_number_2
+                ,computeLabelIndex vertex_number_2 ray_number_2
+                ]
         )
         $
-        edges
+        discreteLatticeEdges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
 -- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
 canonicalizeVertexLabeling :: VertexLabeling → VertexLabeling
@@ -236,7 +235,6 @@ permuteVertexLabeling (VertexLabeling old_labeling) =
     map (old_labeling !!)
     .
     unwrapVertexLabelingPermutation
-
 -- @-node:gcross.20100714141137.1609:permuteVertexLabeling
 -- @+node:gcross.20100714141137.1611:permuteLatticeLabeling
 permuteLatticeLabeling ::  LatticeLabeling → LatticeLabelingPermutation → LatticeLabeling

@@ -21,9 +21,9 @@ import CodeLattice
             ,runLatticeMonad
             ,growLatticeToBoundsFromOrigin
             ,Bounds
-            ,PositionSpaceLattice
-            ,mapKeysToPositionsInLattice
-            ,RawVertex(..)
+            ,Lattice
+            ,Vertex(..)
+            ,ApproximateDouble
             )
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
@@ -31,7 +31,7 @@ import CodeLattice
 -- @+others
 -- @+node:gcross.20100308112554.1298:Types
 -- @+node:gcross.20100308112554.1299:Angle
-type Angle = Double
+type Angle = ApproximateDouble
 -- @-node:gcross.20100308112554.1299:Angle
 -- @+node:gcross.20100308112554.1300:Edge
 type Edge = (Int,Int)
@@ -44,15 +44,16 @@ data Tiling = Tiling
     {   tilingName :: String
     ,   tilingPolygons :: [Int]
     ,   tilingOrientationMode :: OrientationMode
-    ,   tilingSeedRawVertex :: RawVertex
+    ,   tilingSeedVertex :: Vertex
     ,   tilingHasReflectiveSymmetry :: Bool
     ,   tilingSteps :: [Step]
     }
+-- @nonl
 -- @-node:gcross.20100308112554.1302:Tiling
 -- @+node:gcross.20100308112554.1315:OrientationMode
 data OrientationMode =
     OnlyOneOrientation
-  | FixedOrientationRotation Double
+  | FixedOrientationRotation ApproximateDouble
   | PickFirstCompatableOrientation
   | PickNthCompatableOrientation [Int]
 
@@ -66,68 +67,69 @@ tilings =
         "quadrille"
         [4,4,4,4]
         OnlyOneOrientation
-        (RawVertex (-0.5) (-0.5) 0)
+        (Vertex (-0.5) (-0.5) 0)
         True
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
         PickFirstCompatableOrientation
-        (RawVertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
+        (Vertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
         True
     ,makeTiling
         "snub quadrille"
         [3,4,3,4,3]
         (PickNthCompatableOrientation [0,0,0,1,1])
-        (RawVertex (-0.5) (-0.5) 0)
+        (Vertex (-0.5) (-0.5) 0)
         True
     ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
-        (RawVertex (-0.5) (-sqrt 3/2) 0)
+        (Vertex (-0.5) (-sqrt 3/2) 0)
         True
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
         (PickNthCompatableOrientation [1,1,0,0])
-        (RawVertex (-0.5) (-sqrt 3/2) 0)
+        (Vertex (-0.5) (-sqrt 3/2) 0)
         True
     ,makeTiling
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
-        (RawVertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
+        (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
         True
     ,makeTiling
         "deltille"
         (replicate 6 3)
         OnlyOneOrientation
-        (RawVertex 0 0 0)
+        (Vertex 0 0 0)
         True
     ,makeTiling
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
-        (RawVertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
+        (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
         True
     ,makeTiling
         "snub hexatille"
         [6,3,3,3,3]
         (PickNthCompatableOrientation [0,0,1,0,2])
-        (RawVertex (-0.5) (-sqrt 3/2) 0)
+        (Vertex (-0.5) (-sqrt 3/2) 0)
         False
     ,makeTiling
         "isosnub quadrille"
         [4,4,3,3,3]
         (PickNthCompatableOrientation [0,0,0,0,1])
-        (RawVertex (-0.5) (-0.5) 0)
+        (Vertex (-0.5) (-0.5) 0)
         True
     ]
+-- @nonl
 -- @-node:gcross.20100308112554.1297:Tilings
 -- @-node:gcross.20100308112554.1296:Values
 -- @+node:gcross.20100308112554.1303:Functions
 -- @+node:gcross.20100308112554.1305:polygonInteriorAngle
-polygonInteriorAngle :: Int → Double
+polygonInteriorAngle :: Int → Angle
 polygonInteriorAngle n = (n_-2)*180/n_
   where
     n_ = fromIntegral n
@@ -144,10 +146,10 @@ polygonsToStepAngles _ = error "There needs to be at least two polygons adjoinin
 -- @nonl
 -- @-node:gcross.20100308112554.1307:polygonsToEdgesAndAngles
 -- @+node:gcross.20100308112554.1309:lookupAngleOfEdge
-lookupAngleOfEdge :: EdgesAndAngles → Edge → Int → Double
+lookupAngleOfEdge :: EdgesAndAngles → Edge → Int → Angle
 lookupAngleOfEdge table edge disambiguation = go table disambiguation
   where
-    go :: EdgesAndAngles → Int → Double
+    go :: EdgesAndAngles → Int → Angle
     go [] _ = error $
         "Error finding "
         ++ show disambiguation ++
@@ -214,7 +216,7 @@ lookupTilingSteps = tilingSteps . lookupTiling
 -- @nonl
 -- @-node:gcross.20100309124842.1400:lookupTilingSteps
 -- @+node:gcross.20100309124842.1398:makeTiling
-makeTiling :: String → [Int] → OrientationMode → RawVertex → Bool → Tiling
+makeTiling :: String → [Int] → OrientationMode → Vertex → Bool → Tiling
 makeTiling name polygons orientation_mode origin has_reflective_symmetry = tiling
   where
     tiling =
@@ -225,18 +227,19 @@ makeTiling name polygons orientation_mode origin has_reflective_symmetry = tilin
             origin
             has_reflective_symmetry
             (tilingToSteps tiling)
+-- @nonl
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
 -- @+node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
-growPositionSpaceLatticeFromTilingToBounds :: Tiling → Bounds → PositionSpaceLattice
-growPositionSpaceLatticeFromTilingToBounds tiling bounds =
-    mapKeysToPositionsInLattice x_map y_map orientation_map lattice
-  where
-    ((_,lattice),[x_map,y_map,orientation_map]) =
-        runLatticeMonad (tilingSteps tiling) (growLatticeToBoundsFromOrigin bounds)
--- @nonl
+growPositionSpaceLatticeFromTilingToBounds :: Tiling → Bounds → Lattice
+growPositionSpaceLatticeFromTilingToBounds tiling =
+    snd
+    .
+    runLatticeMonad (tilingSteps tiling)
+    .
+    growLatticeToBoundsFromOrigin
 -- @-node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others

@@ -19,10 +19,10 @@ import Control.Monad
 import Control.Monad.Error
 import Control.Monad.Trans
 
-import qualified Data.Bimap as Bimap
 import Data.ConfigFile
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import Data.Foldable
+import Data.Sequence (Seq,(|>))
+import qualified Data.Sequence as Seq
 import Data.UUID
 
 import Database.Enumerator
@@ -33,7 +33,7 @@ import System.Exit
 import System.IO.Unsafe
 import System.Random
 
-import CodeLattice
+import CodeLattice.Discrete
 -- @-node:gcross.20100312175547.1385:<< Import needed modules >>
 -- @nl
 
@@ -70,27 +70,22 @@ fetch4 a b c d accum = result' ((a, b, c, d):accum) --'
 -- @-node:gcross.20100312175547.1823:Enumerators
 -- @+node:gcross.20100312175547.1817:Functions
 -- @+node:gcross.20100312220352.1834:edgeIteratee
-edgeIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [Edge]
+edgeIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [DiscteteEdge]
 edgeIteratee
     vertex_number_1 ray_number_1
     vertex_number_2 ray_number_2
     edges
     =
-    result' (Edge (EdgeSide vertex_number_1 ray_number_1) -- '
-                  (EdgeSide vertex_number_2 ray_number_2)
+    result' (Edge (DiscreteEdgeSide vertex_number_1 ray_number_1) -- '
+                  (DiscreteEdgeSide vertex_number_2 ray_number_2)
             :edges
             )
 -- @nonl
 -- @-node:gcross.20100312220352.1834:edgeIteratee
 -- @+node:gcross.20100312220352.1836:vertexIteratee
-vertexIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [(Int,Vertex)]
-vertexIteratee vertex_number x y orientation vertices =
-    result' ((vertex_number -- '
-             ,Vertex (Location x y) orientation
-             )
-            :vertices
-            )
--- @nonl
+vertexIteratee :: (MonadIO m) => Int → Int → Int → IterAct m (Seq Vertex)
+vertexIteratee x y orientation vertices =
+    result' (vertices |> Vertex x y orientation)
 -- @-node:gcross.20100312220352.1836:vertexIteratee
 -- @+node:gcross.20100312175547.1819:makeConnection
 makeConnection heading = do
@@ -143,14 +138,14 @@ insertRows name statement type_ids rows =
             " rows."
 -- @nonl
 -- @-node:gcross.20100312175547.1833:insertRows
--- @+node:gcross.20100312175547.1831:storeLattice
-storeLattice ::
+-- @+node:gcross.20100312175547.1831:storeDiscreteLattice
+storeDiscreteLattice ::
     String →
     Bool →
     Int →
-    PositionSpaceLattice →
+    DiscreteLattice →
     (forall mark . DBM mark Session String)
-storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice (Lattice vertices edges)) =
+storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
     generateRandomUUIDAsString
     >>=
     \lattice_id → do
@@ -168,8 +163,8 @@ storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice 
             ,bindP $ tiling_name
             ,bindP $ periodic
             ,bindP $ growth_iteration_number
-            ,bindP $ (Bimap.size vertices)
-            ,bindP $ (length edges)
+            ,bindP $ Seq.size discretLatticeVertices
+            ,bindP $ length discreteLatticeEdges
             ]
 
         insertRows
@@ -187,8 +182,8 @@ storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice 
                 ,bindP $ y
                 ,bindP $ orientation
                 ]
-            |   (vertex_number,Vertex (Location x y) orientation) ←
-                    Bimap.toList vertices
+            |   (vertex_number,DiscreteVertex x y orientation) ←
+                    zip [0..] . toList $ discreteLatticeVertices
             ]
 
         insertRows
@@ -211,22 +206,22 @@ storeLattice tiling_name periodic growth_iteration_number (PositionSpaceLattice 
             ]
         return lattice_id
 -- @nonl
--- @-node:gcross.20100312175547.1831:storeLattice
--- @+node:gcross.20100312220352.1837:fetchLattice
-fetchLattice lattice_id = fmap PositionSpaceLattice $
-    liftM2 Lattice
+-- @-node:gcross.20100312175547.1831:storeDiscreteLattice
+-- @+node:gcross.20100312220352.1837:fetchDiscreteLattice
+fetchDiscreteLattice lattice_id =
+    liftM2 DiscreteLattice
     (   fmap Bimap.fromList $
         doQuery
-            (sql $ "select vertex_number, x, y, orientation from vertices where lattice_id = '" ++ lattice_id ++ "'")
+            (sql $ "select x, y, orientation from vertices where lattice_id = '" ++ lattice_id ++ "' order by vertex_number asc")
             vertexIteratee
-            []
+            Seq.empty
     )
     (   doQuery
             (sql $ "select vertex_number_1, ray_number_1, vertex_number_2, ray_number_2 from edges where lattice_id = '" ++ lattice_id ++ "'")
             edgeIteratee
             []
     )
--- @-node:gcross.20100312220352.1837:fetchLattice
+-- @-node:gcross.20100312220352.1837:fetchDiscreteLattice
 -- @-node:gcross.20100312175547.1817:Functions
 -- @-others
 -- @-node:gcross.20100312175547.1384:@thin Database.hs
