@@ -8,6 +8,7 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -27,6 +28,7 @@ import Control.Monad.Trans.State.Strict
 import Data.Char
 import Data.Either
 import Data.Eq.Approximate
+import qualified Data.Foldable as Fold
 import Data.Function
 import qualified Data.IntSet as IntSet
 import Data.List
@@ -373,6 +375,26 @@ latticeRays =
     .
     latticeEdges
 -- @-node:gcross.20100715150143.1833:latticeRays
+-- @+node:gcross.20100717003017.2450:latticeTranslationDistance
+latticeTranslationDistance :: Lattice → Maybe ApproximateDouble
+latticeTranslationDistance Lattice{latticeVertices}
+  | Just (first_vertex,rest_vertices) ← Set.minView latticeVertices
+  , (not . Set.null) rest_vertices
+      = Just
+        .
+        sqrt
+        .
+        Set.findMin
+        .
+        Set.map (\vertex →
+            (vertexLocationX vertex - vertexLocationX first_vertex)^2 +
+            (vertexLocationX vertex - vertexLocationY first_vertex)^2
+        )
+        $
+        rest_vertices
+  | otherwise
+      = Nothing
+-- @-node:gcross.20100717003017.2450:latticeTranslationDistance
 -- @+node:gcross.20100312175547.1840:modifyLattice
 modifyLattice :: (Lattice → Lattice) → LatticeMonad ()
 modifyLattice = modify . first
@@ -402,6 +424,68 @@ numberOfVerticesInLattice :: Lattice → Int
 numberOfVerticesInLattice = Set.size . latticeVertices
 -- @nonl
 -- @-node:gcross.20100331110052.1853:numberOfVerticesInLattice
+-- @+node:gcross.20100717003017.2449:periodizeLattice
+periodizeLattice ::
+    (Vertex → ApproximateDouble) →
+    (ApproximateDouble → Vertex → Vertex) →
+    Int →
+    Lattice →
+    Maybe Lattice
+periodizeLattice
+    computeVertexDistance
+    wrapAroundVertex
+    requested_radius
+    lattice@Lattice{..}
+  | Just translation_distance ← latticeTranslationDistance lattice
+  , floor (maximum_distance / translation_distance) <= requested_radius+1
+     = Just $ let
+        wrap_around_distance = fromIntegral requested_radius * translation_distance
+        wrapAround = wrapAroundVertex wrap_around_distance
+        (border_vertices,inner_vertices) =
+            partitionEithers
+            .
+            mapMaybe (\vertex →
+                case computeVertexDistance vertex `compare` wrap_around_distance of
+                    EQ → (Just . Left) vertex
+                    LT → (Just . Right) vertex
+                    GT → Nothing
+            )
+            .
+            Set.toList
+            $
+            latticeVertices
+        kept_border_vertices =
+            filter (\vertex →
+                case wrapAround vertex `compare` vertex of
+                    EQ → error "Wrapping a vertex around should not get the same vertex back."
+                    LT → True
+                    GT → False
+            ) border_vertices
+        new_vertices = Set.fromList (kept_border_vertices ++ inner_vertices)
+        keptVertex = flip Set.member new_vertices
+        new_edges =
+            mapMaybe (\edge@(Edge (EdgeSide v1 r1) (EdgeSide v2 r2)) →
+                case (keptVertex v1,keptVertex v2) of
+                    (True,True) → Just edge
+                    (False,False) → Nothing
+                    (True,False) → Just $
+                        Edge (EdgeSide (wrapAround v1) r1)
+                             (EdgeSide v2 r2)
+                    (False,True) → Just $
+                        Edge (EdgeSide v1 r1)
+                             (EdgeSide (wrapAround v2) r2)
+            ) latticeEdges
+     in Lattice new_vertices new_edges
+  | otherwise
+     = Nothing
+  where
+    maximum_distance =
+        Set.findMax
+        .
+        Set.map computeVertexDistance
+        $
+        latticeVertices
+-- @-node:gcross.20100717003017.2449:periodizeLattice
 -- @+node:gcross.20100309160622.1351:pruneLattice
 pruneLattice :: Lattice → Lattice
 pruneLattice lattice@Lattice{..}
