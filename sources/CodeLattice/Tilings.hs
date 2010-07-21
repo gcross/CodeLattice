@@ -20,7 +20,6 @@ import CodeLattice
             ,modulo360
             ,runLatticeMonad
             ,growLatticeToBoundsFromOrigin
-            ,Bounds
             ,Lattice
             ,Vertex(..)
             ,ApproximateDouble
@@ -232,15 +231,6 @@ makeTiling name polygons orientation_mode origin has_reflective_symmetry = tilin
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
--- @+node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
-growPositionSpaceLatticeFromTilingToBounds :: Tiling → Bounds → Lattice
-growPositionSpaceLatticeFromTilingToBounds tiling =
-    snd
-    .
-    runLatticeMonad (tilingSteps tiling)
-    .
-    growLatticeToBoundsFromOrigin
--- @-node:gcross.20100331110052.1849:growPositionSpaceLatticeFromTilingToBounds
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

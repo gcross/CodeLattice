@@ -47,14 +47,6 @@ instance AbsoluteTolerance MyTolerance where
     absoluteToleranceOf _ = 1e-5
 type ApproximateDouble = AbsolutelyApproximateValue MyTolerance Double
 -- @-node:gcross.20100717003017.2415:ApproximateDouble
--- @+node:gcross.20100309124842.1404:Bounds
-data Bounds = Bounds
-    {   boundLeft :: ApproximateDouble
-    ,   boundTop :: ApproximateDouble
-    ,   boundRight :: ApproximateDouble
-    ,   boundBottom :: ApproximateDouble
-    } deriving (Show)
--- @-node:gcross.20100309124842.1404:Bounds
 -- @+node:gcross.20100302164430.1239:Edge
 data Edge = Edge
     {   edgeLeftSide :: EdgeSide
@@ -140,12 +132,6 @@ modulo360 :: ApproximateDouble → ApproximateDouble
 modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @nonl
 -- @-node:gcross.20100302201317.1255:modulo360
--- @+node:gcross.20100309124842.1405:withinBounds
-withinBounds :: Bounds → Vertex → Bool
-withinBounds (Bounds left bottom right top) (Vertex x y _) =
-    (x >= left) && (x <= right) &&
-    (y >= bottom) && (y <= top)
--- @-node:gcross.20100309124842.1405:withinBounds
 -- @+node:gcross.20100309124842.1409:originVertex
 originVertex = Vertex 0 0 0
 -- @-node:gcross.20100309124842.1409:originVertex
@@ -272,10 +258,10 @@ getNumberOfEdgesInLattice = fmap (length . latticeEdges) getLattice
 getNumberOfVerticesInLattice = fmap (Set.size . latticeVertices) getLattice
 -- @-node:gcross.20100312133145.1377:getNumberOf[Edges/Vertices]InLattice
 -- @+node:gcross.20100309124842.1403:growLatticeToBounds
-growLatticeToBounds :: Bounds → [Vertex] → LatticeMonad [Vertex]
-growLatticeToBounds bounds = uncurry go . partitionVertices
+growLatticeToBounds :: (Vertex → Bool) → [Vertex] → LatticeMonad [Vertex]
+growLatticeToBounds withinBounds = uncurry go . partitionVertices
   where
-    partitionVertices = partition (not . withinBounds bounds)
+    partitionVertices = partition (not . withinBounds)
 
     go outside_vertices [] = return outside_vertices
     go outside_vertices next_vertices =
@@ -286,49 +272,77 @@ growLatticeToBounds bounds = uncurry go . partitionVertices
 -- @nonl
 -- @-node:gcross.20100309124842.1403:growLatticeToBounds
 -- @+node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
-growLatticeToBoundsFromOrigin :: Bounds → LatticeMonad [Vertex]
-growLatticeToBoundsFromOrigin bounds = growLatticeToBounds bounds [originVertex]
+growLatticeToBoundsFromOrigin :: (Vertex → Bool) → LatticeMonad [Vertex]
+growLatticeToBoundsFromOrigin = flip growLatticeToBounds [originVertex]
 -- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
 -- @+node:gcross.20100331110052.1851:isEmptyLattice
 isEmptyLattice :: Lattice → Bool
 isEmptyLattice Lattice{..} = Set.null latticeVertices || null latticeEdges
 -- @-node:gcross.20100331110052.1851:isEmptyLattice
--- @+node:gcross.20100312133145.1378:iterateLattice
-iterateLattice :: [Vertex] → LatticeMonad (Lattice,[Vertex])
-iterateLattice starting_vertices = do
+-- @+node:gcross.20100312133145.1378:growLatticeUntilPruningStopsReturningOriginal
+growLatticeUntilPruningStopsReturningOriginal ::
+    (Vertex → ApproximateDouble) →
+    (ApproximateDouble → ApproximateDouble) →
+    ApproximateDouble →
+    [Vertex] →
+    LatticeMonad (Lattice,[Vertex],ApproximateDouble)
+growLatticeUntilPruningStopsReturningOriginal
+    computeVertexDistance
+    increaseDistance
+    starting_distance
+    starting_vertices
+  = do
     steps ← getLatticeSteps
     starting_number_of_vertices ← getNumberOfVerticesInLattice
     starting_number_of_edges ← getNumberOfEdgesInLattice
-    let go bounds vertices = do
-            next_vertices ← growLatticeToBounds bounds vertices
+    let go current_distance vertices = do
+            next_vertices ←
+                growLatticeToBounds
+                    ((< current_distance) . computeVertexDistance)
+                    vertices
             pruned_lattice ← fmap pruneLattice getLattice
             case (numberOfVerticesInLattice pruned_lattice > starting_number_of_vertices
                  ,numberOfEdgesInLattice pruned_lattice > starting_number_of_edges
                  ) of
-                (_,True) → return (pruned_lattice,next_vertices)
+                (_,True) → return (pruned_lattice,next_vertices,current_distance)
                 (True,False) → error $ "Iteration produced new vertices (post-pruning) without producing more edges, which should never happen."
-                (False,False) → go (expandBounds bounds) next_vertices
-    go (Bounds (-1) (-1) 1 1) starting_vertices
-  where
-    expandBounds (Bounds a b c d) = Bounds (a-1) (b-1) (c+1) (d+1)
--- @-node:gcross.20100312133145.1378:iterateLattice
--- @+node:gcross.20100312133145.1380:iterateLatticeRepeatedly
-iterateLatticeRepeatedly :: [Vertex] → Int → LatticeMonad ([Lattice],[Vertex])
-iterateLatticeRepeatedly vertices =
-    go [] vertices
+                (False,False) → go (increaseDistance current_distance) next_vertices
+    go starting_distance starting_vertices
+-- @-node:gcross.20100312133145.1378:growLatticeUntilPruningStopsReturningOriginal
+-- @+node:gcross.20100312133145.1380:iteratePrunedLattices
+iteratePrunedLattices ::
+    (Vertex → ApproximateDouble) →
+    (ApproximateDouble → ApproximateDouble) →
+    ApproximateDouble →
+    [Vertex] →
+    Int →
+    LatticeMonad ([Lattice],[Vertex],ApproximateDouble)
+iteratePrunedLattices
+    computeVertexDistance
+    increaseDistance
+    starting_distance
+    starting_vertices
+  = go [] starting_distance starting_vertices
     >=>
-    \(lattices,vertices) →
-        return (reverse lattices,vertices)
+    \(lattices,vertices,distance) →
+        return (reverse lattices,vertices,distance)
   where
-    go lattices current_vertices number_of_iterations_remaining
+    go lattices current_distance current_vertices number_of_iterations_remaining
      | number_of_iterations_remaining <= 0
-        = return (lattices,current_vertices)
+        = return (lattices,current_vertices,current_distance)
      | otherwise
-        = iterateLattice current_vertices
+        = growLatticeUntilPruningStopsReturningOriginal
+            computeVertexDistance
+            increaseDistance
+            current_distance
+            current_vertices
           >>=
-          \(lattice,next_vertices) →
-            go (lattice:lattices) next_vertices (number_of_iterations_remaining-1)
--- @-node:gcross.20100312133145.1380:iterateLatticeRepeatedly
+          \(lattice,next_vertices,next_distance) →
+            go  (lattice:lattices)
+                next_distance
+                next_vertices
+                (number_of_iterations_remaining-1)
+-- @-node:gcross.20100312133145.1380:iteratePrunedLattices
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex → LatticeMonad Bool
 latticeHasVertex vertex =

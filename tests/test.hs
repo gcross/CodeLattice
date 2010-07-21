@@ -16,6 +16,7 @@
 -- @<< Import needed modules >>
 -- @+node:gcross.20091217190104.1412:<< Import needed modules >>
 import Control.Arrow
+import Control.Applicative
 import Control.Applicative.Infix
 import Control.Exception
 import Control.Monad
@@ -36,6 +37,7 @@ import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Sequence as Seq
+import Data.Tuple.Select
 
 import Debug.Trace
 
@@ -67,6 +69,14 @@ instance (AlmostEq a) => AlmostEq [a] where
 x /≈ y = not (x ≈ y)
 -- @-node:gcross.20100714141137.2288:AlmostEq
 -- @+node:gcross.20100715150143.1846:Types
+-- @+node:gcross.20100717003017.2447:Bounds
+data Bounds = Bounds
+    {   boundLeft :: ApproximateDouble
+    ,   boundBottom :: ApproximateDouble
+    ,   boundRight :: ApproximateDouble
+    ,   boundTop :: ApproximateDouble
+    } deriving (Show)
+-- @-node:gcross.20100717003017.2447:Bounds
 -- @+node:gcross.20100715150143.1847:GrownLattice
 data GrownLattice = GrownLattice
     {   grownLatticeTilingName :: !String
@@ -86,6 +96,14 @@ skipList _ [] = []
 skipList n (x:xs) = x:skipList n (drop (n-1) xs)
 -- @nonl
 -- @-node:gcross.20091218141305.1337:skipList
+-- @+node:gcross.20100717003017.2448:withinBounds
+withinBounds :: Bounds → Vertex → Bool
+withinBounds Bounds{..} Vertex{..} =
+    (vertexLocationX >= boundLeft) &&
+    (vertexLocationX <= boundRight) &&
+    (vertexLocationY >= boundTop) &&
+    (vertexLocationY <= boundBottom)
+-- @-node:gcross.20100717003017.2448:withinBounds
 -- @-node:gcross.20091217190104.2175:Functions
 -- @+node:gcross.20100309124842.1410:Grown Lattices
 -- @+node:gcross.20100309124842.1411:grown_lattices
@@ -93,9 +111,13 @@ grown_lattices =
     [(tilingName
      ,fst . runLatticeMonadForTiling tilingName $ do
         lattice ←
-            fmap (last . fst)
+            fmap (last . sel1)
             .
-            iterateLatticeRepeatedly [tilingSeedVertex]
+            iteratePrunedLattices
+                (liftA2 (max `on` abs) vertexLocationX vertexLocationY)
+                (+2)
+                2
+                [originVertex]
             $
             2
         permutations ← getAllSymmetricLatticeLabelingPermutations tilingHasReflectiveSymmetry
@@ -108,7 +130,6 @@ grown_lattices =
      )
     | Tiling{..} ← tilings
     ]
--- @nonl
 -- @-node:gcross.20100309124842.1411:grown_lattices
 -- @+node:gcross.20100309160622.1352:lookupGrownLattice
 lookupGrownLattice :: String → GrownLattice
@@ -787,7 +808,7 @@ main = defaultMain
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
                             (fst . runLatticeMonadForTiling name $ (
-                                growLatticeToBoundsFromOrigin bounds
+                                growLatticeToBoundsFromOrigin (withinBounds bounds)
                                 >>
                                 getAndDrawLattice
                             ))
@@ -1095,7 +1116,7 @@ main = defaultMain
                             "Was the drawn picture correct?"
                             (unlines correct_picture)
                             (fst . runLatticeMonadForTiling name $ (
-                                growLatticeToBoundsFromOrigin bounds
+                                growLatticeToBoundsFromOrigin (withinBounds bounds)
                                 >>
                                 getAndDrawPrunedLattice
                             ))
@@ -1337,17 +1358,21 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100310140947.1395:correct pictures
-        -- @+node:gcross.20100312175547.1383:iterable 4 times
-        ,testGroup "iterable 8 times (skipped)" . const [] $
+        -- @+node:gcross.20100312175547.1383:iterable 8 times
+        ,testGroup "iterable 8 times" $
             [testCase tiling_name $ do
                 let lattices =
-                        fst
+                        sel1
                         .
                         fst
                         .
                         runLatticeMonadForTiling tiling_name
                         .
-                        iterateLatticeRepeatedly [originVertex]
+                        iteratePrunedLattices
+                            (liftA2 (max `on` abs) vertexLocationX vertexLocationY)
+                            (+2)
+                            2
+                            [originVertex]
                         $
                         8
                 assertEqual
@@ -1364,7 +1389,7 @@ main = defaultMain
             | tiling_name ← map tilingName tilings
             ]
         -- @nonl
-        -- @-node:gcross.20100312175547.1383:iterable 4 times
+        -- @-node:gcross.20100312175547.1383:iterable 8 times
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
