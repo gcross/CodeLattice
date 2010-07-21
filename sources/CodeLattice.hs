@@ -36,16 +36,15 @@ import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
+
+import TypeLevel.NaturalNumber
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
 -- @+others
 -- @+node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100717003017.2415:ApproximateDouble
-data MyTolerance
-instance AbsoluteTolerance MyTolerance where
-    absoluteToleranceOf _ = 1e-5
-type ApproximateDouble = AbsolutelyApproximateValue MyTolerance Double
+type ApproximateDouble = AbsolutelyApproximateValue (Digits N5) Double
 -- @-node:gcross.20100717003017.2415:ApproximateDouble
 -- @+node:gcross.20100302164430.1239:Edge
 data Edge = Edge

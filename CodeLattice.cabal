@@ -22,6 +22,7 @@ Library
                     NDArray == 0.1,
                     filepath == 1.1.*,
                     InfixApplicative == 1.*,
+                    type-level-natural-number >= 1.0 && < 1.1,
                     approximate-equality >= 1.0 && < 1.1,
                     tuple >= 0.2 && < 0.3
 
