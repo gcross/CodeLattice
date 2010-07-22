@@ -213,6 +213,19 @@ addVertexToLattice vertex =
             }
     )
 -- @-node:gcross.20100308212437.1401:addVertexToLattice
+-- @+node:gcross.20100717003017.2452:canonicalizeEdge
+canonicalizeEdge :: Edge → Edge
+canonicalizeEdge (Edge s1 s2)
+  | s1 <= s2  = Edge s1 s2
+  | otherwise = Edge s2 s1
+-- @-node:gcross.20100717003017.2452:canonicalizeEdge
+-- @+node:gcross.20100717003017.2451:canonicalizeEdges
+canonicalizeEdges :: [Edge] → Set Edge
+canonicalizeEdges =
+    Set.fromList
+    .
+    map canonicalizeEdge
+-- @-node:gcross.20100717003017.2451:canonicalizeEdges
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice → Map Vertex Int
 computeVertexAdjacencies Lattice{..} =
