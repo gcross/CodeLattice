@@ -545,6 +545,47 @@ main = defaultMain
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
+    -- @+node:gcross.20100722123407.1612:Periodicities
+    ,testGroup "Periodicities"
+        -- @    @+others
+        -- @+node:gcross.20100722123407.1613:square
+        [testGroup "square" $
+            let Periodicity computeVertexDistance wrapAroundVertex = squarePeriodicity
+            in
+                -- @        @+others
+                -- @+node:gcross.20100722123407.1614:computeVertexDistance
+                [testProperty "computeVertexDistance" $
+                    \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
+                -- @-node:gcross.20100722123407.1614:computeVertexDistance
+                -- @+node:gcross.20100722123407.1618:wrapAroundVertex
+                ,testGroup "wrapAroundVertex"
+                    [let vertex = Vertex ax ay 0
+                         correct_vertex = Vertex bx by 0
+                     in testCase (show (ax,ay) ++ ", d = " ++ show d)
+                        .
+                        assertEqual
+                            "Was the wrapped vertex correct?"
+                            correct_vertex
+                        .
+                        wrapAroundVertex d
+                        $
+                        vertex
+                    | ((ax,ay),d,(bx,by)) ←
+                        [((0,0),1,(0,0))
+                        ,((1,0),1,(-1,0))
+                        ,((1,1),1,(-1,-1))
+                        ,((1,1),2,(1,1))
+                        ,((3,1),2,(-1,1))
+                        ,((2.5,1),2,(-1.5,1))
+                        ]
+                    ]
+                -- @-node:gcross.20100722123407.1618:wrapAroundVertex
+                -- @-others
+                ]
+        -- @-node:gcross.20100722123407.1613:square
+        -- @-others
+        ]
+    -- @-node:gcross.20100722123407.1612:Periodicities
     -- @+node:gcross.20100308212437.1385:Ord Vertex
     ,testGroup "Ord Vertex"
         -- @    @+others

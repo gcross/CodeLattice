@@ -683,20 +683,48 @@ getAllSymmetricLatticeLabelingPermutations has_reflective_symmetries =
             (map (+) . delete 360 . nub $ [0,45..360])
 -- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
 -- @-node:gcross.20100713173607.1588:Angle matching
+-- @-node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100717003017.2454:Periodicities
--- @+node:gcross.20100717003017.2455:squarePeriodicity
-squarePeriodicity = Periodicity computeVertexDistance wrapAroundVertex
+-- @+node:gcross.20100722123407.1615:makeComputeDistanceFrom
+makeComputeDistanceFrom ::
+    [(ApproximateDouble,ApproximateDouble)] →
+    Vertex →
+    ApproximateDouble
+makeComputeDistanceFrom vectors (Vertex x y _) =
+    maximum
+    .
+    map (\(bx,by) → abs (bx*x + by*y))
+    $
+    vectors
+-- @-node:gcross.20100722123407.1615:makeComputeDistanceFrom
+-- @+node:gcross.20100722123407.1616:makeReflectiveWrapAroundFrom
+makeReflectiveWrapAroundFrom ::
+    [(ApproximateDouble,ApproximateDouble)] →
+    ApproximateDouble →
+    Vertex →
+    Vertex
+makeReflectiveWrapAroundFrom vectors d vertex = foldl' makeReflectiveWrapAroundFromVector vertex vectors -- '
   where
-    computeVertexDistance (Vertex x y _) = (max `on` abs) x y
-    wrapAroundVertex boundary_distance (Vertex x y o) =
-        Vertex (wrap x) (wrap y) o
+    makeReflectiveWrapAroundFromVector vertex@(Vertex x y o) (bx,by)
+      | abs r < d = vertex
+      | otherwise  = Vertex (x + w * bx) (y + w * by) o
       where
-        wrap r
-          | abs r <= boundary_distance = r
-          | otherwise = r - 2 * signum r * boundary_distance
+        r = (bx*x + by*y)
+        w = - 2 * signum r * d
+-- @-node:gcross.20100722123407.1616:makeReflectiveWrapAroundFrom
+-- @+node:gcross.20100722123407.1617:makeReflectivePeriodicityFrom
+makeReflectivePeriodicityFrom ::
+    [(ApproximateDouble,ApproximateDouble)] →
+    Periodicity
+makeReflectivePeriodicityFrom =
+    liftA2 Periodicity
+        makeComputeDistanceFrom
+        makeReflectiveWrapAroundFrom
+-- @-node:gcross.20100722123407.1617:makeReflectivePeriodicityFrom
+-- @+node:gcross.20100717003017.2455:squarePeriodicity
+squarePeriodicity = makeReflectivePeriodicityFrom [(1,0),(0,1)]
 -- @-node:gcross.20100717003017.2455:squarePeriodicity
 -- @-node:gcross.20100717003017.2454:Periodicities
--- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
 -- @-leo
