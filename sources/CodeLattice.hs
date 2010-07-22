@@ -724,6 +724,9 @@ makeReflectivePeriodicityFrom =
 -- @+node:gcross.20100717003017.2455:squarePeriodicity
 squarePeriodicity = makeReflectivePeriodicityFrom [(1,0),(0,1)]
 -- @-node:gcross.20100717003017.2455:squarePeriodicity
+-- @+node:gcross.20100722123407.1620:hexagonalPeriodicity
+hexagonalPeriodicity = makeReflectivePeriodicityFrom [(0,1),(sqrt 3/2,1/2),(sqrt 3/2,-1/2)]
+-- @-node:gcross.20100722123407.1620:hexagonalPeriodicity
 -- @-node:gcross.20100717003017.2454:Periodicities
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs

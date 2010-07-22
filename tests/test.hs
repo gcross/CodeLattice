@@ -583,6 +583,55 @@ main = defaultMain
                 -- @-others
                 ]
         -- @-node:gcross.20100722123407.1613:square
+        -- @+node:gcross.20100722123407.1624:hexagonal
+        ,testGroup "hexagonal" $
+            let Periodicity computeVertexDistance wrapAroundVertex = hexagonalPeriodicity
+            in
+                -- @        @+others
+                -- @+node:gcross.20100722123407.1625:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100722123407.1627:examples
+                    [testGroup "examples" $
+                        [let vertex = Vertex x y 0
+                         in testCase (show (x,y))
+                            .
+                            assertEqual
+                                "Was the distance correct?"
+                                correct_distance
+                            .
+                            computeVertexDistance
+                            $
+                            vertex
+                        | (x,y,correct_distance) ←
+                            [(0,1,1)
+                            ,(sqrt 3/2,1/2,1)
+                            ,(sqrt 3/2,-1/2,1)
+                            ,(1,2,2)
+                            ,(sqrt 3,0,3/2)
+                            ]
+                        ]
+                    -- @-node:gcross.20100722123407.1627:examples
+                    -- @+node:gcross.20100722123407.1628:maximum distance
+                    ,testProperty "maximum distance" $
+                        \x y →
+                            let angle = 180 / pi * atan2 y x
+                                correct_distance
+                                  | angle < -120 = -(x * sqrt 3 / 2) - (y / 2)
+                                  | angle <  -60 = -y
+                                  | angle <    0 =  (x * sqrt 3 / 2) - (y / 2)
+                                  | angle <   60 =  (x * sqrt 3 / 2) + (y / 2)
+                                  | angle <  120 =  y
+                                  | angle <  180 = -(x * sqrt 3 / 2) + (y / 2)
+                                distance = computeVertexDistance (Vertex x y undefined)
+                            in correct_distance == distance
+                    -- @-node:gcross.20100722123407.1628:maximum distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100722123407.1625:computeVertexDistance
+                -- @-others
+                ]
+        -- @-node:gcross.20100722123407.1624:hexagonal
         -- @-others
         ]
     -- @-node:gcross.20100722123407.1612:Periodicities
