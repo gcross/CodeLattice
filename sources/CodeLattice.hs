@@ -463,17 +463,18 @@ periodizeLattice
             ) border_vertices
         new_vertices = Set.fromList (kept_border_vertices ++ inner_vertices)
         keptVertex = flip Set.member new_vertices
+        wrapEdge s1@(EdgeSide v1 _) (EdgeSide v2 r2)
+          | new_v2 < v1 = Nothing
+          | otherwise   = Just (Edge s1 (EdgeSide new_v2 r2))
+          where
+            new_v2  = wrapAround v2
         new_edges =
-            mapMaybe (\edge@(Edge (EdgeSide v1 r1) (EdgeSide v2 r2)) →
+            mapMaybe (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) →
                 case (keptVertex v1,keptVertex v2) of
                     (True,True) → Just edge
                     (False,False) → Nothing
-                    (True,False) → Just $
-                        Edge (EdgeSide (wrapAround v1) r1)
-                             (EdgeSide v2 r2)
-                    (False,True) → Just $
-                        Edge (EdgeSide v1 r1)
-                             (EdgeSide (wrapAround v2) r2)
+                    (True,False) → wrapEdge s1 s2
+                    (False,True) → wrapEdge s2 s1
             ) latticeEdges
      in Lattice new_vertices new_edges
   | otherwise
