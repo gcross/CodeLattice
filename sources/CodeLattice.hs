@@ -69,6 +69,12 @@ data Lattice = Lattice
 -- @+node:gcross.20100308212437.1391:LatticeMonad
 type LatticeMonad resultType = State (Lattice,[Step]) resultType
 -- @-node:gcross.20100308212437.1391:LatticeMonad
+-- @+node:gcross.20100717003017.2453:Periodicity
+data Periodicity = Periodicity
+    {   periodicityComputeVertexDistance :: (Vertex → ApproximateDouble)
+    ,   periodicityWrapAroundVertex :: (ApproximateDouble → Vertex → Vertex)
+    }
+-- @-node:gcross.20100717003017.2453:Periodicity
 -- @+node:gcross.20100302164430.1241:Step
 data Step = Step
     {   stepAngle :: ApproximateDouble -- in degrees
@@ -439,14 +445,15 @@ numberOfVerticesInLattice = Set.size . latticeVertices
 -- @-node:gcross.20100331110052.1853:numberOfVerticesInLattice
 -- @+node:gcross.20100717003017.2449:periodizeLattice
 periodizeLattice ::
-    (Vertex → ApproximateDouble) →
-    (ApproximateDouble → Vertex → Vertex) →
+    Periodicity →
     Int →
     Lattice →
     Maybe Lattice
 periodizeLattice
-    computeVertexDistance
-    wrapAroundVertex
+    (Periodicity
+        computeVertexDistance
+        wrapAroundVertex
+    )
     requested_radius
     lattice@Lattice{..}
   | Just translation_distance ← latticeTranslationDistance lattice
@@ -676,6 +683,19 @@ getAllSymmetricLatticeLabelingPermutations has_reflective_symmetries =
             (map (+) . delete 360 . nub $ [0,45..360])
 -- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
 -- @-node:gcross.20100713173607.1588:Angle matching
+-- @+node:gcross.20100717003017.2454:Periodicities
+-- @+node:gcross.20100717003017.2455:squarePeriodicity
+squarePeriodicity = Periodicity computeVertexDistance wrapAroundVertex
+  where
+    computeVertexDistance (Vertex x y _) = (max `on` abs) x y
+    wrapAroundVertex boundary_distance (Vertex x y o) =
+        Vertex (wrap x) (wrap y) o
+      where
+        wrap r
+          | abs r <= boundary_distance = r
+          | otherwise = r - 2 * signum r * boundary_distance
+-- @-node:gcross.20100717003017.2455:squarePeriodicity
+-- @-node:gcross.20100717003017.2454:Periodicities
 -- @-node:gcross.20100302164430.1305:Functions
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
