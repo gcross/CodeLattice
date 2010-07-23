@@ -82,7 +82,7 @@ data GrownLattice = GrownLattice
     {   grownLatticeTilingName :: !String
     ,   grownLattice :: !Lattice
     ,   grownDiscreteLattice :: !DiscreteLattice
-    ,   grownLatticeSymmetricPermutations :: ![LatticeLabelingPermutation]
+    -- ,   grownLatticeSymmetricPermutations :: ![LatticeLabelingPermutation]
     }
 -- @-node:gcross.20100715150143.1847:GrownLattice
 -- @-node:gcross.20100715150143.1846:Types
@@ -120,13 +120,13 @@ grown_lattices =
                 [originVertex]
             $
             2
-        permutations ← getAllSymmetricLatticeLabelingPermutations tilingHasReflectiveSymmetry
+        -- permutations ← getAllSymmetricLatticeLabelingPermutations tilingHasReflectiveSymmetry
         return $
             GrownLattice
                 tilingName
                 lattice
                 (discretizeLattice lattice)
-                permutations        
+                -- permutations        
      )
     | Tiling{..} ← tilings
     ]
@@ -739,33 +739,38 @@ main = defaultMain
             -- @nonl
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100714141137.2538:correct number of permutations
-            ,testGroup "correct number of symmetric permutations" . const [] $
-                [testCase name $
-                    assertEqual
-                        "Is the number of computed symmetric permutations correct?"
-                        correct_number_of_symmetric_permutations
-                        .
-                        length
-                        .
-                        grownLatticeSymmetricPermutations
-                        .
-                        lookupGrownLattice
-                        $
-                        name
-                | (name,correct_number_of_symmetric_permutations) ←
-                    [("quadrille",8)
-                    ,("truncated quadrille",8)
-                    ,("snub quadrille",8)
-                    ,("hextille",12)
-                    ,("hexadeltille",12)
-                    ,("truncated hextille",12)
-                    ,("deltille",12)
-                    ,("rhombihexadeltille",12)
-                    -- ,("truncated hexadeltille",12)
-                    ,("snub hexatille",6)
-                    ,("isosnub quadrille",4)
-                    ]
-                ]
+            -- @+at
+            --  ,testGroup "correct number of symmetric permutations" . const 
+            --  [] $
+            --      [testCase name $
+            --          assertEqual
+            --              "Is the number of computed symmetric permutations 
+            --  correct?"
+            --              correct_number_of_symmetric_permutations
+            --              .
+            --              length
+            --              .
+            --              grownLatticeSymmetricPermutations
+            --              .
+            --              lookupGrownLattice
+            --              $
+            --              name
+            --      | (name,correct_number_of_symmetric_permutations) ←
+            --          [("quadrille",8)
+            --          ,("truncated quadrille",8)
+            --          ,("snub quadrille",8)
+            --          ,("hextille",12)
+            --          ,("hexadeltille",12)
+            --          ,("truncated hextille",12)
+            --          ,("deltille",12)
+            --          ,("rhombihexadeltille",12)
+            --          -- ,("truncated hexadeltille",12)
+            --          ,("snub hexatille",6)
+            --          ,("isosnub quadrille",4)
+            --          ]
+            --      ]
+            -- @-at
+            -- @@c
             -- @-node:gcross.20100714141137.2538:correct number of permutations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
@@ -1524,20 +1529,24 @@ main = defaultMain
         ]
     -- @-node:gcross.20100715150143.1659:Solving
     -- @+node:gcross.20100715150143.1843:Symmetries
-    ,testGroup "Symmetries" . const [] $
-        [ testProperty grownLatticeTilingName $
-            arbitraryLatticeLabeling grownLattice
-            >>=
-            \labeling → return $
-                let (first_solution:rest_solutions) =
-                        map (
-                            solveForLabeling (latticeToScanConfiguration grownDiscreteLattice)
-                            .
-                            permuteLatticeLabeling labeling
-                        ) grownLatticeSymmetricPermutations
-                in all (== first_solution) rest_solutions
-        | GrownLattice{..} ← map (lookupGrownLattice . tilingName) tilings
-        ]
+    -- @+at
+    --  ,testGroup "Symmetries" . const [] $
+    --      [ testProperty grownLatticeTilingName $
+    --          arbitraryLatticeLabeling grownLattice
+    --          >>=
+    --          \labeling → return $
+    --              let (first_solution:rest_solutions) =
+    --                      map (
+    --                          solveForLabeling (latticeToScanConfiguration 
+    --  grownDiscreteLattice)
+    --                          .
+    --                          permuteLatticeLabeling labeling
+    --                      ) grownLatticeSymmetricPermutations
+    --              in all (== first_solution) rest_solutions
+    --      | GrownLattice{..} ← map (lookupGrownLattice . tilingName) tilings
+    --      ]
+    -- @-at
+    -- @@c
     -- @-node:gcross.20100715150143.1843:Symmetries
     -- @+node:gcross.20100722123407.1612:Periodicities
     ,testGroup "Periodicities"

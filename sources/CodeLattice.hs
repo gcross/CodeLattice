@@ -744,7 +744,10 @@ rotate angle_in_degrees (x,y) =
     cos_angle = cos angle
     sin_angle = sin angle
 -- @-node:gcross.20100722123407.1632:rotate
--- @+node:gcross.20100717003017.2455:squarePeriodicity
+-- @+node:gcross.20100723120236.1635:squarePeriodicity
+squarePeriodicity = squarePeriodicityRotatedBy 0
+-- @-node:gcross.20100723120236.1635:squarePeriodicity
+-- @+node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
 squarePeriodicityRotatedBy angle =
     let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1)]
 
@@ -756,8 +759,12 @@ squarePeriodicityRotatedBy angle =
             wrapVertexAroundVector b1 d
 
     in Periodicity computeDistanceFrom wrapAround
--- @-node:gcross.20100717003017.2455:squarePeriodicity
--- @+node:gcross.20100722123407.1620:hexagonalPeriodicity
+-- @-node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
+-- @+node:gcross.20100723120236.1637:hexagonalPeriodicity
+hexagonalPeriodicity = hexagonalPeriodicityRotatedBy 0
+-- @nonl
+-- @-node:gcross.20100723120236.1637:hexagonalPeriodicity
+-- @+node:gcross.20100722123407.1620:hexagonalPeriodicityRotatedBy
 hexagonalPeriodicityRotatedBy angle =
     let basis@[b1,b2,b3] = map (rotate angle)
             [(sqrt 3/2,1/2)
@@ -785,7 +792,7 @@ hexagonalPeriodicityRotatedBy angle =
              || isInside (offset+180) (offset+240)
 
     in Periodicity computeDistanceFrom wrapAround
--- @-node:gcross.20100722123407.1620:hexagonalPeriodicity
+-- @-node:gcross.20100722123407.1620:hexagonalPeriodicityRotatedBy
 -- @-node:gcross.20100717003017.2454:Periodicities
 -- @-others
 -- @-node:gcross.20100302164430.1233:@thin CodeLattice.hs
