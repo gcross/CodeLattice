@@ -72,8 +72,9 @@ type LatticeMonad resultType = State (Lattice,[Step]) resultType
 -- @+node:gcross.20100717003017.2453:Periodicity
 data Periodicity = Periodicity
     {   periodicityComputeVertexDistance :: (Vertex → ApproximateDouble)
-    ,   periodicityWrapAroundVertex :: (ApproximateDouble → Vertex → Vertex)
+    ,   periodicityWrapVertexAround :: (ApproximateDouble → Vertex → Vertex)
     }
+-- @nonl
 -- @-node:gcross.20100717003017.2453:Periodicity
 -- @+node:gcross.20100302164430.1241:Step
 data Step = Step
@@ -452,7 +453,7 @@ periodizeLattice ::
 periodizeLattice
     (Periodicity
         computeVertexDistance
-        wrapAroundVertex
+        wrapVertexAround
     )
     requested_radius
     lattice@Lattice{..}
@@ -460,7 +461,7 @@ periodizeLattice
   , floor (maximum_distance / translation_distance) <= requested_radius+1
      = Just $ let
         wrap_around_distance = fromIntegral requested_radius * translation_distance
-        wrapAround = wrapAroundVertex wrap_around_distance
+        wrapAround = wrapVertexAround wrap_around_distance
         (border_vertices,inner_vertices) =
             partitionEithers
             .
@@ -506,6 +507,7 @@ periodizeLattice
         Set.map computeVertexDistance
         $
         latticeVertices
+-- @nonl
 -- @-node:gcross.20100717003017.2449:periodizeLattice
 -- @+node:gcross.20100309160622.1351:pruneLattice
 pruneLattice :: Lattice → Lattice
@@ -721,11 +723,68 @@ makeReflectivePeriodicityFrom =
         makeComputeDistanceFrom
         makeReflectiveWrapAroundFrom
 -- @-node:gcross.20100722123407.1617:makeReflectivePeriodicityFrom
+-- @+node:gcross.20100722123407.1631:wrapVertexAroundVector
+wrapVertexAroundVector ::
+    (ApproximateDouble,ApproximateDouble) →
+    ApproximateDouble →
+    Vertex →
+    Vertex
+wrapVertexAroundVector (bx,by) d vertex@(Vertex x y o)
+  | abs r < d = vertex
+  | otherwise  = Vertex (x - w*bx) (y - w*by) o
+ where
+    r = bx*x + by*y
+    w = 2 * signum r * d
+-- @-node:gcross.20100722123407.1631:wrapVertexAroundVector
+-- @+node:gcross.20100722123407.1632:rotate
+rotate angle_in_degrees (x,y) =
+    (x*cos_angle - y*sin_angle, y*cos_angle + x*sin_angle)
+  where
+    angle = angle_in_degrees / 180 * pi
+    cos_angle = cos angle
+    sin_angle = sin angle
+-- @-node:gcross.20100722123407.1632:rotate
 -- @+node:gcross.20100717003017.2455:squarePeriodicity
-squarePeriodicity = makeReflectivePeriodicityFrom [(1,0),(0,1)]
+squarePeriodicityRotatedBy angle =
+    let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1)]
+
+        computeDistanceFrom = makeComputeDistanceFrom basis
+
+        wrapAround d =
+            wrapVertexAroundVector b2 d
+            .
+            wrapVertexAroundVector b1 d
+
+    in Periodicity computeDistanceFrom wrapAround
 -- @-node:gcross.20100717003017.2455:squarePeriodicity
 -- @+node:gcross.20100722123407.1620:hexagonalPeriodicity
-hexagonalPeriodicity = makeReflectivePeriodicityFrom [(0,1),(sqrt 3/2,1/2),(sqrt 3/2,-1/2)]
+hexagonalPeriodicityRotatedBy angle =
+    let basis@[b1,b2,b3] = map (rotate angle)
+            [(sqrt 3/2,1/2)
+            ,(0,1)
+            ,(-sqrt 3/2,1/2)
+            ]
+
+        computeDistanceFrom = makeComputeDistanceFrom basis
+
+        wrapAround d vertex@(Vertex x y _)
+          | offsetIs   0 = wrapVertexAroundVector b1 d vertex
+          | offsetIs  60 = wrapVertexAroundVector b2 d vertex
+          | offsetIs 120 = wrapVertexAroundVector b3 d vertex
+          | otherwise    =
+                error (
+                    "Vertex is located at "
+                    ++ show (x,y) ++
+                    ", which is on a (hexagonal) boundary"
+                )
+          where
+            vertex_angle = modulo360 (atan2 y x/pi*180 - angle)
+            isInside a b = (a < vertex_angle) && (vertex_angle < b)
+            offsetIs offset =
+                isInside offset (offset+60)
+             || isInside (offset+180) (offset+240)
+
+    in Periodicity computeDistanceFrom wrapAround
 -- @-node:gcross.20100722123407.1620:hexagonalPeriodicity
 -- @-node:gcross.20100717003017.2454:Periodicities
 -- @-others

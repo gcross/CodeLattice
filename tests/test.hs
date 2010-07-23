@@ -545,96 +545,6 @@ main = defaultMain
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
-    -- @+node:gcross.20100722123407.1612:Periodicities
-    ,testGroup "Periodicities"
-        -- @    @+others
-        -- @+node:gcross.20100722123407.1613:square
-        [testGroup "square" $
-            let Periodicity computeVertexDistance wrapAroundVertex = squarePeriodicity
-            in
-                -- @        @+others
-                -- @+node:gcross.20100722123407.1614:computeVertexDistance
-                [testProperty "computeVertexDistance" $
-                    \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
-                -- @-node:gcross.20100722123407.1614:computeVertexDistance
-                -- @+node:gcross.20100722123407.1618:wrapAroundVertex
-                ,testGroup "wrapAroundVertex"
-                    [let vertex = Vertex ax ay 0
-                         correct_vertex = Vertex bx by 0
-                     in testCase (show (ax,ay) ++ ", d = " ++ show d)
-                        .
-                        assertEqual
-                            "Was the wrapped vertex correct?"
-                            correct_vertex
-                        .
-                        wrapAroundVertex d
-                        $
-                        vertex
-                    | ((ax,ay),d,(bx,by)) ←
-                        [((0,0),1,(0,0))
-                        ,((1,0),1,(-1,0))
-                        ,((1,1),1,(-1,-1))
-                        ,((1,1),2,(1,1))
-                        ,((3,1),2,(-1,1))
-                        ,((2.5,1),2,(-1.5,1))
-                        ]
-                    ]
-                -- @-node:gcross.20100722123407.1618:wrapAroundVertex
-                -- @-others
-                ]
-        -- @-node:gcross.20100722123407.1613:square
-        -- @+node:gcross.20100722123407.1624:hexagonal
-        ,testGroup "hexagonal" $
-            let Periodicity computeVertexDistance wrapAroundVertex = hexagonalPeriodicity
-            in
-                -- @        @+others
-                -- @+node:gcross.20100722123407.1625:computeVertexDistance
-                [testGroup "computeVertexDistance"
-                    -- @    @+others
-                    -- @+node:gcross.20100722123407.1627:examples
-                    [testGroup "examples" $
-                        [let vertex = Vertex x y 0
-                         in testCase (show (x,y))
-                            .
-                            assertEqual
-                                "Was the distance correct?"
-                                correct_distance
-                            .
-                            computeVertexDistance
-                            $
-                            vertex
-                        | (x,y,correct_distance) ←
-                            [(0,1,1)
-                            ,(sqrt 3/2,1/2,1)
-                            ,(sqrt 3/2,-1/2,1)
-                            ,(1,2,2)
-                            ,(sqrt 3,0,3/2)
-                            ]
-                        ]
-                    -- @-node:gcross.20100722123407.1627:examples
-                    -- @+node:gcross.20100722123407.1628:maximum distance
-                    ,testProperty "maximum distance" $
-                        \x y →
-                            let angle = 180 / pi * atan2 y x
-                                correct_distance
-                                  | angle < -120 = -(x * sqrt 3 / 2) - (y / 2)
-                                  | angle <  -60 = -y
-                                  | angle <    0 =  (x * sqrt 3 / 2) - (y / 2)
-                                  | angle <   60 =  (x * sqrt 3 / 2) + (y / 2)
-                                  | angle <  120 =  y
-                                  | angle <  180 = -(x * sqrt 3 / 2) + (y / 2)
-                                distance = computeVertexDistance (Vertex x y undefined)
-                            in correct_distance == distance
-                    -- @-node:gcross.20100722123407.1628:maximum distance
-                    -- @-others
-                    ]
-                -- @-node:gcross.20100722123407.1625:computeVertexDistance
-                -- @-others
-                ]
-        -- @-node:gcross.20100722123407.1624:hexagonal
-        -- @-others
-        ]
-    -- @-node:gcross.20100722123407.1612:Periodicities
     -- @+node:gcross.20100308212437.1385:Ord Vertex
     ,testGroup "Ord Vertex"
         -- @    @+others
@@ -1629,6 +1539,148 @@ main = defaultMain
         | GrownLattice{..} ← map (lookupGrownLattice . tilingName) tilings
         ]
     -- @-node:gcross.20100715150143.1843:Symmetries
+    -- @+node:gcross.20100722123407.1612:Periodicities
+    ,testGroup "Periodicities"
+        -- @    @+others
+        -- @+node:gcross.20100722123407.1613:square
+        [testGroup "square" $
+            let Periodicity computeVertexDistance wrapVertexAround = squarePeriodicityRotatedBy 0
+            in
+                -- @        @+others
+                -- @+node:gcross.20100722123407.1614:computeVertexDistance
+                [testProperty "computeVertexDistance" $
+                    \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
+                -- @-node:gcross.20100722123407.1614:computeVertexDistance
+                -- @+node:gcross.20100722123407.1618:wrapVertexAround
+                ,testGroup "wrapVertexAround"
+                    [let vertex = Vertex ax ay 0
+                         correct_vertex = Vertex bx by 0
+                     in testCase (show (ax,ay) ++ ", d = " ++ show d)
+                        .
+                        assertEqual
+                            "Was the wrapped vertex correct?"
+                            correct_vertex
+                        .
+                        wrapVertexAround d
+                        $
+                        vertex
+                    | ((ax,ay),d,(bx,by)) ←
+                        [((0,0),1,(0,0))
+                        ,((1,0),1,(-1,0))
+                        ,((1,1),1,(-1,-1))
+                        ,((2,2),1,(0,0))
+                        ,((1.5,2),1,(-0.5,0))
+                        ,((2,1.5),1,(0,-0.5))
+                        ,((1,1),2,(1,1))
+                        ,((3,1),2,(-1,1))
+                        ,((2.5,1),2,(-1.5,1))
+                        ]
+                    ]
+                -- @nonl
+                -- @-node:gcross.20100722123407.1618:wrapVertexAround
+                -- @-others
+                ]
+        -- @nonl
+        -- @-node:gcross.20100722123407.1613:square
+        -- @+node:gcross.20100722123407.1624:hexagonal
+        ,testGroup "hexagonal" $
+            let Periodicity computeVertexDistance wrapVertexAround = hexagonalPeriodicityRotatedBy 0
+            in
+                -- @        @+others
+                -- @+node:gcross.20100722123407.1625:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100722123407.1627:examples
+                    [testGroup "examples" $
+                        [let vertex = Vertex x y 0
+                         in testCase (show (x,y))
+                            .
+                            assertEqual
+                                "Was the distance correct?"
+                                correct_distance
+                            .
+                            computeVertexDistance
+                            $
+                            vertex
+                        | (x,y,correct_distance) ←
+                            [(0,1,1)
+                            ,(sqrt 3/2,1/2,1)
+                            ,(sqrt 3/2,-1/2,1)
+                            ,(1,2,2)
+                            ,(sqrt 3,0,3/2)
+                            ]
+                        ]
+                    -- @-node:gcross.20100722123407.1627:examples
+                    -- @+node:gcross.20100722123407.1628:maximum distance
+                    ,testProperty "maximum distance" $
+                        \x y →
+                            let angle = 180 / pi * atan2 y x
+                                correct_distance
+                                  | angle < -120 = -(x * sqrt 3 / 2) - (y / 2)
+                                  | angle <  -60 = -y
+                                  | angle <    0 =  (x * sqrt 3 / 2) - (y / 2)
+                                  | angle <   60 =  (x * sqrt 3 / 2) + (y / 2)
+                                  | angle <  120 =  y
+                                  | angle <  180 = -(x * sqrt 3 / 2) + (y / 2)
+                                distance = computeVertexDistance (Vertex x y undefined)
+                            in correct_distance == distance
+                    -- @-node:gcross.20100722123407.1628:maximum distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100722123407.1625:computeVertexDistance
+                -- @+node:gcross.20100722123407.1630:wrapVertexAround
+                ,testGroup "wrapVertexAround"
+                    -- @    @+others
+                    -- @+node:gcross.20100722123407.1635:examples
+                    [testGroup "examples"
+                        [let vertex = Vertex ax ay 0
+                             correct_vertex = Vertex bx by 0
+                         in testCase (show (ax,ay) ++ ", d = " ++ show d)
+                            .
+                            assertEqual
+                                "Was the wrapped vertex correct?"
+                                correct_vertex
+                            .
+                            wrapVertexAround d
+                            $
+                            vertex
+                        | ((ax,ay),d,(bx,by)) ←
+                            [((0,1),1,(0,-1))
+                            ]
+                        ]
+                    -- @-node:gcross.20100722123407.1635:examples
+                    -- @+node:gcross.20100722123407.1636:expected errors
+                    ,testGroup "expected errors"
+                        [testProperty (show angle) $
+                            \rotation_angle (Positive distance) →
+                                let wrapVertexAround =
+                                        periodicityWrapVertexAround
+                                        .
+                                        hexagonalPeriodicityRotatedBy
+                                        $
+                                        (rotation_angle/pi*180)
+                                in  isBottom
+                                    .
+                                    wrapVertexAround distance
+                                    $
+                                    Vertex
+                                        (2 * distance * cos (angle + rotation_angle))
+                                        (2 * distance * sin (angle + rotation_angle))
+                                        0
+                        | angle ← fmap (pi/180*) [0,60..360]
+                        ]
+                    -- @-node:gcross.20100722123407.1636:expected errors
+                    -- @-others
+                    ]
+                -- @nonl
+                -- @-node:gcross.20100722123407.1630:wrapVertexAround
+                -- @-others
+                ]
+        -- @nonl
+        -- @-node:gcross.20100722123407.1624:hexagonal
+        -- @-others
+        ]
+    -- @-node:gcross.20100722123407.1612:Periodicities
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl
