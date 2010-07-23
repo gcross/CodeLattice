@@ -296,6 +296,30 @@ growLatticeToBounds withinBounds = uncurry go . partitionVertices
 growLatticeToBoundsFromOrigin :: (Vertex → Bool) → LatticeMonad [Vertex]
 growLatticeToBoundsFromOrigin = flip growLatticeToBounds [originVertex]
 -- @-node:gcross.20100309124842.1408:growLatticeToBoundsFromOrigin
+-- @+node:gcross.20100723142502.1631:growPeriodicLattice
+growPeriodicLattice ::
+    Periodicity →
+    (ApproximateDouble → ApproximateDouble) →
+    ApproximateDouble →
+    Int →
+    [Vertex] →
+    LatticeMonad (Lattice,ApproximateDouble,[Vertex])
+growPeriodicLattice
+    periodicity@Periodicity{..}
+    increaseDistance
+    starting_distance
+    desired_radius
+    = go starting_distance
+  where
+    go current_distance current_vertices = do
+        let withinBounds = (<= current_distance) . periodicityComputeVertexDistance
+            next_distance = increaseDistance current_distance
+        next_vertices ← growLatticeToBounds withinBounds current_vertices
+        lattice ← getLattice
+        case periodizeLattice periodicity desired_radius lattice of
+            Just periodic_lattice → return (periodic_lattice,next_distance,next_vertices)
+            Nothing → go next_distance next_vertices
+-- @-node:gcross.20100723142502.1631:growPeriodicLattice
 -- @+node:gcross.20100331110052.1851:isEmptyLattice
 isEmptyLattice :: Lattice → Bool
 isEmptyLattice Lattice{..} = Set.null latticeVertices || null latticeEdges
