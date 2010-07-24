@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+                     "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg id          = "Tiling_Semiregular_3_4_6_4_Small_Rhombitrihexagonal"    
+     version     = "1.1" 
+     xmlns       = "http://www.w3.org/2000/svg" 
+     xmlns:xlink = "http://www.w3.org/1999/xlink" 
+     width       = "400" 
+     height      = "400" >
+     
+<defs>
+   <polygon id           = "A_Triangle"
+            fill         = "#99DDBB" 
+            stroke       = "#000000"
+            stroke-width = "4"
+            points       = "0,0 26,45 52,0" />
+            
+   <polygon id           = "A_Square" 
+            fill         = "#99BBDD" 
+            stroke       = "#000000"
+            stroke-width = "4"
+            points       = "0,0 26,45 -19,71 -45,26" />
+            
+   <polygon id           = "A_Hexagon" 
+            fill         = "#DD99BB" 
+            stroke       = "#000000"
+            stroke-width = "4"
+            points       = "0,0 0,52 45,78 90,52 90,0 45,-26" />
+            
+   <g id           = "A_Set"
+      stroke       = "#000000"
+      stroke-width = "4" >
+   
+      <use xlink:href="#A_Hexagon"/>
+      <use xlink:href="#A_Square"   transform="translate(71,-71)scale(-1,1)"/>
+      <use xlink:href="#A_Triangle" transform="translate(142,0)scale(-1)"/>
+      
+      <rect x="90" width="52" height="52" fill="#99BBDD"/>
+      
+      <use xlink:href="#A_Triangle" transform="translate(90,52)"/>
+      <use xlink:href="#A_Square"   transform="translate(90,52)"/>
+   </g>
+   
+   <pattern id               = "The_Pattern" 
+            patternUnits     = "userSpaceOnUse" 
+            patternTransform = "translate(-1,-4)scale(0.5)" 
+            width            ="142" height="246">
+         
+      <use xlink:href="#A_Set" transform="translate(-71,71)" />
+      <use xlink:href="#A_Set" transform="translate(71,71)"  />
+      <use xlink:href="#A_Set" transform="translate(0,194)"  />
+      <use xlink:href="#A_Set" transform="translate(0,-52)"  />
+   </pattern>
+   
+</defs>
+
+<rect x            = "2"
+      y            = "2"
+      height       = "394" 
+      width        = "394"
+      stroke       = "#000000"
+      stroke-width = "2" 
+      fill         = "url(#The_Pattern)"/>
+
+</svg>

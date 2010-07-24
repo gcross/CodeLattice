@@ -41,6 +41,7 @@ data Tiling = Tiling
     ,   tilingPeriodicity :: Periodicity
     ,   tilingNumberOfOrientations :: Int
     ,   tilingNumberOfRays :: Int
+    ,   tilingTranslationSymmetryDistance :: ApproximateDouble
     ,   tilingSteps :: [Step]
     ,   tilingUnitRadiusLattice :: Lattice
     ,   tilingUnitRadiusDiscreteLattice :: DiscreteLattice
@@ -67,6 +68,7 @@ tilings =
         (Vertex (-0.5) (-0.5) 0)
         (squarePeriodicity 1)
         1
+        1.0
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
@@ -74,6 +76,7 @@ tilings =
         (Vertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
         (squarePeriodicityRotatedBy 45 (1 + sqrt 2))
         4
+        (1 + sqrt 2)
     ,makeTiling
         "snub quadrille"
         [4,3,3,4,3]
@@ -81,13 +84,15 @@ tilings =
         (Vertex (-0.5) (-0.5) 0)
         (squarePeriodicityRotatedBy 15 (sqrt ((1/2)^2 + (1+sqrt 3/2)^2)))
         4
+        (sqrt ((1/2)^2 + (1+sqrt 3/2)^2))
     ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
         (Vertex (-0.5) (-sqrt 3/2) 0)
-        (hexagonalPeriodicityRotatedBy 30 (sqrt 3))
+        (hexagonalPeriodicityRotatedBy 30 1.5)
         2
+        (sqrt 3)
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
@@ -95,6 +100,7 @@ tilings =
         (Vertex (-0.5) (-sqrt 3/2) 0)
         (hexagonalPeriodicityRotatedBy 30 2)
         3
+        2
     ,makeTiling
         "truncated hextille"
         [12,12,3]
@@ -102,6 +108,7 @@ tilings =
         (Vertex (-0.5) (-(1 + sqrt 3/2)) 0)
         (hexagonalPeriodicityRotatedBy 30 (2+sqrt 3))
         6
+        (2+sqrt 3)
     ,makeTiling
         "deltille"
         (replicate 6 3)
@@ -109,13 +116,15 @@ tilings =
         (Vertex 0 0 0)
         (hexagonalPeriodicityRotatedBy 30 1)
         1
+        1.0
     ,makeTiling
         "rhombihexadeltille"
-        [4,6,4,3]
+        [6,4,3,4]
         PickFirstCompatableOrientation
-        (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
-        (hexagonalPeriodicityRotatedBy 30 (1+sqrt 3))
+        (Vertex (-0.5) (-(0.5 + sqrt 3/2)) 0)
+        (hexagonalPeriodicityRotatedBy 30 (1.5+sqrt 3/2))
         6
+        (1+sqrt 3)
 -- @+at
 --      ,makeTiling
 --          "snub hexatille"
@@ -233,6 +242,7 @@ makeTiling ::
     Vertex →
     Periodicity →
     Int →
+    ApproximateDouble →
     Tiling
 makeTiling
     name
@@ -241,6 +251,7 @@ makeTiling
     seed_vertex
     periodicity
     number_of_orientations
+    translation_symmetry_distance
     = tiling
   where
     tiling@Tiling{..} =
@@ -252,6 +263,7 @@ makeTiling
             periodicity
             number_of_orientations
             (length tilingSteps)
+            translation_symmetry_distance
             (tilingToSteps tiling)
             (   sel1
                 .

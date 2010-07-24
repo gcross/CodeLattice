@@ -747,7 +747,7 @@ main = defaultMain
                     .
                     assertEqual
                         "Is the distance correct?"
-                        (Just . periodDistance $ tilingPeriodicity)
+                        (Just tilingTranslationSymmetryDistance)
                     .
                     latticeTranslationDistance
                     $
@@ -856,12 +856,16 @@ main = defaultMain
                         -- @-node:gcross.20100723142502.1652:hexadeltille
                         -- @+node:gcross.20100723142502.1654:truncated hextille
                         ,("truncated hextille"
-                         ,["   0   "
-                          ,"0 0 0 0"
-                          ," 0   0 "
-                          ," 0   0 "
-                          ,"0 0 0 0"
-                          ,"   0   "
+                         ,["     2     "
+                          ,"     5     "
+                          ,"3   1 3   1"
+                          ," 0 4   0 4 "
+                          ,"  2     2  "
+                          ,"  5     5  "
+                          ," 1 3   1 3 "
+                          ,"4   0 4   0"
+                          ,"     2     "
+                          ,"     5     "
                           ]
                          )
                         -- @-node:gcross.20100723142502.1654:truncated hextille
@@ -1795,6 +1799,7 @@ main = defaultMain
                             vertex
                         | (x,y,correct_distance) ←
                             [(0,2,sqrt 3)
+                            ,(1,sqrt 3,2)
                             ]
                         ]
                     -- @-node:gcross.20100723201654.1646:examples
