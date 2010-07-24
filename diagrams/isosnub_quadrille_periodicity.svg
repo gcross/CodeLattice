@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="Tiling_Semiregular_3_3_3_4_4_Elongated_Triangular"
+   version="1.1"
+   width="400"
+   height="400"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="isosnub_quadrille_periodicity.svg">
+  <metadata
+     id="metadata6899">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="852"
+     id="namedview6897"
+     showgrid="false"
+     inkscape:zoom="1.668772"
+     inkscape:cx="223.96972"
+     inkscape:cy="200"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Tiling_Semiregular_3_3_3_4_4_Elongated_Triangular" />
+  <defs
+     id="defs6873">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 200 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="400 : 200 : 1"
+       inkscape:persp3d-origin="200 : 133.33333 : 1"
+       id="perspective6901" />
+    <polygon
+       id="Triangle"
+       stroke="#000000"
+       stroke-width="2"
+       points="0,0 26,45 52,0" />
+    <g
+       id="TS_Minor_Group">
+      <use
+         xlink:href="#Triangle"
+         transform="scale(1,-1)"
+         fill="#99DDBB"
+         id="use6877" />
+      <use
+         xlink:href="#Triangle"
+         transform="translate(0,52)"
+         fill="#99BBDD"
+         id="use6879" />
+      <rect
+         stroke="#000000"
+         stroke-width="2"
+         width="52"
+         height="52"
+         id="rect6881" />
+    </g>
+    <pattern
+       id="Tri_Square_Pattern"
+       patternUnits="userSpaceOnUse"
+       patternTransform="translate(-9, 25)"
+       width="104"
+       height="194">
+      <g
+         id="TS_Major_Group">
+        <use
+           xlink:href="#TS_Minor_Group"
+           fill="#AAEEAA"
+           id="use6885" />
+        <use
+           xlink:href="#TS_Minor_Group"
+           fill="#AAAAEE"
+           transform="translate(52)"
+           id="use6887" />
+      </g>
+      <use
+         xlink:href="#TS_Major_Group"
+         transform="translate(-26,97)"
+         id="use6889" />
+      <use
+         xlink:href="#TS_Minor_Group"
+         fill="#AAEEAA"
+         transform="translate(78,97)"
+         id="use6891" />
+      <use
+         xlink:href="#TS_Major_Group"
+         transform="translate(0,194)"
+         id="use6893" />
+    </pattern>
+  </defs>
+  <rect
+     x="2"
+     y="2"
+     height="394"
+     width="394"
+     stroke="#000000"
+     stroke-width="2"
+     fill="url(#Tri_Square_Pattern)"
+     id="rect6895" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 224.71614,345.46888 -52.13414,-59.9243 1.19848,-83.59441 52.73338,-56.02921 51.23529,55.13036 0.29962,84.49327 -53.33263,59.92429 z"
+     id="path6903"
+     sodipodi:nodetypes="ccccccc" />
+</svg>

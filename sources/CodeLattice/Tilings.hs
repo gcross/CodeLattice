@@ -125,18 +125,15 @@ tilings =
         (hexagonalPeriodicityRotatedBy 0 (1.5+sqrt 3/2))
         6
         (1+sqrt 3)
--- @+at
---      ,makeTiling
---          "isosnub quadrille"
---          [4,4,3,3,3]
---          (PickNthCompatableOrientation [0,0,0,0,1])
---          (Vertex (-0.5) (-0.5) 0)
---          undefined
---          2 5
--- @-at
--- @@c
+    ,makeTiling
+        "isosnub quadrille"
+        [4,4,3,3,3]
+        (PickNthCompatableOrientation [0,0,0,0,1])
+        (Vertex (-0.5) (-0.5) 0)
+        (rectangularPeriodicity ((1+sqrt 3/2)/1.5) 1.5)
+        2
+        1
     ]
--- @nonl
 -- @-node:gcross.20100308112554.1297:Tilings
 -- @-node:gcross.20100308112554.1296:Values
 -- @+node:gcross.20100308112554.1303:Functions

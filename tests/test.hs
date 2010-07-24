@@ -890,6 +890,15 @@ main = defaultMain
                           ]
                          )
                         -- @-node:gcross.20100723201654.1663:rhombihexadeltille
+                        -- @+node:gcross.20100723201654.1668:isosnub quadrille
+                        ,("isosnub quadrille"
+                         ,[" 0 0 0"
+                          ,"1 1 1 "
+                          ,"0 0 0 "
+                          ," 1 1 1"
+                          ]
+                         )
+                        -- @-node:gcross.20100723201654.1668:isosnub quadrille
                         -- @-others
                         ]
                 ]

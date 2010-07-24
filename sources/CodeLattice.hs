@@ -509,6 +509,10 @@ periodizeLattice
   , floor (maximum_distance / translation_distance) >= requested_radius+1
      = Just $ let
         new_edges =
+            Set.toList
+            .
+            Set.fromList
+            .
             mapMaybe (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) →
                 let wrapped_v1 = wrapAround v1
                     wrapped_v2 = wrapAround v2
@@ -523,10 +527,14 @@ periodizeLattice
                                   new_v2
                                     | wrapped_v2 < v2 = wrapped_v2
                                     | otherwise       = v2
-                              in Just (Edge
-                                        (EdgeSide new_v1 r1)
-                                        (EdgeSide new_v2 r2)
-                                      )
+                                  new_edge
+                                    | new_v1 < new_v2 =
+                                        Edge (EdgeSide new_v1 r1)
+                                             (EdgeSide new_v2 r2)
+                                    | otherwise =
+                                        Edge (EdgeSide new_v2 r2)
+                                             (EdgeSide new_v1 r1)
+                              in Just new_edge
                     (LT,EQ)
                         | wrapped_v2 < v2
                             → Just (Edge s1 (EdgeSide wrapped_v2 r2))
@@ -547,7 +555,9 @@ periodizeLattice
                             → Just (Edge (EdgeSide wrapped_v1 r1) s2)
                         | otherwise
                             → Nothing
-            ) latticeEdges
+            )
+            $
+            latticeEdges
           where
             wrap_around_distance = fromIntegral requested_radius * translation_distance
             placeVertex = (`compare` wrap_around_distance) . computeVertexDistance
@@ -795,12 +805,13 @@ rectangularPeriodicity y_over_x = rectangularPeriodicityRotatedBy y_over_x 0
 -- @-node:gcross.20100723201654.1666:rectangularPeriodicity
 -- @+node:gcross.20100723201654.1664:rectangularPeriodicityRotatedBy
 rectangularPeriodicityRotatedBy y_over_x angle distance =
-    let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1/y_over_x)]
+    let basis@[b1@(b1x,b1y),b2] = map (rotate angle) [(1,0),(0,1)]
+        b1_scaled = b1x*y_over_x + b1y*y_over_x
 
         computeDistanceFrom = makeComputeDistanceFrom basis
 
         wrapAround d =
-            wrapVertexAroundVector b2 d
+            wrapVertexAroundVector b2 (d*y_over_x)
             .
             wrapVertexAroundVector b1 d
 
