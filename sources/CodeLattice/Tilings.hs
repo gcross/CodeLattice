@@ -86,7 +86,7 @@ tilings =
         [6,6,6]
         (FixedOrientationRotation 180)
         (Vertex (-0.5) (-sqrt 3/2) 0)
-        hexagonalPeriodicity
+        (hexagonalPeriodicityRotatedBy 30)
         2
     ,makeTiling
         "hexadeltille"

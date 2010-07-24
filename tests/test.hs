@@ -722,28 +722,24 @@ main = defaultMain
             -- @@c
             -- @-node:gcross.20100714141137.2538:correct number of permutations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
-            -- @+at
-            --  ,testGroup "valid adjacencies" $
-            --      [testCase tilingName
-            --          .
-            --          assertEqual
-            --              "Are there any adjacencies not equal to the number 
-            --  of rays?"
-            --              []
-            --          .
-            --          nub
-            --          .
-            --          filter (/= tilingNumberOfRays)
-            --          .
-            --          Map.elems
-            --          .
-            --          computeVertexAdjacencies
-            --          $
-            --          tilingUnitRadiusLattice
-            --      | Tiling{..} ← tilings
-            --      ]
-            -- @-at
-            -- @@c
+            ,testGroup "valid adjacencies" $
+                [testCase tilingName
+                    .
+                    assertEqual
+                        "Are there any adjacencies not equal to the number of rays?"
+                        []
+                    .
+                    nub
+                    .
+                    filter (/= tilingNumberOfRays)
+                    .
+                    Map.elems
+                    .
+                    computeVertexAdjacencies
+                    $
+                    tilingUnitRadiusLattice
+                | Tiling{..} ← tilings
+                ]
             -- @-node:gcross.20100309160622.1348:valid adjacencies
             -- @+node:gcross.20100723142502.1646:correct lattice translation symmetry distance
             ,testGroup "correct lattice translation symmetry distance" $
@@ -781,6 +777,25 @@ main = defaultMain
                 | Tiling{..} ← tilings
                 ]
             -- @-node:gcross.20100723142502.1647:size of lattice invariant under discretization
+            -- @+node:gcross.20100723201654.1656:correct number of edges
+            ,testGroup "correct number of edges" $
+                [testCase tilingName
+                    .
+                    assertEqual
+                        "Is the number of edges?"
+                        correct_number_of_edges
+                    .
+                    length
+                    .
+                    latticeEdges
+                    $
+                    tilingUnitRadiusLattice
+                | (Tiling{..},correct_number_of_edges) ←
+                    map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
+                        [("quadrille",8)
+                        ]
+                ]
+            -- @-node:gcross.20100723201654.1656:correct number of edges
             -- @+node:gcross.20100723142502.1633:correct pictures
             ,testGroup "correct pictures" $
                 [testCase tilingName
@@ -839,11 +854,11 @@ main = defaultMain
                         -- @-node:gcross.20100723142502.1637:hextille
                         -- @+node:gcross.20100723142502.1652:hexadeltille
                         ,("hexadeltille"
-                         ,["   0   "
-                          ,"0 0 0 0"
-                          ," 0   0 "
-                          ,"0 0 0 0"
-                          ,"   0   "
+                         ,["   1   "
+                          ,"0 2 0 2"
+                          ," 1   1 "
+                          ,"2 0 2 0"
+                          ,"   1   "
                           ]
                          )
                         -- @-node:gcross.20100723142502.1652:hexadeltille

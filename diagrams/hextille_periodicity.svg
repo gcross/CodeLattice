@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="Tiling_Regular_6_3_Hexagonal"
+   version="1.1"
+   width="400"
+   height="400"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="hextille_periodicity.svg">
+  <metadata
+     id="metadata11670">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="852"
+     id="namedview11668"
+     showgrid="false"
+     inkscape:zoom="2.36"
+     inkscape:cx="165.70701"
+     inkscape:cy="209.92858"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Tiling_Regular_6_3_Hexagonal" />
+  <defs
+     id="defs11647">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 200 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="400 : 200 : 1"
+       inkscape:persp3d-origin="200 : 133.33333 : 1"
+       id="perspective11672" />
+    <polygon
+       id="Hexagon"
+       stroke="#000000"
+       stroke-width="4"
+       points="0,0 52,0 78,45 52,90 0,90 -26,45" />
+    <g
+       id="Hex_Group">
+      <use
+         xlink:href="#Hexagon"
+         transform="translate(-26)"
+         id="use11651" />
+      <use
+         xlink:href="#Hexagon"
+         transform="translate(130)"
+         id="use11653" />
+      <use
+         xlink:href="#Hexagon"
+         transform="translate(52, -135)"
+         id="use11655" />
+    </g>
+    <pattern
+       id="Hex_Pattern"
+       patternUnits="userSpaceOnUse"
+       patternTransform="translate(4, 20) scale(0.5)"
+       width="156"
+       height=" 270">
+      <use
+         xlink:href="#Hex_Group"
+         fill="#99BBDD"
+         transform="translate(0, 90) scale(1, -1)"
+         id="use11658" />
+      <use
+         xlink:href="#Hex_Group"
+         fill="#BB99DD"
+         transform="translate(0, 90)"
+         id="use11660" />
+      <use
+         xlink:href="#Hex_Group"
+         fill="#DD99BB"
+         transform="translate(0, 180)"
+         id="use11662" />
+      <use
+         xlink:href="#Hexagon"
+         fill="#BB99DD"
+         transform="translate(52, 225)"
+         id="use11664" />
+    </pattern>
+    <inkscape:perspective
+       id="perspective2921"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient12020"
+       id="radialGradient12026"
+       cx="1105"
+       cy="822.36218"
+       fx="1105"
+       fy="822.36218"
+       r="5.5"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       id="linearGradient12020">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop12022" />
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="1"
+         id="stop12024" />
+    </linearGradient>
+    <radialGradient
+       r="5.5"
+       fy="822.36218"
+       fx="1105"
+       cy="822.36218"
+       cx="1105"
+       gradientUnits="userSpaceOnUse"
+       id="radialGradient2930"
+       xlink:href="#linearGradient12020"
+       inkscape:collect="always" />
+  </defs>
+  <rect
+     x="2"
+     y="2"
+     height="394"
+     width="394"
+     stroke="#000000"
+     stroke-width="2"
+     fill="url(#Hex_Pattern)"
+     id="rect11666" />
+  <path
+     sodipodi:type="arc"
+     style="fill:url(#radialGradient2930);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     id="path11246"
+     sodipodi:cx="1105"
+     sodipodi:cy="822.36218"
+     sodipodi:rx="5"
+     sodipodi:ry="5"
+     d="m 1110,822.36218 a 5,5 0 1 1 -10,0 5,5 0 1 1 10,0 z"
+     transform="translate(-906.05129,-623.1086)" />
+  <path
+     sodipodi:nodetypes="ccccccc"
+     id="path11714"
+     d="m 238.10465,130.25969 41.19105,69.26968 -40.61071,69.63102 -80.34867,-0.11025 -38.47948,-68.98455 39.46467,-69.49659 78.78314,-0.30919 z"
+     style="fill:none;stroke:#000000;stroke-width:1.97993159px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:2.92526102px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="M 256.50024,97.100239 317.35816,199.44311 257.35768,302.31984 138.64608,302.15696 81.79437,200.23535 140.10165,97.557241 256.50024,97.100417 z"
+     id="path11716"
+     sodipodi:nodetypes="ccccccc" />
+  <path
+     sodipodi:nodetypes="ccccccc"
+     id="path11718"
+     d="m 198.89009,159.60262 35.50996,19.89651 -0.179,40.71232 -35.17249,20.24253 -34.25194,-20.4566 -0.28832,-40.36409 34.38179,-20.03067 z"
+     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+</svg>

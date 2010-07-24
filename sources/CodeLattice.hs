@@ -42,6 +42,7 @@ import Data.Typeable
 import TypeLevel.NaturalNumber
 
 import Debug.Trace
+import Text.Printf
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -498,54 +499,61 @@ periodizeLattice
     requested_radius
     lattice@Lattice{..}
   | Just translation_distance ← latticeTranslationDistance lattice
-  , floor (maximum_distance / translation_distance) <= requested_radius+1
+  , floor (maximum_distance / translation_distance) >= requested_radius+1
      = Just $ let
-        wrap_around_distance = fromIntegral requested_radius * translation_distance
-        wrapAround = wrapVertexAround wrap_around_distance
-        new_vertices =
-            Set.fromList
-            .
-            mapMaybe (\vertex →
-                let wrapped_vertex = wrapAround vertex
-                in case computeVertexDistance vertex `compare` wrap_around_distance of
-                    EQ | wrapped_vertex == vertex
-                         → error $
-                            "Wrapping a vertex around should not get the same vertex back. ("
-                            ++ show vertex ++
-                            ")"
-                       | vertexOrientation wrapped_vertex /= vertexOrientation vertex
-                         → error $
-                            "Wrapping a vertex around should obtain a vertex with the same orientation. ("
-                            ++ show vertex ++
-                            " v.s. "
-                            ++ show wrapped_vertex ++
-                            ")"
-                       | wrapped_vertex < vertex
-                         → Just vertex
-                       | otherwise
-                         → Nothing
-                    LT → Just vertex
-                    GT → Nothing
-            )
-            .
-            Set.toList
-            $            
-            latticeVertices
-        keptVertex = flip Set.member new_vertices
-        wrapEdge s1@(EdgeSide v1 _) (EdgeSide v2 r2)
-          | new_v2 < v1 = Nothing
-          | otherwise   = Just (Edge s1 (EdgeSide new_v2 r2))
-          where
-            new_v2  = wrapAround v2
         new_edges =
             mapMaybe (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) →
-                case (keptVertex v1,keptVertex v2) of
-                    (True,True) → Just edge
-                    (False,False) → Nothing
-                    (True,False) → wrapEdge s1 s2
-                    (False,True) → wrapEdge s2 s1
+                let wrapped_v1 = wrapAround v1
+                    wrapped_v2 = wrapAround v2
+                in case (placeVertex v1,placeVertex v2) of
+                    (GT,GT) → Nothing
+                    (EQ,GT) → Nothing
+                    (GT,EQ) → Nothing
+                    (LT,LT) → Just edge
+                    (EQ,EQ) → let new_v1
+                                    | wrapped_v1 < v1 = wrapped_v1
+                                    | otherwise       = v1
+                                  new_v2
+                                    | wrapped_v2 < v2 = wrapped_v2
+                                    | otherwise       = v2
+                              in Just (Edge
+                                        (EdgeSide new_v1 r1)
+                                        (EdgeSide new_v2 r2)
+                                      )
+                    (LT,EQ)
+                        | wrapped_v2 < v2
+                            → Just (Edge s1 (EdgeSide wrapped_v2 r2))
+                        | otherwise
+                            → Just edge
+                    (EQ,LT)
+                        | wrapped_v1 < v1
+                            → Just (Edge (EdgeSide wrapped_v1 r1) s2)
+                        | otherwise
+                            → Just edge
+                    (LT,GT)
+                        | wrapped_v2 > v1
+                            → Just (Edge s1 (EdgeSide wrapped_v2 r2))
+                        | otherwise
+                            → Nothing
+                    (GT,LT)
+                        | wrapped_v1 > v2
+                            → Just (Edge (EdgeSide wrapped_v1 r1) s2)
+                        | otherwise
+                            → Nothing
             ) latticeEdges
-     in Lattice new_vertices new_edges
+          where
+            wrap_around_distance = fromIntegral requested_radius * translation_distance
+            placeVertex = (`compare` wrap_around_distance) . computeVertexDistance
+            wrapAround = wrapVertexAround wrap_around_distance
+        new_vertices =
+            Set.unions
+            .
+            map (\(Edge (EdgeSide v1 _) (EdgeSide v2 _)) →
+                Set.fromList [v1,v2]
+            )
+            $
+            new_edges
+       in Lattice new_vertices new_edges
   | otherwise
      = Nothing
   where
@@ -821,7 +829,9 @@ hexagonalPeriodicityRotatedBy angle =
                 error (
                     "Vertex is located at "
                     ++ show (x,y) ++
-                    ", which is on a (hexagonal) boundary"
+                    " @ "
+                    ++ show (atan2 y x / pi * 180) ++
+                    ", which is on a (hexagonal) corner"
                 )
           where
             vertex_angle = modulo360 (atan2 y x/pi*180 - angle)
