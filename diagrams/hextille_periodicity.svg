@@ -39,11 +39,11 @@
      id="namedview11668"
      showgrid="false"
      inkscape:zoom="2.36"
-     inkscape:cx="165.70701"
-     inkscape:cy="209.92858"
+     inkscape:cx="247.36194"
+     inkscape:cy="202.90801"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      inkscape:current-layer="Tiling_Regular_6_3_Hexagonal" />
   <defs
      id="defs11647">
@@ -174,4 +174,9 @@
      id="path11718"
      d="m 198.89009,159.60262 35.50996,19.89651 -0.179,40.71232 -35.17249,20.24253 -34.25194,-20.4566 -0.28832,-40.36409 34.38179,-20.03067 z"
      style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.31352711px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 198.67494,147.02786 46.64332,26.13463 -0.23513,53.47671 -46.19999,26.58917 -44.99083,-26.87028 -0.37873,-53.01934 45.1614,-26.31081 z"
+     id="path12111"
+     sodipodi:nodetypes="ccccccc" />
 </svg>

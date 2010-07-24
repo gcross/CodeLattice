@@ -1,67 +1,142 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
-                     "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-
-<svg id          = "Tiling_Semiregular_3_4_6_4_Small_Rhombitrihexagonal"    
-     version     = "1.1" 
-     xmlns       = "http://www.w3.org/2000/svg" 
-     xmlns:xlink = "http://www.w3.org/1999/xlink" 
-     width       = "400" 
-     height      = "400" >
-     
-<defs>
-   <polygon id           = "A_Triangle"
-            fill         = "#99DDBB" 
-            stroke       = "#000000"
-            stroke-width = "4"
-            points       = "0,0 26,45 52,0" />
-            
-   <polygon id           = "A_Square" 
-            fill         = "#99BBDD" 
-            stroke       = "#000000"
-            stroke-width = "4"
-            points       = "0,0 26,45 -19,71 -45,26" />
-            
-   <polygon id           = "A_Hexagon" 
-            fill         = "#DD99BB" 
-            stroke       = "#000000"
-            stroke-width = "4"
-            points       = "0,0 0,52 45,78 90,52 90,0 45,-26" />
-            
-   <g id           = "A_Set"
-      stroke       = "#000000"
-      stroke-width = "4" >
-   
-      <use xlink:href="#A_Hexagon"/>
-      <use xlink:href="#A_Square"   transform="translate(71,-71)scale(-1,1)"/>
-      <use xlink:href="#A_Triangle" transform="translate(142,0)scale(-1)"/>
-      
-      <rect x="90" width="52" height="52" fill="#99BBDD"/>
-      
-      <use xlink:href="#A_Triangle" transform="translate(90,52)"/>
-      <use xlink:href="#A_Square"   transform="translate(90,52)"/>
-   </g>
-   
-   <pattern id               = "The_Pattern" 
-            patternUnits     = "userSpaceOnUse" 
-            patternTransform = "translate(-1,-4)scale(0.5)" 
-            width            ="142" height="246">
-         
-      <use xlink:href="#A_Set" transform="translate(-71,71)" />
-      <use xlink:href="#A_Set" transform="translate(71,71)"  />
-      <use xlink:href="#A_Set" transform="translate(0,194)"  />
-      <use xlink:href="#A_Set" transform="translate(0,-52)"  />
-   </pattern>
-   
-</defs>
-
-<rect x            = "2"
-      y            = "2"
-      height       = "394" 
-      width        = "394"
-      stroke       = "#000000"
-      stroke-width = "2" 
-      fill         = "url(#The_Pattern)"/>
-
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="Tiling_Semiregular_3_4_6_4_Small_Rhombitrihexagonal"
+   version="1.1"
+   width="400"
+   height="400"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="rhombihexadeltille-periodicity.svg">
+  <metadata
+     id="metadata17162">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="852"
+     id="namedview17160"
+     showgrid="false"
+     inkscape:zoom="1.668772"
+     inkscape:cx="237.75231"
+     inkscape:cy="200"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Tiling_Semiregular_3_4_6_4_Small_Rhombitrihexagonal" />
+  <defs
+     id="defs17131">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 200 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="400 : 200 : 1"
+       inkscape:persp3d-origin="200 : 133.33333 : 1"
+       id="perspective17164" />
+    <polygon
+       id="A_Triangle"
+       fill="#99DDBB"
+       stroke="#000000"
+       stroke-width="4"
+       points="0,0 26,45 52,0" />
+    <polygon
+       id="A_Square"
+       fill="#99BBDD"
+       stroke="#000000"
+       stroke-width="4"
+       points="0,0 26,45 -19,71 -45,26" />
+    <polygon
+       id="A_Hexagon"
+       fill="#DD99BB"
+       stroke="#000000"
+       stroke-width="4"
+       points="0,0 0,52 45,78 90,52 90,0 45,-26" />
+    <g
+       id="A_Set"
+       stroke="#000000"
+       stroke-width="4">
+      <use
+         xlink:href="#A_Hexagon"
+         id="use17137" />
+      <use
+         xlink:href="#A_Square"
+         transform="translate(71,-71)scale(-1,1)"
+         id="use17139" />
+      <use
+         xlink:href="#A_Triangle"
+         transform="translate(142,0)scale(-1)"
+         id="use17141" />
+      <rect
+         x="90"
+         width="52"
+         height="52"
+         fill="#99BBDD"
+         id="rect17143" />
+      <use
+         xlink:href="#A_Triangle"
+         transform="translate(90,52)"
+         id="use17145" />
+      <use
+         xlink:href="#A_Square"
+         transform="translate(90,52)"
+         id="use17147" />
+    </g>
+    <pattern
+       id="The_Pattern"
+       patternUnits="userSpaceOnUse"
+       patternTransform="translate(-1,-4)scale(0.5)"
+       width="142"
+       height="246">
+      <use
+         xlink:href="#A_Set"
+         transform="translate(-71,71)"
+         id="use17150" />
+      <use
+         xlink:href="#A_Set"
+         transform="translate(71,71)"
+         id="use17152" />
+      <use
+         xlink:href="#A_Set"
+         transform="translate(0,194)"
+         id="use17154" />
+      <use
+         xlink:href="#A_Set"
+         transform="translate(0,-52)"
+         id="use17156" />
+    </pattern>
+  </defs>
+  <rect
+     x="2"
+     y="2"
+     height="394"
+     width="394"
+     stroke="#000000"
+     stroke-width="2"
+     fill="url(#The_Pattern)"
+     id="rect17158" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.04214466px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 124.82635,168.14349 37.15761,-64.35889 73.58749,-0.0597 38.36455,64.69517 -38.55151,64.27522 -74.98139,-0.024 -35.57675,-64.52785 z"
+     id="path17166" />
 </svg>
