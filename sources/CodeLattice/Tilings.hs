@@ -127,13 +127,6 @@ tilings =
         (1+sqrt 3)
 -- @+at
 --      ,makeTiling
---          "snub hexatille"
---          [6,3,3,3,3]
---          (PickNthCompatableOrientation [0,0,1,0,2])
---          (Vertex (-0.5) (-sqrt 3/2) 0)
---          undefined
---          6 5
---      ,makeTiling
 --          "isosnub quadrille"
 --          [4,4,3,3,3]
 --          (PickNthCompatableOrientation [0,0,0,0,1])
