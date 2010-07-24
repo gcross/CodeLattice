@@ -76,6 +76,7 @@ type LatticeMonad resultType = State (Lattice,[Step]) resultType
 data Periodicity = Periodicity
     {   periodicityComputeVertexDistance :: (Vertex → ApproximateDouble)
     ,   periodicityWrapVertexAround :: (ApproximateDouble → Vertex → Vertex)
+    ,   periodDistance :: ApproximateDouble
     }
 -- @-node:gcross.20100717003017.2453:Periodicity
 -- @+node:gcross.20100302164430.1241:Step
@@ -495,10 +496,16 @@ periodizeLattice
     Periodicity
         {   periodicityComputeVertexDistance = computeVertexDistance
         ,   periodicityWrapVertexAround = wrapVertexAround
+        ,   periodDistance = translation_distance
         }
     requested_radius
     lattice@Lattice{..}
-  | Just translation_distance ← latticeTranslationDistance lattice
+  | Just (maximum_distance,_) ←
+        Set.maxView
+        .
+        Set.map computeVertexDistance
+        $
+        latticeVertices
   , floor (maximum_distance / translation_distance) >= requested_radius+1
      = Just $ let
         new_edges =
@@ -556,14 +563,6 @@ periodizeLattice
        in Lattice new_vertices new_edges
   | otherwise
      = Nothing
-  where
-    maximum_distance =
-        Set.findMax
-        .
-        Set.map computeVertexDistance
-        $
-        latticeVertices
--- @nonl
 -- @-node:gcross.20100717003017.2449:periodizeLattice
 -- @+node:gcross.20100309160622.1351:pruneLattice
 pruneLattice :: Lattice → Lattice
@@ -795,7 +794,7 @@ rotate angle_in_degrees (x,y) =
 squarePeriodicity = squarePeriodicityRotatedBy 0
 -- @-node:gcross.20100723120236.1635:squarePeriodicity
 -- @+node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
-squarePeriodicityRotatedBy angle =
+squarePeriodicityRotatedBy angle distance =
     let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1)]
 
         computeDistanceFrom = makeComputeDistanceFrom basis
@@ -805,14 +804,15 @@ squarePeriodicityRotatedBy angle =
             .
             wrapVertexAroundVector b1 d
 
-    in Periodicity computeDistanceFrom wrapAround
+    in Periodicity computeDistanceFrom wrapAround distance
+
 -- @-node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
 -- @+node:gcross.20100723120236.1637:hexagonalPeriodicity
 hexagonalPeriodicity = hexagonalPeriodicityRotatedBy 0
 -- @nonl
 -- @-node:gcross.20100723120236.1637:hexagonalPeriodicity
 -- @+node:gcross.20100722123407.1620:hexagonalPeriodicityRotatedBy
-hexagonalPeriodicityRotatedBy angle =
+hexagonalPeriodicityRotatedBy angle distance =
     let basis@[b1,b2,b3] = map (rotate angle)
             [(sqrt 3/2,1/2)
             ,(0,1)
@@ -840,7 +840,7 @@ hexagonalPeriodicityRotatedBy angle =
                 isInside offset (offset+60)
              || isInside (offset+180) (offset+240)
 
-    in Periodicity computeDistanceFrom wrapAround
+    in Periodicity computeDistanceFrom wrapAround distance
 -- @-node:gcross.20100722123407.1620:hexagonalPeriodicityRotatedBy
 -- @-node:gcross.20100717003017.2454:Periodicities
 -- @-others

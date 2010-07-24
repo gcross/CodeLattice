@@ -65,56 +65,56 @@ tilings =
         [4,4,4,4]
         OnlyOneOrientation
         (Vertex (-0.5) (-0.5) 0)
-        squarePeriodicity
+        (squarePeriodicity 1)
         1
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
         PickFirstCompatableOrientation
         (Vertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
-        (squarePeriodicityRotatedBy 45)
+        (squarePeriodicityRotatedBy 45 (1 + sqrt 2))
         4
     ,makeTiling
         "snub quadrille"
         [4,3,3,4,3]
         (PickNthCompatableOrientation [0,0,0,1,1])
         (Vertex (-0.5) (-0.5) 0)
-        (squarePeriodicityRotatedBy 15)
+        (squarePeriodicityRotatedBy 15 (sqrt ((1/2)^2 + (1+sqrt 3/2)^2)))
         4
     ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
         (Vertex (-0.5) (-sqrt 3/2) 0)
-        (hexagonalPeriodicityRotatedBy 30)
+        (hexagonalPeriodicityRotatedBy 30 (sqrt 3))
         2
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
         (PickNthCompatableOrientation [1,1,0,0])
         (Vertex (-0.5) (-sqrt 3/2) 0)
-        (hexagonalPeriodicityRotatedBy 30)
+        (hexagonalPeriodicityRotatedBy 30 2)
         3
     ,makeTiling
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
         (Vertex (-0.5) (-(1 + sqrt 3/2)) 0)
-        (hexagonalPeriodicityRotatedBy 30)
+        (hexagonalPeriodicityRotatedBy 30 (2+sqrt 3))
         6
     ,makeTiling
         "deltille"
         (replicate 6 3)
         OnlyOneOrientation
         (Vertex 0 0 0)
-        (hexagonalPeriodicityRotatedBy 30)
+        (hexagonalPeriodicityRotatedBy 30 1)
         1
     ,makeTiling
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
         (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
-        (hexagonalPeriodicityRotatedBy 30)
+        (hexagonalPeriodicityRotatedBy 30 (1+sqrt 3))
         6
 -- @+at
 --      ,makeTiling

@@ -747,20 +747,12 @@ main = defaultMain
                     .
                     assertEqual
                         "Is the distance correct?"
-                        (Just correct_distance)
+                        (Just . periodDistance $ tilingPeriodicity)
                     .
                     latticeTranslationDistance
                     $
                     tilingUnitRadiusLattice
-                | (Tiling{..},correct_distance) ←
-                    map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
-                        [("quadrille",1)
-                        ,("truncated quadrille",1 + sqrt 2)
-                        -- ,("snub quadrille",2)
-                        ,("hextille",sqrt 3)
-                        ,("hexadeltille",2)
-                        ,("truncated hextille",2+sqrt 3)
-                        ]
+                | Tiling{..} ← tilings
                 ]
             -- @-node:gcross.20100723142502.1646:correct lattice translation symmetry distance
             -- @+node:gcross.20100723142502.1647:size of lattice invariant under discretization
@@ -1631,7 +1623,8 @@ main = defaultMain
         -- @    @+others
         -- @+node:gcross.20100722123407.1613:square
         [testGroup "square" $
-            let Periodicity computeVertexDistance wrapVertexAround = squarePeriodicityRotatedBy 0
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    squarePeriodicityRotatedBy 0 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100723201654.1651:computeVertexDistance
@@ -1681,7 +1674,8 @@ main = defaultMain
         -- @-node:gcross.20100722123407.1613:square
         -- @+node:gcross.20100722123407.1624:hexagonal
         ,testGroup "hexagonal" $
-            let Periodicity computeVertexDistance wrapVertexAround = hexagonalPeriodicityRotatedBy 0
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    hexagonalPeriodicityRotatedBy 0 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100722123407.1625:computeVertexDistance
@@ -1757,7 +1751,7 @@ main = defaultMain
                                 let wrapVertexAround =
                                         periodicityWrapVertexAround
                                         .
-                                        hexagonalPeriodicityRotatedBy
+                                        flip hexagonalPeriodicityRotatedBy undefined
                                         $
                                         (rotation_angle/pi*180)
                                 in  isBottom
@@ -1780,7 +1774,8 @@ main = defaultMain
         -- @-node:gcross.20100722123407.1624:hexagonal
         -- @+node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
         ,testGroup "hexagonal (rotated 30 degrees)" $
-            let Periodicity computeVertexDistance wrapVertexAround = hexagonalPeriodicityRotatedBy 30
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    hexagonalPeriodicityRotatedBy 30 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100723201654.1647:computeVertexDistance
