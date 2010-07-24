@@ -790,12 +790,12 @@ rotate angle_in_degrees (x,y) =
     cos_angle = cos angle
     sin_angle = sin angle
 -- @-node:gcross.20100722123407.1632:rotate
--- @+node:gcross.20100723120236.1635:squarePeriodicity
-squarePeriodicity = squarePeriodicityRotatedBy 0
--- @-node:gcross.20100723120236.1635:squarePeriodicity
--- @+node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
-squarePeriodicityRotatedBy angle distance =
-    let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1)]
+-- @+node:gcross.20100723201654.1666:rectangularPeriodicity
+rectangularPeriodicity y_over_x = rectangularPeriodicityRotatedBy y_over_x 0
+-- @-node:gcross.20100723201654.1666:rectangularPeriodicity
+-- @+node:gcross.20100723201654.1664:rectangularPeriodicityRotatedBy
+rectangularPeriodicityRotatedBy y_over_x angle distance =
+    let basis@[b1,b2] = map (rotate angle) [(1,0),(0,1/y_over_x)]
 
         computeDistanceFrom = makeComputeDistanceFrom basis
 
@@ -806,6 +806,12 @@ squarePeriodicityRotatedBy angle distance =
 
     in Periodicity computeDistanceFrom wrapAround distance
 
+-- @-node:gcross.20100723201654.1664:rectangularPeriodicityRotatedBy
+-- @+node:gcross.20100723120236.1635:squarePeriodicity
+squarePeriodicity = squarePeriodicityRotatedBy 0
+-- @-node:gcross.20100723120236.1635:squarePeriodicity
+-- @+node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
+squarePeriodicityRotatedBy = rectangularPeriodicityRotatedBy 1
 -- @-node:gcross.20100717003017.2455:squarePeriodicityRotatedBy
 -- @+node:gcross.20100723120236.1637:hexagonalPeriodicity
 hexagonalPeriodicity = hexagonalPeriodicityRotatedBy 0
