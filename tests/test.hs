@@ -1619,10 +1619,20 @@ main = defaultMain
             let Periodicity computeVertexDistance wrapVertexAround = squarePeriodicityRotatedBy 0
             in
                 -- @        @+others
-                -- @+node:gcross.20100722123407.1614:computeVertexDistance
-                [testProperty "computeVertexDistance" $
-                    \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
-                -- @-node:gcross.20100722123407.1614:computeVertexDistance
+                -- @+node:gcross.20100723201654.1651:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100722123407.1614:computeVertexDistance
+                    [testProperty "correct value" $
+                        \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
+                    -- @-node:gcross.20100722123407.1614:computeVertexDistance
+                    -- @+node:gcross.20100723201654.1650:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100723201654.1650:bounded by actual distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100723201654.1651:computeVertexDistance
                 -- @+node:gcross.20100722123407.1618:wrapVertexAround
                 ,testGroup "wrapVertexAround"
                     [let vertex = Vertex ax ay 0
@@ -1697,6 +1707,10 @@ main = defaultMain
                                 distance = computeVertexDistance (Vertex x y undefined)
                             in correct_distance == distance
                     -- @-node:gcross.20100722123407.1628:maximum distance
+                    -- @+node:gcross.20100723201654.1648:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100723201654.1648:bounded by actual distance
                     -- @-others
                     ]
                 -- @-node:gcross.20100722123407.1625:computeVertexDistance
@@ -1754,23 +1768,33 @@ main = defaultMain
             let Periodicity computeVertexDistance wrapVertexAround = hexagonalPeriodicityRotatedBy 30
             in
                 -- @        @+others
-                -- @+node:gcross.20100723201654.1646:computeVertexDistance
-                [testGroup "computeVertexDistance" $
-                    [let vertex = Vertex x y 0
-                     in testCase (show (x,y))
-                        .
-                        assertEqual
-                            "Was the distance correct?"
-                            correct_distance
-                        .
-                        computeVertexDistance
-                        $
-                        vertex
-                    | (x,y,correct_distance) ←
-                        [(0,2,sqrt 3)
+                -- @+node:gcross.20100723201654.1647:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100723201654.1646:examples
+                    [testGroup "examples" $
+                        [let vertex = Vertex x y 0
+                         in testCase (show (x,y))
+                            .
+                            assertEqual
+                                "Was the distance correct?"
+                                correct_distance
+                            .
+                            computeVertexDistance
+                            $
+                            vertex
+                        | (x,y,correct_distance) ←
+                            [(0,2,sqrt 3)
+                            ]
                         ]
+                    -- @-node:gcross.20100723201654.1646:examples
+                    -- @+node:gcross.20100723201654.1653:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100723201654.1653:bounded by actual distance
+                    -- @-others
                     ]
-                -- @-node:gcross.20100723201654.1646:computeVertexDistance
+                -- @-node:gcross.20100723201654.1647:computeVertexDistance
                 -- @-others
                 ]
         -- @-node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
