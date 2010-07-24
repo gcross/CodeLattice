@@ -869,6 +869,27 @@ main = defaultMain
                           ]
                          )
                         -- @-node:gcross.20100723142502.1654:truncated hextille
+                        -- @+node:gcross.20100723201654.1661:deltille
+                        ,("deltille"
+                         ,[" 0 "
+                          ,"0 0"
+                          ," 0 "
+                          ]
+                         )
+                        -- @-node:gcross.20100723201654.1661:deltille
+                        -- @+node:gcross.20100723201654.1663:rhombihexadeltille
+                        ,("rhombihexadeltille"
+                         ,["   5 3   "
+                          ," 4     4 "
+                          ,"    1    "
+                          ,"0 2   0 2"
+                          ,"5 3   5 3"
+                          ,"    4    "
+                          ," 1     1 "
+                          ,"   0 2   "
+                          ]
+                         )
+                        -- @-node:gcross.20100723201654.1663:rhombihexadeltille
                         -- @-others
                         ]
                 ]
