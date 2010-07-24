@@ -119,10 +119,10 @@ tilings =
         1.0
     ,makeTiling
         "rhombihexadeltille"
-        [6,4,3,4]
+        [3,4,6,4]
         PickFirstCompatableOrientation
-        (Vertex (-0.5) (-(0.5 + sqrt 3/2)) 0)
-        (hexagonalPeriodicityRotatedBy 30 (1.5+sqrt 3/2))
+        (Vertex (sqrt 3/2) 0.5 0)
+        (hexagonalPeriodicityRotatedBy 0 (1.5+sqrt 3/2))
         6
         (1+sqrt 3)
 -- @+at
