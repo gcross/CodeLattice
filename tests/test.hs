@@ -1749,6 +1749,31 @@ main = defaultMain
                 -- @-others
                 ]
         -- @-node:gcross.20100722123407.1624:hexagonal
+        -- @+node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
+        ,testGroup "hexagonal (rotated 30 degrees)" $
+            let Periodicity computeVertexDistance wrapVertexAround = hexagonalPeriodicityRotatedBy 30
+            in
+                -- @        @+others
+                -- @+node:gcross.20100723201654.1646:computeVertexDistance
+                [testGroup "computeVertexDistance" $
+                    [let vertex = Vertex x y 0
+                     in testCase (show (x,y))
+                        .
+                        assertEqual
+                            "Was the distance correct?"
+                            correct_distance
+                        .
+                        computeVertexDistance
+                        $
+                        vertex
+                    | (x,y,correct_distance) ←
+                        [(0,2,sqrt 3)
+                        ]
+                    ]
+                -- @-node:gcross.20100723201654.1646:computeVertexDistance
+                -- @-others
+                ]
+        -- @-node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
         -- @-others
         ]
     -- @-node:gcross.20100722123407.1612:Periodicities
