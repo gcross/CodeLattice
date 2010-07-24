@@ -40,6 +40,8 @@ import qualified Data.Set as Set
 import Data.Typeable
 
 import TypeLevel.NaturalNumber
+
+import Debug.Trace
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -74,7 +76,6 @@ data Periodicity = Periodicity
     {   periodicityComputeVertexDistance :: (Vertex → ApproximateDouble)
     ,   periodicityWrapVertexAround :: (ApproximateDouble → Vertex → Vertex)
     }
--- @nonl
 -- @-node:gcross.20100717003017.2453:Periodicity
 -- @+node:gcross.20100302164430.1241:Step
 data Step = Step
@@ -87,7 +88,7 @@ data Vertex = Vertex
     {   vertexLocationX :: ApproximateDouble
     ,   vertexLocationY :: ApproximateDouble
     ,   vertexOrientation :: ApproximateDouble
-    } deriving (Show,Eq)
+    } deriving (Eq)
 -- @-node:gcross.20100302164430.1235:Vertex
 -- @+node:gcross.20100714141137.2291:VertexClass(es)
 newtype VertexClass = VertexClass { unwrapVertexClass :: [ApproximateDouble] }
@@ -121,6 +122,17 @@ instance Ord Vertex where
       where
         location_comparison = (x1,y1) `compare` (x2,y2)
 -- @-node:gcross.20100308212437.1384:Ord Vertex
+-- @+node:gcross.20100723142502.1638:Show Vertex
+instance Show Vertex where
+    show (Vertex x y o) =
+        "Vertex {("
+        ++ show (unwrapAbsolutelyApproximateValue x) ++
+        ","
+        ++ show (unwrapAbsolutelyApproximateValue y) ++
+        ") @ "
+        ++ show (unwrapAbsolutelyApproximateValue o) ++
+        "}"
+-- @-node:gcross.20100723142502.1638:Show Vertex
 -- @+node:gcross.20100312175547.1843:Eq Lattice
 instance Eq Lattice where
     lattice1 == lattice2 =
@@ -422,7 +434,12 @@ latticeRays =
 -- @+node:gcross.20100717003017.2450:latticeTranslationDistance
 latticeTranslationDistance :: Lattice → Maybe ApproximateDouble
 latticeTranslationDistance Lattice{latticeVertices}
-  | Just (first_vertex,rest_vertices) ← Set.minView latticeVertices
+  | Just (Vertex x1 y1 0,rest_vertices) ←
+        Set.minView
+        .
+        Set.filter ((== 0) . vertexOrientation)
+        $
+        latticeVertices
   , (not . Set.null) rest_vertices
       = Just
         .
@@ -430,10 +447,9 @@ latticeTranslationDistance Lattice{latticeVertices}
         .
         Set.findMin
         .
-        Set.map (\vertex →
-            (vertexLocationX vertex - vertexLocationX first_vertex)^2 +
-            (vertexLocationX vertex - vertexLocationY first_vertex)^2
-        )
+        Set.delete 0
+        .
+        Set.map (\(Vertex x2 y2 0) → (x1-x2)^2 + (y1-y2)^2)
         $
         rest_vertices
   | otherwise
@@ -475,10 +491,10 @@ periodizeLattice ::
     Lattice →
     Maybe Lattice
 periodizeLattice
-    (Periodicity
-        computeVertexDistance
-        wrapVertexAround
-    )
+    Periodicity
+        {   periodicityComputeVertexDistance = computeVertexDistance
+        ,   periodicityWrapVertexAround = wrapVertexAround
+        }
     requested_radius
     lattice@Lattice{..}
   | Just translation_distance ← latticeTranslationDistance lattice
@@ -486,27 +502,35 @@ periodizeLattice
      = Just $ let
         wrap_around_distance = fromIntegral requested_radius * translation_distance
         wrapAround = wrapVertexAround wrap_around_distance
-        (border_vertices,inner_vertices) =
-            partitionEithers
+        new_vertices =
+            Set.fromList
             .
             mapMaybe (\vertex →
-                case computeVertexDistance vertex `compare` wrap_around_distance of
-                    EQ → (Just . Left) vertex
-                    LT → (Just . Right) vertex
+                let wrapped_vertex = wrapAround vertex
+                in case computeVertexDistance vertex `compare` wrap_around_distance of
+                    EQ | wrapped_vertex == vertex
+                         → error $
+                            "Wrapping a vertex around should not get the same vertex back. ("
+                            ++ show vertex ++
+                            ")"
+                       | vertexOrientation wrapped_vertex /= vertexOrientation vertex
+                         → error $
+                            "Wrapping a vertex around should obtain a vertex with the same orientation. ("
+                            ++ show vertex ++
+                            " v.s. "
+                            ++ show wrapped_vertex ++
+                            ")"
+                       | wrapped_vertex < vertex
+                         → Just vertex
+                       | otherwise
+                         → Nothing
+                    LT → Just vertex
                     GT → Nothing
             )
             .
             Set.toList
-            $
+            $            
             latticeVertices
-        kept_border_vertices =
-            filter (\vertex →
-                case wrapAround vertex `compare` vertex of
-                    EQ → error "Wrapping a vertex around should not get the same vertex back."
-                    LT → True
-                    GT → False
-            ) border_vertices
-        new_vertices = Set.fromList (kept_border_vertices ++ inner_vertices)
         keptVertex = flip Set.member new_vertices
         wrapEdge s1@(EdgeSide v1 _) (EdgeSide v2 r2)
           | new_v2 < v1 = Nothing
@@ -738,15 +762,6 @@ makeReflectiveWrapAroundFrom vectors d vertex = foldl' makeReflectiveWrapAroundF
         r = (bx*x + by*y)
         w = - 2 * signum r * d
 -- @-node:gcross.20100722123407.1616:makeReflectiveWrapAroundFrom
--- @+node:gcross.20100722123407.1617:makeReflectivePeriodicityFrom
-makeReflectivePeriodicityFrom ::
-    [(ApproximateDouble,ApproximateDouble)] →
-    Periodicity
-makeReflectivePeriodicityFrom =
-    liftA2 Periodicity
-        makeComputeDistanceFrom
-        makeReflectiveWrapAroundFrom
--- @-node:gcross.20100722123407.1617:makeReflectivePeriodicityFrom
 -- @+node:gcross.20100722123407.1631:wrapVertexAroundVector
 wrapVertexAroundVector ::
     (ApproximateDouble,ApproximateDouble) →

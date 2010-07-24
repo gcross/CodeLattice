@@ -30,6 +30,8 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 
 import CodeLattice
+
+import Debug.Trace
 -- @-node:gcross.20100717003017.2422:<< Import needed modules >>
 -- @nl
 
@@ -86,7 +88,7 @@ discretizeLattice lattice@Lattice{..} =
             map (\Vertex{..} →
                 DiscreteVertex
                     (fromJust . Map.lookup vertexLocationX $ x_location_map)
-                    (fromJust . Map.lookup vertexLocationX $ y_location_map)
+                    (fromJust . Map.lookup vertexLocationY $ y_location_map)
                     (fromJust . Map.lookup vertexOrientation $ orientations_map)
             ) vertices
 
@@ -136,11 +138,11 @@ drawDiscreteLattice DiscreteLattice{discreteLatticeVertices}
             $
             discreteLatticeVertices
         minmax getCoordinate =
-            (minimum &&& maximum)
+            (Set.findMin &&& Set.findMax)
             .
-            map getCoordinate
+            Set.map getCoordinate
             .
-            Map.keys
+            Map.keysSet
             $
             coordinate_map
         (min_X,max_X) = minmax fst
@@ -162,7 +164,6 @@ drawDiscreteLattice DiscreteLattice{discreteLatticeVertices}
         ]
   where
     removeBlankLines = filter (any (/= ' '))
--- @nonl
 -- @-node:gcross.20100717003017.2431:drawDiscreteLattice
 -- @+node:gcross.20100717003017.2433:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String

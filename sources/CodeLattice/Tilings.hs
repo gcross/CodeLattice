@@ -4,8 +4,8 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100713115329.1585:<< Language extensions >>
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UnicodeSyntax #-}
--- @nonl
 -- @-node:gcross.20100713115329.1585:<< Language extensions >>
 -- @nl
 
@@ -14,8 +14,10 @@ module CodeLattice.Tilings where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100308112554.1293:<< Import needed modules >>
 import Data.Maybe
+import Data.Tuple.Select
 
 import CodeLattice hiding (Edge)
+import CodeLattice.Discrete
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
 
@@ -37,7 +39,11 @@ data Tiling = Tiling
     ,   tilingOrientationMode :: OrientationMode
     ,   tilingSeedVertex :: Vertex
     ,   tilingPeriodicity :: Periodicity
+    ,   tilingNumberOfOrientations :: Int
+    ,   tilingNumberOfRays :: Int
     ,   tilingSteps :: [Step]
+    ,   tilingUnitRadiusLattice :: Lattice
+    ,   tilingUnitRadiusDiscreteLattice :: DiscreteLattice
     }
 -- @nonl
 -- @-node:gcross.20100308112554.1302:Tiling
@@ -60,60 +66,73 @@ tilings =
         OnlyOneOrientation
         (Vertex (-0.5) (-0.5) 0)
         squarePeriodicity
+        1
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
         PickFirstCompatableOrientation
         (Vertex (-0.5) (-(0.5 + 1/sqrt 2)) 0)
         (squarePeriodicityRotatedBy 45)
+        4
     ,makeTiling
         "snub quadrille"
-        [3,4,3,4,3]
+        [4,3,3,4,3]
         (PickNthCompatableOrientation [0,0,0,1,1])
         (Vertex (-0.5) (-0.5) 0)
         (squarePeriodicityRotatedBy 15)
+        4
     ,makeTiling
         "hextille"
         [6,6,6]
         (FixedOrientationRotation 180)
         (Vertex (-0.5) (-sqrt 3/2) 0)
         hexagonalPeriodicity
+        2
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
         (PickNthCompatableOrientation [1,1,0,0])
         (Vertex (-0.5) (-sqrt 3/2) 0)
         (hexagonalPeriodicityRotatedBy 30)
+        3
     ,makeTiling
         "truncated hextille"
         [12,12,3]
         PickFirstCompatableOrientation
-        (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
+        (Vertex (-0.5) (-(1 + sqrt 3/2)) 0)
         (hexagonalPeriodicityRotatedBy 30)
+        6
     ,makeTiling
         "deltille"
         (replicate 6 3)
         OnlyOneOrientation
         (Vertex 0 0 0)
         (hexagonalPeriodicityRotatedBy 30)
+        1
     ,makeTiling
         "rhombihexadeltille"
         [4,6,4,3]
         PickFirstCompatableOrientation
         (Vertex (-0.5) (-(0.5 + 0.5 + sqrt 3/2)) 0)
         (hexagonalPeriodicityRotatedBy 30)
-    ,makeTiling
-        "snub hexatille"
-        [6,3,3,3,3]
-        (PickNthCompatableOrientation [0,0,1,0,2])
-        (Vertex (-0.5) (-sqrt 3/2) 0)
-        undefined
-    ,makeTiling
-        "isosnub quadrille"
-        [4,4,3,3,3]
-        (PickNthCompatableOrientation [0,0,0,0,1])
-        (Vertex (-0.5) (-0.5) 0)
-        undefined
+        6
+-- @+at
+--      ,makeTiling
+--          "snub hexatille"
+--          [6,3,3,3,3]
+--          (PickNthCompatableOrientation [0,0,1,0,2])
+--          (Vertex (-0.5) (-sqrt 3/2) 0)
+--          undefined
+--          6 5
+--      ,makeTiling
+--          "isosnub quadrille"
+--          [4,4,3,3,3]
+--          (PickNthCompatableOrientation [0,0,0,0,1])
+--          (Vertex (-0.5) (-0.5) 0)
+--          undefined
+--          2 5
+-- @-at
+-- @@c
     ]
 -- @nonl
 -- @-node:gcross.20100308112554.1297:Tilings
@@ -207,18 +226,47 @@ lookupTilingSteps = tilingSteps . lookupTiling
 -- @nonl
 -- @-node:gcross.20100309124842.1400:lookupTilingSteps
 -- @+node:gcross.20100309124842.1398:makeTiling
-makeTiling :: String → [Int] → OrientationMode → Vertex → Periodicity → Tiling
-makeTiling name polygons orientation_mode origin periodicity = tiling
+makeTiling ::
+    String →
+    [Int] →
+    OrientationMode →
+    Vertex →
+    Periodicity →
+    Int →
+    Tiling
+makeTiling
+    name
+    polygons
+    orientation_mode
+    seed_vertex
+    periodicity
+    number_of_orientations
+    = tiling
   where
-    tiling =
+    tiling@Tiling{..} =
         Tiling
             name
             polygons
             orientation_mode
-            origin
+            seed_vertex
             periodicity
+            number_of_orientations
+            (length tilingSteps)
             (tilingToSteps tiling)
--- @nonl
+            (   sel1
+                .
+                fst
+                .
+                runLatticeMonad tilingSteps
+                $
+                growPeriodicLattice
+                    tilingPeriodicity
+                    (+1.0)
+                    1.0
+                    1
+                    [tilingSeedVertex]
+            )
+            (discretizeLattice tilingUnitRadiusLattice)
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps

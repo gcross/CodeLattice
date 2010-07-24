@@ -55,9 +55,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
+     inkscape:zoom="1.4"
      inkscape:cx="187.67543"
-     inkscape:cy="439.75701"
+     inkscape:cy="496.89987"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -17274,5 +17274,9 @@
        sodipodi:rx="9.5913467"
        sodipodi:ry="9.3046274"
        d="m 199.99999,603.05756 a 9.5913467,9.3046274 0 1 1 -19.18269,0 9.5913467,9.3046274 0 1 1 19.18269,0 z" />
+    <path
+       id="path10934"
+       d="m 112.99869,622.89587 56.46761,-97.535 97.53501,56.46761 -56.46762,97.53501 -97.535,-56.46762 z"
+       style="fill:#0004ff;fill-opacity:0.1254902;stroke:#0000ff;stroke-width:1.54002619;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
 </svg>
