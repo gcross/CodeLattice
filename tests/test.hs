@@ -754,7 +754,7 @@ main = defaultMain
                 [testCase tilingName
                     .
                     assertEqual
-                        "Is the number of edges?"
+                        "Is the number of edges correct?"
                         correct_number_of_edges
                     .
                     length
@@ -765,6 +765,14 @@ main = defaultMain
                 | (Tiling{..},correct_number_of_edges) ←
                     map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
                         [("quadrille",8)
+                        ,("truncated quadrille",24)
+                        ,("snub quadrille",20)
+                        ,("hextille",9)
+                        ,("hexadeltille",24)
+                        ,("truncated hextille",36)
+                        ,("deltille",12)
+                        ,("rhombihexadeltille",36)
+                        ,("isosnub quadrille",30)
                         ]
                 ]
             -- @-node:gcross.20100723201654.1656:correct number of edges
@@ -802,17 +810,11 @@ main = defaultMain
                         -- @-node:gcross.20100723142502.1649:truncated quadrille
                         -- @+node:gcross.20100723142502.1651:snub quadrille
                         ,("snub quadrille"
-                         ,["       0   "
-                          ,"  0  1     "
-                          ,"         3 "
-                          ,"1          "
-                          ,"    3 2    "
-                          ," 2       0 "
-                          ,"    0 1    "
-                          ,"          3"
-                          ," 1         "
-                          ,"     3  2  "
-                          ,"   2       "
+                         ,["  1  "
+                          ," 3 2 "
+                          ,"2   0"
+                          ," 0 1 "
+                          ,"  3  "
                           ]
                          )
                         -- @-node:gcross.20100723142502.1651:snub quadrille

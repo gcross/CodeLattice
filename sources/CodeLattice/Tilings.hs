@@ -91,7 +91,12 @@ tilings =
         [4,3,3,4,3]
         (PickNthCompatableOrientation [0,0,0,1,1])
         (Vertex (-0.5) (-0.5) 0)
-        (squarePeriodicityRotatedBy 15 (sqrt ((1/2)^2 + (1+sqrt 3/2)^2)))
+        (squarePeriodicityRotatedBy 60
+            (sqrt ((1/2+sqrt 2/2*cos (pi/12))^2
+                  +(1/2+sqrt 2/2*sin (pi/12))^2
+                  )
+            )
+        )
         4
         (sqrt ((1/2)^2 + (1+sqrt 3/2)^2))
         8
