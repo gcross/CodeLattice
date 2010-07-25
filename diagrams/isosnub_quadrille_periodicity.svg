@@ -38,9 +38,9 @@
      inkscape:window-height="852"
      id="namedview6897"
      showgrid="false"
-     inkscape:zoom="1.668772"
-     inkscape:cx="223.96972"
-     inkscape:cy="200"
+     inkscape:zoom="1.18"
+     inkscape:cx="538.98305"
+     inkscape:cy="175.09034"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -116,13 +116,15 @@
      y="2"
      height="394"
      width="394"
-     stroke="#000000"
+     id="rect6895"
      stroke-width="2"
-     fill="url(#Tri_Square_Pattern)"
-     id="rect6895" />
-  <path
-     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 224.71614,345.46888 -52.13414,-59.9243 1.19848,-83.59441 52.73338,-56.02921 51.23529,55.13036 0.29962,84.49327 -53.33263,59.92429 z"
-     id="path6903"
-     sodipodi:nodetypes="ccccccc" />
+     stroke="#000000"
+     fill="url(#Tri_Square_Pattern)" />
+  <rect
+     style="fill:none;stroke:#ad0b00;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     id="rect6915"
+     width="155.08475"
+     height="200.84746"
+     x="147.45763"
+     y="145.76271" />
 </svg>
