@@ -325,6 +325,14 @@ computeTilingSymmetries Tiling {..}
                 (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
 
         original_vertices = latticeVertices tilingUnitRadiusLattice
+
+        Periodicity{..} = tilingPeriodicity
+
+        wrapAround = periodicityWrapVertexAround periodDistance
+        borderVertex =
+            (== periodDistance)
+            .
+            periodicityComputeVertexDistance
     in mapMaybe (\f → do
         permutation ←
             (original_vertex_classes ??→??)
@@ -354,7 +362,10 @@ computeTilingSymmetries Tiling {..}
                             (`elemIndex` orientations)
                             $
                             o
-                    in Vertex (r*cos θ) (r*sin θ) new_o
+                        new_vertex = Vertex (r*cos θ) (r*sin θ) new_o
+                    in if borderVertex new_vertex
+                        then (new_vertex `min` wrapAround new_vertex)
+                        else new_vertex
                 ) original_vertices
         if original_vertices == modified_vertices
             then return permutation
