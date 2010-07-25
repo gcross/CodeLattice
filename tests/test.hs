@@ -1613,24 +1613,20 @@ main = defaultMain
         ]
     -- @-node:gcross.20100715150143.1659:Solving
     -- @+node:gcross.20100715150143.1843:Symmetries
-    -- @+at
-    --  ,testGroup "Symmetries" . const [] $
-    --      [ testProperty grownLatticeTilingName $
-    --          arbitraryLatticeLabeling grownLattice
-    --          >>=
-    --          \labeling → return $
-    --              let (first_solution:rest_solutions) =
-    --                      map (
-    --                          solveForLabeling (latticeToScanConfiguration 
-    --  grownDiscreteLattice)
-    --                          .
-    --                          permuteLatticeLabeling labeling
-    --                      ) grownLatticeSymmetricPermutations
-    --              in all (== first_solution) rest_solutions
-    --      | GrownLattice{..} ← map (lookupGrownLattice . tilingName) tilings
-    --      ]
-    -- @-at
-    -- @@c
+    ,testGroup "Symmetries" $
+        [ testProperty tilingName $
+            arbitraryLatticeLabeling tilingUnitRadiusLattice
+            >>=
+            \labeling → return $
+                let (first_solution:rest_solutions) =
+                        map (
+                            solveForLabeling (latticeToScanConfiguration tilingUnitRadiusDiscreteLattice)
+                            .
+                            permuteLatticeLabeling labeling
+                        ) tilingSymmetries
+                in all (== first_solution) rest_solutions
+        | Tiling{..} ← tilings
+        ]
     -- @-node:gcross.20100715150143.1843:Symmetries
     -- @+node:gcross.20100722123407.1612:Periodicities
     ,testGroup "Periodicities"
