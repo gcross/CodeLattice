@@ -92,20 +92,6 @@ data Vertex = Vertex
     ,   vertexOrientation :: ApproximateDouble
     } deriving (Eq)
 -- @-node:gcross.20100302164430.1235:Vertex
--- @+node:gcross.20100714141137.2291:VertexClass(es)
-newtype VertexClass = VertexClass { unwrapVertexClass :: [ApproximateDouble] }
-newtype VertexClasses = VertexClasses { unwrapVertexClasses :: [VertexClass] }
--- @-node:gcross.20100714141137.2291:VertexClass(es)
--- @+node:gcross.20100714141137.2533:VertexLabelingPermutation
-newtype VertexLabelingPermutation = VertexLabelingPermutation
-    { unwrapVertexLabelingPermutation :: [Int]
-    } deriving (Eq)
--- @-node:gcross.20100714141137.2533:VertexLabelingPermutation
--- @+node:gcross.20100714141137.2534:LatticeLabelingPermutation
-newtype LatticeLabelingPermutation = LatticeLabelingPermutation
-    { unwrapLatticeLabelingPermutation :: [(Int,VertexLabelingPermutation)]
-    } deriving (Eq)
--- @-node:gcross.20100714141137.2534:LatticeLabelingPermutation
 -- @-node:gcross.20100302164430.1234:Types
 -- @+node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100308212437.1384:Ord Vertex
@@ -140,8 +126,31 @@ instance Eq Lattice where
     lattice1 == lattice2 =
         (((==) `on` latticeVertices) lattice1 lattice2)
         &&
-        (((==) `on` (sort . latticeEdges)) lattice1 lattice2)
+        (((==) `on` (sort . map canonicalizeEdge . latticeEdges)) lattice1 lattice2)
 -- @-node:gcross.20100312175547.1843:Eq Lattice
+-- @+node:gcross.20100723201654.1726:Show Lattice
+instance Show Lattice where
+    show (Lattice vertices edges) =
+        "Lattice:\n\tVertices:\n\t\t"
+        ++ (intercalate "\n\t\t"
+            .
+            map show
+            .
+            Set.toList
+            $
+            vertices
+            )
+        ++
+        "\n\tEdges:\n\t\t"
+        ++ (intercalate "\n\t\t"
+            .
+            map show
+            $
+            edges
+           )
+        ++
+        "\n"
+-- @-node:gcross.20100723201654.1726:Show Lattice
 -- @-node:gcross.20100308212437.1383:Instances
 -- @+node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100308212437.1393:Miscellaneous
@@ -237,16 +246,34 @@ addVertexToLattice vertex =
 -- @+node:gcross.20100717003017.2452:canonicalizeEdge
 canonicalizeEdge :: Edge → Edge
 canonicalizeEdge (Edge s1 s2)
-  | s1 <= s2  = Edge s1 s2
-  | otherwise = Edge s2 s1
+  | s1 > s2   = Edge s2 s1
+  | otherwise = Edge s1 s2
 -- @-node:gcross.20100717003017.2452:canonicalizeEdge
--- @+node:gcross.20100717003017.2451:canonicalizeEdges
-canonicalizeEdges :: [Edge] → Set Edge
-canonicalizeEdges =
-    Set.fromList
-    .
-    map canonicalizeEdge
--- @-node:gcross.20100717003017.2451:canonicalizeEdges
+-- @+node:gcross.20100723201654.1669:canonicalizePeriodicLattice
+canonicalizePeriodicLattice ::
+    Periodicity →
+    Int →
+    Lattice →
+    Lattice
+canonicalizePeriodicLattice
+    Periodicity{..}
+    radius
+    (Lattice _ edges)
+    = latticeFromEdges new_edges
+  where
+    wrap_around_distance = fromIntegral radius * periodDistance
+    canonicalizePeriodicEdge =
+        liftA2 Edge
+            (canonicalizePeriodicEdgeSide . edgeLeftSide)
+            (canonicalizePeriodicEdgeSide . edgeRightSide)
+    canonicalizePeriodicEdgeSide (EdgeSide v r) = EdgeSide new_v r
+      where
+        wrapped_v = periodicityWrapVertexAround wrap_around_distance v
+        new_v
+          | wrapped_v < v = wrapped_v
+          | otherwise     = v
+    new_edges = map canonicalizePeriodicEdge edges
+-- @-node:gcross.20100723201654.1669:canonicalizePeriodicLattice
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice → Map Vertex Int
 computeVertexAdjacencies Lattice{..} =
@@ -402,6 +429,19 @@ iteratePrunedLattices
                 next_vertices
                 (number_of_iterations_remaining-1)
 -- @-node:gcross.20100312133145.1380:iteratePrunedLattices
+-- @+node:gcross.20100723201654.1670:latticeFromEdges
+latticeFromEdges :: [Edge] → Lattice
+latticeFromEdges edges = Lattice vertices edges
+  where
+    vertices =
+        Set.unions
+        .
+        map (\(Edge (EdgeSide v1 _) (EdgeSide v2 _)) →
+            Set.fromList [v1,v2]
+        )
+        $
+        edges
+-- @-node:gcross.20100723201654.1670:latticeFromEdges
 -- @+node:gcross.20100308212437.1397:latticeHasVertex
 latticeHasVertex :: Vertex → LatticeMonad Bool
 latticeHasVertex vertex =
@@ -513,6 +553,8 @@ periodizeLattice
             .
             Set.fromList
             .
+            map canonicalizeEdge
+            .
             mapMaybe (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) →
                 let wrapped_v1 = wrapAround v1
                     wrapped_v2 = wrapAround v2
@@ -562,15 +604,7 @@ periodizeLattice
             wrap_around_distance = fromIntegral requested_radius * translation_distance
             placeVertex = (`compare` wrap_around_distance) . computeVertexDistance
             wrapAround = wrapVertexAround wrap_around_distance
-        new_vertices =
-            Set.unions
-            .
-            map (\(Edge (EdgeSide v1 _) (EdgeSide v2 _)) →
-                Set.fromList [v1,v2]
-            )
-            $
-            new_edges
-       in Lattice new_vertices new_edges
+       in latticeFromEdges new_edges
   | otherwise
      = Nothing
 -- @-node:gcross.20100717003017.2449:periodizeLattice
@@ -665,91 +699,6 @@ processVertices = fmap concat . mapM processVertex
 -- @nonl
 -- @-node:gcross.20100308212437.1468:processVertices
 -- @-node:gcross.20100308212437.1402:Processing Vertices
--- @+node:gcross.20100713173607.1588:Angle matching
--- @+node:gcross.20100714141137.1604:(?→?)
-(?→?) :: VertexClass → VertexClass → Maybe VertexLabelingPermutation
-(?→?) (VertexClass angles) =
-    fmap VertexLabelingPermutation
-    .
-    sequence
-    .
-    map (flip elemIndex angles)
-    .
-    unwrapVertexClass
--- @-node:gcross.20100714141137.1604:(?→?)
--- @+node:gcross.20100714141137.1607:(??→?)
-(??→?) :: VertexClasses → VertexClass → Maybe (Int,VertexLabelingPermutation)
-(VertexClasses vcs) ??→? vc2 =
-    msum
-    .
-    zipWith (\index vc1 → fmap (index,) (vc1 ?→? vc2))
-        [0..]
-    $
-    vcs
--- @-node:gcross.20100714141137.1607:(??→?)
--- @+node:gcross.20100714141137.1605:(??→??)
-(??→??) :: VertexClasses → VertexClasses → Maybe LatticeLabelingPermutation
-(??→??) vertex_classes =
-    fmap LatticeLabelingPermutation
-    .
-    sequence
-    .
-    map (vertex_classes ??→?)
-    .
-    unwrapVertexClasses
--- @-node:gcross.20100714141137.1605:(??→??)
--- @+node:gcross.20100713173607.1594:(|⇆)
-(|⇆) :: ApproximateDouble → ApproximateDouble → ApproximateDouble
-reflection_axis_angle |⇆ angle = 2*reflection_axis_angle - angle
--- @-node:gcross.20100713173607.1594:(|⇆)
--- @+node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
-getOriginVertexClassModifiedBy ::
-    (ApproximateDouble → ApproximateDouble) →
-    LatticeMonad VertexClass
-getOriginVertexClassModifiedBy f =
-    fmap (
-        VertexClass
-        .
-        map (
-            modulo360
-            .
-            f
-            .
-            stepAngle
-        )
-    ) getLatticeSteps
--- @-node:gcross.20100714141137.2289:getOriginVertexClassRotatedBy
--- @+node:gcross.20100714141137.2290:getAllVertexClassesModifiedBy
-getAllVertexClassesModifiedBy ::
-    (ApproximateDouble → ApproximateDouble) →
-    LatticeMonad VertexClasses
-getAllVertexClassesModifiedBy f =
-    getAllOrientations
-    >>=
-    fmap VertexClasses
-    .
-    mapM (getOriginVertexClassModifiedBy . (f .) . (+))
--- @-node:gcross.20100714141137.2290:getAllVertexClassesModifiedBy
--- @+node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
-getAllSymmetricLatticeLabelingPermutations :: Bool → LatticeMonad [LatticeLabelingPermutation]
-getAllSymmetricLatticeLabelingPermutations has_reflective_symmetries =
-    getAllVertexClassesModifiedBy id
-    >>=
-    \original_vertex_classes →
-        fmap (nub . catMaybes)
-        .
-        mapM (
-            fmap (original_vertex_classes ??→??)
-            .
-            getAllVertexClassesModifiedBy
-        )
-        $
-        liftM2 (.)
-            [id] -- (id : if has_reflective_symmetries then map (|⇆) [0,90] else [])
-            -- (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
-            (map (+) . delete 360 . nub $ [0,45..360])
--- @-node:gcross.20100714141137.2532:getAllSymmetricLatticeLabelingPermutations
--- @-node:gcross.20100713173607.1588:Angle matching
 -- @-node:gcross.20100302164430.1305:Functions
 -- @+node:gcross.20100717003017.2454:Periodicities
 -- @+node:gcross.20100722123407.1615:makeComputeDistanceFrom

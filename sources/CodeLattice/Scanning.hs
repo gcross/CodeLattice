@@ -45,6 +45,7 @@ import System.IO.Unsafe
 
 import CodeLattice
 import CodeLattice.Discrete
+import CodeLattice.Labeling
 -- @-node:gcross.20100314233604.1667:<< Import needed modules >>
 -- @nl
 

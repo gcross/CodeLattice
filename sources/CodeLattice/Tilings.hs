@@ -13,11 +13,16 @@ module CodeLattice.Tilings where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100308112554.1293:<< Import needed modules >>
+import Control.Monad
+
+import Data.List
 import Data.Maybe
+import qualified Data.Set as Set
 import Data.Tuple.Select
 
 import CodeLattice hiding (Edge)
 import CodeLattice.Discrete
+import CodeLattice.Labeling
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
 
@@ -41,10 +46,12 @@ data Tiling = Tiling
     ,   tilingPeriodicity :: Periodicity
     ,   tilingNumberOfOrientations :: Int
     ,   tilingNumberOfRays :: Int
+    ,   tilingNumberOfSymmetries :: Int
     ,   tilingTranslationSymmetryDistance :: ApproximateDouble
     ,   tilingSteps :: [Step]
     ,   tilingUnitRadiusLattice :: Lattice
     ,   tilingUnitRadiusDiscreteLattice :: DiscreteLattice
+    ,   tilingSymmetries :: [LatticeLabelingPermutation]
     }
 -- @nonl
 -- @-node:gcross.20100308112554.1302:Tiling
@@ -69,6 +76,7 @@ tilings =
         (squarePeriodicity 1)
         1
         1.0
+        8
     ,makeTiling
         "truncated quadrille"
         [8,8,4]
@@ -77,6 +85,7 @@ tilings =
         (squarePeriodicityRotatedBy 45 (1 + sqrt 2))
         4
         (1 + sqrt 2)
+        8
     ,makeTiling
         "snub quadrille"
         [4,3,3,4,3]
@@ -85,6 +94,7 @@ tilings =
         (squarePeriodicityRotatedBy 15 (sqrt ((1/2)^2 + (1+sqrt 3/2)^2)))
         4
         (sqrt ((1/2)^2 + (1+sqrt 3/2)^2))
+        8
     ,makeTiling
         "hextille"
         [6,6,6]
@@ -93,6 +103,7 @@ tilings =
         (hexagonalPeriodicityRotatedBy 30 1.5)
         2
         (sqrt 3)
+        12
     ,makeTiling
         "hexadeltille"
         [6,3,6,3]
@@ -100,7 +111,8 @@ tilings =
         (Vertex (-0.5) (-sqrt 3/2) 0)
         (hexagonalPeriodicityRotatedBy 30 2)
         3
-        2
+        2.0
+        12
     ,makeTiling
         "truncated hextille"
         [12,12,3]
@@ -109,6 +121,7 @@ tilings =
         (hexagonalPeriodicityRotatedBy 30 (2+sqrt 3))
         6
         (2+sqrt 3)
+        12
     ,makeTiling
         "deltille"
         (replicate 6 3)
@@ -117,6 +130,7 @@ tilings =
         (hexagonalPeriodicityRotatedBy 30 1)
         1
         1.0
+        12
     ,makeTiling
         "rhombihexadeltille"
         [3,4,6,4]
@@ -125,6 +139,7 @@ tilings =
         (hexagonalPeriodicityRotatedBy 0 (1.5+sqrt 3/2))
         6
         (1+sqrt 3)
+        12
     ,makeTiling
         "isosnub quadrille"
         [4,4,3,3,3]
@@ -132,7 +147,8 @@ tilings =
         (Vertex (-0.5) (-0.5) 0)
         (rectangularPeriodicity ((1+sqrt 3/2)/1.5) 1.5)
         2
-        1
+        1.0
+        4
     ]
 -- @-node:gcross.20100308112554.1297:Tilings
 -- @-node:gcross.20100308112554.1296:Values
@@ -233,6 +249,7 @@ makeTiling ::
     Periodicity →
     Int →
     ApproximateDouble →
+    Int →
     Tiling
 makeTiling
     name
@@ -242,6 +259,7 @@ makeTiling
     periodicity
     number_of_orientations
     translation_symmetry_distance
+    number_of_symmetries
     = tiling
   where
     tiling@Tiling{..} =
@@ -253,6 +271,7 @@ makeTiling
             periodicity
             number_of_orientations
             (length tilingSteps)
+            number_of_symmetries
             translation_symmetry_distance
             (tilingToSteps tiling)
             (   sel1
@@ -269,10 +288,79 @@ makeTiling
                     [tilingSeedVertex]
             )
             (discretizeLattice tilingUnitRadiusLattice)
+            (computeTilingSymmetries tiling)
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
+-- @+node:gcross.20100723201654.1713:computeTilingSymmetries
+computeTilingSymmetries :: Tiling → [LatticeLabelingPermutation]
+computeTilingSymmetries Tiling {..}
+  = let computeOriginVertexClassModifiedBy f =
+            VertexClass
+            .
+            map (
+                modulo360
+                .
+                f
+                .
+                stepAngle
+            )
+            $
+            tilingSteps
+        computeAllVertexClassesModifiedBy f
+          = VertexClasses
+            .
+            map (computeOriginVertexClassModifiedBy . (f .) . (+))
+            $
+            orientations
+
+        orientations = latticeOrientations tilingUnitRadiusLattice
+
+        original_vertex_classes = computeAllVertexClassesModifiedBy id
+
+        rotations =
+            liftM2 (.)
+                (map (|⇆) [0,90])
+                (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
+
+        original_vertices = latticeVertices tilingUnitRadiusLattice
+    in mapMaybe (\f → do
+        permutation ←
+            (original_vertex_classes ??→??)
+            .
+            computeAllVertexClassesModifiedBy
+            $
+            f
+        let modified_vertices =
+                Set.map (\(Vertex x y o) →
+                    let r = sqrt (x^2 + y^2)
+                        θ = (*(pi/180)) . f . (*(180/pi)) $ atan2 y x
+                        new_o =
+                            (orientations !!)
+                            .
+                            fromJust
+                            .
+                            (`elemIndex` (
+                                map fst
+                                .
+                                unwrapLatticeLabelingPermutation
+                                $
+                                permutation
+                            ))
+                            .
+                            fromJust
+                            .
+                            (`elemIndex` orientations)
+                            $
+                            o
+                    in Vertex (r*cos θ) (r*sin θ) new_o
+                ) original_vertices
+        if original_vertices == modified_vertices
+            then return permutation
+            else Nothing
+      ) rotations
+-- @-node:gcross.20100723201654.1713:computeTilingSymmetries
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

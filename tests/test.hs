@@ -50,6 +50,7 @@ import Test.QuickCheck
 
 import CodeLattice
 import CodeLattice.Discrete
+import CodeLattice.Labeling
 import CodeLattice.Scanning
 import CodeLattice.Tilings
 -- @-node:gcross.20091217190104.1412:<< Import needed modules >>
@@ -688,38 +689,17 @@ main = defaultMain
                 ]
             -- @-node:gcross.20100309150650.1374:correct number of orientations
             -- @+node:gcross.20100714141137.2538:correct number of permutations
-            -- @+at
-            --  ,testGroup "correct number of symmetric permutations" . const 
-            --  [] $
-            --      [testCase name $
-            --          assertEqual
-            --              "Is the number of computed symmetric permutations 
-            --  correct?"
-            --              correct_number_of_symmetric_permutations
-            --              .
-            --              length
-            --              .
-            --              grownLatticeSymmetricPermutations
-            --              .
-            --              lookupGrownLattice
-            --              $
-            --              name
-            --      | (name,correct_number_of_symmetric_permutations) ←
-            --          [("quadrille",8)
-            --          ,("truncated quadrille",8)
-            --          ,("snub quadrille",8)
-            --          ,("hextille",12)
-            --          ,("hexadeltille",12)
-            --          ,("truncated hextille",12)
-            --          ,("deltille",12)
-            --          ,("rhombihexadeltille",12)
-            --          -- ,("truncated hexadeltille",12)
-            --          ,("snub hexatille",6)
-            --          ,("isosnub quadrille",4)
-            --          ]
-            --      ]
-            -- @-at
-            -- @@c
+            ,testGroup "correct number of symmetries" $
+                [testCase tilingName $
+                    assertEqual
+                        "Is the number of symmetries correct?"
+                        tilingNumberOfSymmetries
+                        .
+                        length
+                        $
+                        tilingSymmetries
+                | Tiling{..} ← tilings
+                ]
             -- @-node:gcross.20100714141137.2538:correct number of permutations
             -- @+node:gcross.20100309160622.1348:valid adjacencies
             ,testGroup "valid adjacencies" $
@@ -1503,7 +1483,7 @@ main = defaultMain
         ]
     -- @-node:gcross.20100307133316.1312:Tilings
     -- @+node:gcross.20100715150143.1659:Solving
-    ,testGroup "Solving" $
+    ,testGroup "Solving"
         [let scan_configuration = latticeToScanConfiguration lattice
          in testGroup lattice_name
             [testCase (show test_index)
