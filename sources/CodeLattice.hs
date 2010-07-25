@@ -365,6 +365,35 @@ growPeriodicLattice
 isEmptyLattice :: Lattice → Bool
 isEmptyLattice Lattice{..} = Set.null latticeVertices || null latticeEdges
 -- @-node:gcross.20100331110052.1851:isEmptyLattice
+-- @+node:gcross.20100723201654.1727:graphLattice
+graphLattice :: Lattice → String
+graphLattice (Lattice vertices edges) =
+    let vertex_labelings =
+            Map.fromList
+            .
+            flip zip ['n':show n | n ← [0..]] -- '
+            .
+            Set.toList
+            $
+            vertices
+    in "graph {"
+        ++ "\n" ++
+           intercalate "\n"
+            [ printf "%s [pos=\"%f,%f!\"];"
+                vertex_label
+                (unwrapAbsolutelyApproximateValue vertexLocationX)
+                (unwrapAbsolutelyApproximateValue vertexLocationY)
+            | (Vertex{..},vertex_label) ← Map.assocs vertex_labelings
+            ]
+        ++ "\n" ++ 
+           intercalate "\n"
+            [ printf "%s--%s;"
+                (fromJust . flip Map.lookup vertex_labelings $ v1)
+                (fromJust . flip Map.lookup vertex_labelings $ v2)
+            | (Edge (EdgeSide v1 _) (EdgeSide v2 _)) ← edges
+            ]
+        ++ "\n}"
+-- @-node:gcross.20100723201654.1727:graphLattice
 -- @+node:gcross.20100312133145.1378:growLatticeUntilPruningStopsReturningOriginal
 growLatticeUntilPruningStopsReturningOriginal ::
     (Vertex → ApproximateDouble) →
