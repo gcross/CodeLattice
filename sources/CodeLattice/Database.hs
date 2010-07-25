@@ -6,6 +6,7 @@
 -- @+node:gcross.20100312175547.1842:<< Language extensions >>
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100312175547.1842:<< Language extensions >>
@@ -20,7 +21,7 @@ import Control.Monad.Error
 import Control.Monad.Trans
 
 import Data.ConfigFile
-import Data.Foldable
+import qualified Data.Foldable as Fold
 import Data.Sequence (Seq,(|>))
 import qualified Data.Sequence as Seq
 import Data.UUID
@@ -70,22 +71,23 @@ fetch4 a b c d accum = result' ((a, b, c, d):accum) --'
 -- @-node:gcross.20100312175547.1823:Enumerators
 -- @+node:gcross.20100312175547.1817:Functions
 -- @+node:gcross.20100312220352.1834:edgeIteratee
-edgeIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [DiscteteEdge]
+edgeIteratee :: (MonadIO m) => Int → Int → Int → Int → IterAct m [DiscreteEdge]
 edgeIteratee
     vertex_number_1 ray_number_1
     vertex_number_2 ray_number_2
     edges
     =
-    result' (Edge (DiscreteEdgeSide vertex_number_1 ray_number_1) -- '
-                  (DiscreteEdgeSide vertex_number_2 ray_number_2)
+    result' (DiscreteEdge
+                (DiscreteEdgeSide vertex_number_1 ray_number_1) -- '
+                (DiscreteEdgeSide vertex_number_2 ray_number_2)
             :edges
             )
 -- @nonl
 -- @-node:gcross.20100312220352.1834:edgeIteratee
 -- @+node:gcross.20100312220352.1836:vertexIteratee
-vertexIteratee :: (MonadIO m) => Int → Int → Int → IterAct m (Seq Vertex)
+vertexIteratee :: (MonadIO m) => Int → Int → Int → IterAct m (Seq DiscreteVertex)
 vertexIteratee x y orientation vertices =
-    result' (vertices |> Vertex x y orientation)
+    result' (vertices |> DiscreteVertex x y orientation)
 -- @-node:gcross.20100312220352.1836:vertexIteratee
 -- @+node:gcross.20100312175547.1819:makeConnection
 makeConnection heading = do
@@ -145,8 +147,12 @@ storeDiscreteLattice ::
     Int →
     DiscreteLattice →
     (forall mark . DBM mark Session String)
-storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
-    generateRandomUUIDAsString
+storeDiscreteLattice
+    tiling_name
+    periodic
+    growth_iteration_number
+    DiscreteLattice{..}
+  = generateRandomUUIDAsString
     >>=
     \lattice_id → do
         insertRow
@@ -163,7 +169,7 @@ storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
             ,bindP $ tiling_name
             ,bindP $ periodic
             ,bindP $ growth_iteration_number
-            ,bindP $ Seq.size discretLatticeVertices
+            ,bindP $ Seq.length discreteLatticeVertices
             ,bindP $ length discreteLatticeEdges
             ]
 
@@ -183,7 +189,7 @@ storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
                 ,bindP $ orientation
                 ]
             |   (vertex_number,DiscreteVertex x y orientation) ←
-                    zip [0..] . toList $ discreteLatticeVertices
+                    zip [(0::Int)..] . Fold.toList $ discreteLatticeVertices
             ]
 
         insertRows
@@ -201,8 +207,10 @@ storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
                 ,bindP $ vertex_number_2
                 ,bindP $ ray_2
                 ]
-            |   Edge (EdgeSide vertex_number_1 ray_1) (EdgeSide vertex_number_2 ray_2)
-                    ← edges
+            |   DiscreteEdge
+                    (DiscreteEdgeSide vertex_number_1 ray_1)
+                    (DiscreteEdgeSide vertex_number_2 ray_2)
+                        ← discreteLatticeEdges
             ]
         return lattice_id
 -- @nonl
@@ -210,8 +218,7 @@ storeLattice tiling_name periodic growth_iteration_number Lattice{..} =
 -- @+node:gcross.20100312220352.1837:fetchDiscreteLattice
 fetchDiscreteLattice lattice_id =
     liftM2 DiscreteLattice
-    (   fmap Bimap.fromList $
-        doQuery
+    (   doQuery
             (sql $ "select x, y, orientation from vertices where lattice_id = '" ++ lattice_id ++ "' order by vertex_number asc")
             vertexIteratee
             Seq.empty
