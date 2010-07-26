@@ -51,6 +51,8 @@ data Tiling = Tiling
     ,   tilingSteps :: [Step]
     ,   tilingUnitRadiusLattice :: Lattice
     ,   tilingUnitRadiusDiscreteLattice :: DiscreteLattice
+    ,   tilingOrientations :: [ApproximateDouble]
+    ,   tilingVertexClasses :: VertexClasses
     ,   tilingSymmetries :: [LatticeLabelingPermutation]
     }
 -- @nonl
@@ -293,64 +295,63 @@ makeTiling
                     [tilingSeedVertex]
             )
             (discretizeLattice tilingUnitRadiusLattice)
+            (latticeOrientations tilingUnitRadiusLattice)
+            (computeVertexClassesModifiedBy tiling id)
             (computeTilingSymmetries tiling)
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
 -- @-node:gcross.20100312175547.1382:runLatticeMonadForTiling
--- @+node:gcross.20100723201654.1713:computeTilingSymmetries
-computeTilingSymmetries :: Tiling → [LatticeLabelingPermutation]
-computeTilingSymmetries Tiling {..}
-  = let computeOriginVertexClassModifiedBy f =
-            VertexClass
+-- @+node:gcross.20100723201654.1735:computeVertexClassesModifiedBy
+computeVertexClassesModifiedBy ::
+    Tiling →
+    (ApproximateDouble → ApproximateDouble) →
+    VertexClasses
+computeVertexClassesModifiedBy Tiling{..} f =
+    VertexClasses
+    .
+    map (computeSeedVertexClassModifiedBy . (f .) . (+))
+    $
+    tilingOrientations
+  where
+    computeSeedVertexClassModifiedBy f =
+        VertexClass
+        .
+        map (
+            modulo360
             .
-            map (
-                modulo360
-                .
-                f
-                .
-                stepAngle
-            )
-            $
-            tilingSteps
-        computeAllVertexClassesModifiedBy f
-          = VertexClasses
+            f
             .
-            map (computeOriginVertexClassModifiedBy . (f .) . (+))
-            $
-            orientations
-
-        orientations = latticeOrientations tilingUnitRadiusLattice
-
-        original_vertex_classes = computeAllVertexClassesModifiedBy id
-
-        rotations =
-            liftM2 (.)
-                (map (|⇆) [0,90])
-                (map (+) . delete 360 . nub $ [0,30..360] ++ [0,45..360])
-
-        original_vertices = latticeVertices tilingUnitRadiusLattice
-
-        Periodicity{..} = tilingPeriodicity
-
-        wrapAround = periodicityWrapVertexAround periodDistance
-        borderVertex =
-            (== periodDistance)
+            stepAngle
+        )
+        $
+        tilingSteps
+-- @-node:gcross.20100723201654.1735:computeVertexClassesModifiedBy
+-- @+node:gcross.20100723201654.1713:checkTilingSymmetries
+checkTilingSymmetry ::
+    Tiling →
+    (ApproximateDouble → ApproximateDouble) →
+    Maybe LatticeLabelingPermutation
+checkTilingSymmetry tiling@Tiling{..} f
+  = do  permutation ←
+            (tilingVertexClasses ??→??)
             .
-            periodicityComputeVertexDistance
-    in mapMaybe (\f → do
-        permutation ←
-            (original_vertex_classes ??→??)
-            .
-            computeAllVertexClassesModifiedBy
+            computeVertexClassesModifiedBy tiling
             $
             f
-        let modified_vertices =
+        let Periodicity{..} = tilingPeriodicity
+            wrapAround = periodicityWrapVertexAround periodDistance
+            borderVertex =
+                (== periodDistance)
+                .
+                periodicityComputeVertexDistance 
+            original_vertices = latticeVertices tilingUnitRadiusLattice         
+            modified_vertices =
                 Set.map (\(Vertex x y o) →
                     let r = sqrt (x^2 + y^2)
                         θ = (*(pi/180)) . f . (*(180/pi)) $ atan2 y x
                         new_o =
-                            (orientations !!)
+                            (tilingOrientations !!)
                             .
                             fromJust
                             .
@@ -364,7 +365,7 @@ computeTilingSymmetries Tiling {..}
                             .
                             fromJust
                             .
-                            (`elemIndex` orientations)
+                            (`elemIndex` tilingOrientations)
                             $
                             o
                         new_vertex = Vertex (r*cos θ) (r*sin θ) new_o
@@ -374,9 +375,19 @@ computeTilingSymmetries Tiling {..}
                 ) original_vertices
         if original_vertices == modified_vertices
             then return permutation
-            else Nothing
-      ) rotations
--- @-node:gcross.20100723201654.1713:computeTilingSymmetries
+            else Nothing  where
+-- @-node:gcross.20100723201654.1713:checkTilingSymmetries
+-- @+node:gcross.20100723201654.1734:computeTilingSymmetries
+computeTilingSymmetries :: Tiling → [LatticeLabelingPermutation]
+computeTilingSymmetries tiling =
+    nub
+    .
+    mapMaybe (checkTilingSymmetry tiling)
+    $
+    liftM2 (.)
+        (id:map (|⇆) [0,15..90])
+        (map (+) [0,15..360])
+-- @-node:gcross.20100723201654.1734:computeTilingSymmetries
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

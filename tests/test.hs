@@ -682,9 +682,9 @@ main = defaultMain
                         "Is the number of computed orientations correct?"
                         tilingNumberOfOrientations
                         .
-                        numberOfOrientationsInLattice
+                        length
                         $
-                        tilingUnitRadiusLattice
+                        tilingOrientations
                 | Tiling{..} ← tilings
                 ]
             -- @-node:gcross.20100309150650.1374:correct number of orientations
