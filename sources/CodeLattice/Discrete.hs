@@ -64,6 +64,10 @@ data DiscreteVertex = DiscreteVertex
 -- @-node:gcross.20100717003017.2425:DiscreteVertex
 -- @-node:gcross.20100717003017.2423:Types
 -- @+node:gcross.20100717003017.2429:Functions
+-- @+node:gcross.20100726103932.1784:drawVertices
+drawVertices :: Set Vertex → String
+drawVertices = drawDiscreteVertices . discretizeVertices
+-- @-node:gcross.20100726103932.1784:drawVertices
 -- @+node:gcross.20100726103932.1783:discretizeVertices
 discretizeVertices :: Set Vertex → [DiscreteVertex]
 discretizeVertices vertices =
@@ -132,30 +136,14 @@ discretizeLattice lattice@Lattice{..} =
 -- @-node:gcross.20100717003017.2437:discretizeLattice
 -- @+node:gcross.20100717003017.2431:drawDiscreteLattice
 drawDiscreteLattice :: DiscreteLattice → String
-drawDiscreteLattice DiscreteLattice{discreteLatticeVertices}
-  | Seq.null discreteLatticeVertices = ""
+drawDiscreteLattice = drawDiscreteVertices . discreteLatticeVertices
+-- @-node:gcross.20100717003017.2431:drawDiscreteLattice
+-- @+node:gcross.20100726103932.1786:drawDiscreteVertices
+drawDiscreteVertices :: Foldable t => t DiscreteVertex → String
+drawDiscreteVertices vertices
+  | Map.null coordinate_map = ""
   | otherwise =
-    let coordinate_map = 
-            Map.fromList
-            .
-            map ((discreteVertexLocationX &&& discreteVertexLocationY) &&&
-                 discreteVertexOrientation
-                )
-            .
-            toList
-            $
-            discreteLatticeVertices
-        minmax getCoordinate =
-            (Set.findMin &&& Set.findMax)
-            .
-            Set.map getCoordinate
-            .
-            Map.keysSet
-            $
-            coordinate_map
-        (min_X,max_X) = minmax fst
-        (min_Y,max_Y) = minmax snd
-    in  unlines
+        unlines
         .
         transpose
         .
@@ -165,14 +153,36 @@ drawDiscreteLattice DiscreteLattice{discreteLatticeVertices}
         .
         removeBlankLines
         $
-        [[maybe ' ' (chr . (+ ord '0')) (Map.lookup (x,y) coordinate_map)
+        [[maybe ' ' (chr . (+ ord '0')) (Map.lookup (x,y) coordinate_map) -- '
          | x ← [min_X..max_X]
          ]
         | y ← [max_Y,max_Y-1..min_Y]
         ]
   where
+    coordinate_map = 
+        Map.fromList
+        .
+        map ((discreteVertexLocationX &&& discreteVertexLocationY) &&&
+             discreteVertexOrientation
+            )
+        .
+        toList
+        $
+        vertices
+    minmax getCoordinate =
+        (Set.findMin &&& Set.findMax)
+        .
+        Set.map getCoordinate
+        .
+        Map.keysSet
+        $
+        coordinate_map
+
+    (min_X,max_X) = minmax fst
+    (min_Y,max_Y) = minmax snd
+
     removeBlankLines = filter (any (/= ' '))
--- @-node:gcross.20100717003017.2431:drawDiscreteLattice
+-- @-node:gcross.20100726103932.1786:drawDiscreteVertices
 -- @+node:gcross.20100717003017.2433:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
 getAndDrawLattice =
