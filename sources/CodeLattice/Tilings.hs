@@ -281,23 +281,11 @@ makeTiling
             number_of_symmetries
             translation_symmetry_distance
             (tilingToSteps tiling)
-            (   sel1
-                .
-                fst
-                .
-                runLatticeMonad tilingSteps
-                $
-                growPeriodicLattice
-                    tilingPeriodicity
-                    (+1.0)
-                    1.0
-                    1
-                    [tilingSeedVertex]
-            )
+            (generatePeriodicLatticeForTiling tiling 1)
             (discretizeLattice tilingUnitRadiusLattice)
             (latticeOrientations tilingUnitRadiusLattice)
             (computeVertexClassesModifiedBy tiling id)
-            (computeTilingSymmetries tiling)
+            (computeTilingSymmetriesAgainst tiling tilingUnitRadiusLattice)
 -- @-node:gcross.20100309124842.1398:makeTiling
 -- @+node:gcross.20100312175547.1382:runLatticeMonadForTiling
 runLatticeMonadForTiling = runLatticeMonad . lookupTilingSteps
@@ -327,12 +315,13 @@ computeVertexClassesModifiedBy Tiling{..} f =
         $
         tilingSteps
 -- @-node:gcross.20100723201654.1735:computeVertexClassesModifiedBy
--- @+node:gcross.20100723201654.1713:checkTilingSymmetries
-checkTilingSymmetry ::
+-- @+node:gcross.20100723201654.1713:checkTilingSymmetryAgainst
+checkTilingSymmetryAgainst ::
     Tiling →
+    Lattice →
     (ApproximateDouble → ApproximateDouble) →
     Maybe LatticeLabelingPermutation
-checkTilingSymmetry tiling@Tiling{..} f
+checkTilingSymmetryAgainst tiling@Tiling{..} lattice f
   = do  permutation ←
             (tilingVertexClasses ??→??)
             .
@@ -345,7 +334,7 @@ checkTilingSymmetry tiling@Tiling{..} f
                 (== periodDistance)
                 .
                 periodicityComputeVertexDistance 
-            original_vertices = latticeVertices tilingUnitRadiusLattice         
+            original_vertices = latticeVertices lattice         
             modified_vertices =
                 Set.map (\(Vertex x y o) →
                     let r = sqrt (x^2 + y^2)
@@ -374,18 +363,37 @@ checkTilingSymmetry tiling@Tiling{..} f
         if original_vertices == modified_vertices
             then return permutation
             else Nothing
--- @-node:gcross.20100723201654.1713:checkTilingSymmetries
--- @+node:gcross.20100723201654.1734:computeTilingSymmetries
-computeTilingSymmetries :: Tiling → [LatticeLabelingPermutation]
-computeTilingSymmetries tiling =
+-- @-node:gcross.20100723201654.1713:checkTilingSymmetryAgainst
+-- @+node:gcross.20100723201654.1734:computeTilingSymmetriesAgainst
+computeTilingSymmetriesAgainst ::
+    Tiling →
+    Lattice →
+    [LatticeLabelingPermutation]
+computeTilingSymmetriesAgainst tiling lattice =
     nub
     .
-    mapMaybe (checkTilingSymmetry tiling)
+    mapMaybe (checkTilingSymmetryAgainst tiling lattice)
     $
     liftM2 (.)
         (id:map (|⇆) [0,15..90])
         (map (+) [0,15..360])
--- @-node:gcross.20100723201654.1734:computeTilingSymmetries
+-- @-node:gcross.20100723201654.1734:computeTilingSymmetriesAgainst
+-- @+node:gcross.20100726103932.1756:generatePeriodicLatticeForTiling
+generatePeriodicLatticeForTiling :: Tiling → Int → Lattice
+generatePeriodicLatticeForTiling Tiling{..} radius =
+    sel1
+    .
+    fst
+    .
+    runLatticeMonad tilingSteps
+    $
+    growPeriodicLattice
+        tilingPeriodicity
+        (+1.0)
+        1.0
+        radius
+        [tilingSeedVertex]
+-- @-node:gcross.20100726103932.1756:generatePeriodicLatticeForTiling
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs

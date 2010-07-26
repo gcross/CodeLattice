@@ -588,28 +588,353 @@ main = defaultMain
         -- @-others
         ]
     -- @-node:gcross.20100308212437.1385:Ord Vertex
+    -- @+node:gcross.20100726103932.1673:Solving
+    ,testGroup "Solving"
+        [let scan_configuration = latticeToScanConfiguration lattice
+         in testGroup lattice_name
+            [testCase (show test_index)
+                .
+                assertEqual
+                    "Was the correct solution obtained by the solver?"
+                    correct_solution
+                .
+                solveForLabeling scan_configuration
+                .
+                LatticeLabeling
+                .
+                map VertexLabeling
+                $
+                labeling
+            | test_index ← [1..]
+            | (labeling,correct_solution) ← test_cases
+            ]
+        |(lattice_name,lattice,test_cases) ←
+            -- @        @+others
+            -- @+node:gcross.20100726103932.1674:4-qubit square, one orientation
+            [("4-qubit square, one orientation"
+             ,DiscreteLattice
+              {   discreteLatticeVertices =
+                      Seq.fromList
+                          [ DiscreteVertex i j 0
+                          | i ← [0,1]
+                          , j ← [0,1]
+                          ]
+              ,   discreteLatticeEdges =
+                      [DiscreteEdge (DiscreteEdgeSide 0 0) (DiscreteEdgeSide 2 1)
+                      ,DiscreteEdge (DiscreteEdgeSide 0 1) (DiscreteEdgeSide 1 0)
+                      ,DiscreteEdge (DiscreteEdgeSide 3 0) (DiscreteEdgeSide 1 1)
+                      ,DiscreteEdge (DiscreteEdgeSide 3 1) (DiscreteEdgeSide 2 0)
+                      ]
+              }
+             ,
+              -- @  @+others
+              -- @+node:gcross.20100726103932.1675:1
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) X (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) X (1,0) X
+              -- @-at
+              -- @@c
+              [([[1,1]],Solution 3 0 1 [1])
+              -- @-node:gcross.20100726103932.1675:1
+              -- @+node:gcross.20100726103932.1676:2
+              -- @+at
+              --  (0,0) X (1,0) Z
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) Z
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100726103932.1676:2
+              -- @-others
+              ]
+             )
+            -- @-node:gcross.20100726103932.1674:4-qubit square, one orientation
+            -- @+node:gcross.20100726103932.1677:4-qubit square, two orientations
+            ,("4-qubit square, two orientations"
+             ,DiscreteLattice
+              {   discreteLatticeVertices =
+                      Seq.fromList
+                          [ DiscreteVertex i j ((i+j) `mod` 2)
+                          | i ← [0,1]
+                          , j ← [0,1]
+                          ]
+              ,   discreteLatticeEdges =
+                      [DiscreteEdge (DiscreteEdgeSide 0 0) (DiscreteEdgeSide 2 1)
+                      ,DiscreteEdge (DiscreteEdgeSide 0 1) (DiscreteEdgeSide 1 0)
+                      ,DiscreteEdge (DiscreteEdgeSide 3 0) (DiscreteEdgeSide 1 1)
+                      ,DiscreteEdge (DiscreteEdgeSide 3 1) (DiscreteEdgeSide 2 0)
+                      ]
+              }
+             ,
+              -- @  @+others
+              -- @+node:gcross.20100726103932.1678:1
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) X (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) X (1,0) X
+              -- @-at
+              -- @@c
+              [([[1,1],[1,1]],Solution 3 0 1 [1])
+              -- @-node:gcross.20100726103932.1678:1
+              -- @+node:gcross.20100726103932.1679:2
+              -- @+at
+              --  (0,0) X (1,0) Z
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) Z
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2],[1,2]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100726103932.1679:2
+              -- @+node:gcross.20100726103932.1680:3
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) Z (0,1) Z
+              --  (1,1) X (0,1) X
+              --  (1,1) Z (1,0) Z
+              -- @-at
+              -- @@c
+              ,([[1,2],[2,1]],Solution 2 1 1 [2])
+              -- @-node:gcross.20100726103932.1680:3
+              -- @+node:gcross.20100726103932.1681:4
+              -- @+at
+              --  (0,0) X (1,0) X
+              --  (0,0) Z (0,1) X
+              --  (1,1) X (0,1) X
+              --  (1,1) Z (1,0) X
+              -- @-at
+              -- @@c
+              ,([[1,2],[1,1]],Solution 0 2 2 [1,1])
+              -- @-node:gcross.20100726103932.1681:4
+              -- @-others
+              ]
+             )
+            -- @-node:gcross.20100726103932.1677:4-qubit square, two orientations
+            -- @-others
+            ]
+        ]
+    -- @-node:gcross.20100726103932.1673:Solving
+    -- @+node:gcross.20100726103932.1700:Periodicities
+    ,testGroup "Periodicities"
+        -- @    @+others
+        -- @+node:gcross.20100726103932.1701:square
+        [testGroup "square" $
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    squarePeriodicityRotatedBy 0 undefined
+            in
+                -- @        @+others
+                -- @+node:gcross.20100726103932.1702:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100726103932.1703:computeVertexDistance
+                    [testProperty "correct value" $
+                        \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
+                    -- @-node:gcross.20100726103932.1703:computeVertexDistance
+                    -- @+node:gcross.20100726103932.1704:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100726103932.1704:bounded by actual distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100726103932.1702:computeVertexDistance
+                -- @+node:gcross.20100726103932.1705:wrapVertexAround
+                ,testGroup "wrapVertexAround"
+                    [let vertex = Vertex ax ay 0
+                         correct_vertex = Vertex bx by 0
+                     in testCase (show (ax,ay) ++ ", d = " ++ show d)
+                        .
+                        assertEqual
+                            "Was the wrapped vertex correct?"
+                            correct_vertex
+                        .
+                        wrapVertexAround d
+                        $
+                        vertex
+                    | ((ax,ay),d,(bx,by)) ←
+                        [((0,0),1,(0,0))
+                        ,((1,0),1,(-1,0))
+                        ,((1,1),1,(-1,-1))
+                        ,((2,2),1,(0,0))
+                        ,((1.5,2),1,(-0.5,0))
+                        ,((2,1.5),1,(0,-0.5))
+                        ,((1,1),2,(1,1))
+                        ,((3,1),2,(-1,1))
+                        ,((2.5,1),2,(-1.5,1))
+                        ]
+                    ]
+                -- @nonl
+                -- @-node:gcross.20100726103932.1705:wrapVertexAround
+                -- @-others
+                ]
+        -- @nonl
+        -- @-node:gcross.20100726103932.1701:square
+        -- @+node:gcross.20100726103932.1706:hexagonal
+        ,testGroup "hexagonal" $
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    hexagonalPeriodicityRotatedBy 0 undefined
+            in
+                -- @        @+others
+                -- @+node:gcross.20100726103932.1707:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100726103932.1708:examples
+                    [testGroup "examples" $
+                        [let vertex = Vertex x y 0
+                         in testCase (show (x,y))
+                            .
+                            assertEqual
+                                "Was the distance correct?"
+                                correct_distance
+                            .
+                            computeVertexDistance
+                            $
+                            vertex
+                        | (x,y,correct_distance) ←
+                            [(0,1,1)
+                            ,(sqrt 3/2,1/2,1)
+                            ,(sqrt 3/2,-1/2,1)
+                            ,(1,2,2)
+                            ,(sqrt 3,0,3/2)
+                            ]
+                        ]
+                    -- @-node:gcross.20100726103932.1708:examples
+                    -- @+node:gcross.20100726103932.1709:maximum distance
+                    ,testProperty "maximum distance" $
+                        \x y →
+                            let angle = 180 / pi * atan2 y x
+                                correct_distance
+                                  | angle < -120 = -(x * sqrt 3 / 2) - (y / 2)
+                                  | angle <  -60 = -y
+                                  | angle <    0 =  (x * sqrt 3 / 2) - (y / 2)
+                                  | angle <   60 =  (x * sqrt 3 / 2) + (y / 2)
+                                  | angle <  120 =  y
+                                  | angle <  180 = -(x * sqrt 3 / 2) + (y / 2)
+                                distance = computeVertexDistance (Vertex x y undefined)
+                            in correct_distance == distance
+                    -- @-node:gcross.20100726103932.1709:maximum distance
+                    -- @+node:gcross.20100726103932.1710:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100726103932.1710:bounded by actual distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100726103932.1707:computeVertexDistance
+                -- @+node:gcross.20100726103932.1711:wrapVertexAround
+                ,testGroup "wrapVertexAround"
+                    -- @    @+others
+                    -- @+node:gcross.20100726103932.1712:examples
+                    [testGroup "examples"
+                        [let vertex = Vertex ax ay 0
+                             correct_vertex = Vertex bx by 0
+                         in testCase (show (ax,ay) ++ ", d = " ++ show d)
+                            .
+                            assertEqual
+                                "Was the wrapped vertex correct?"
+                                correct_vertex
+                            .
+                            wrapVertexAround d
+                            $
+                            vertex
+                        | ((ax,ay),d,(bx,by)) ←
+                            [((0,1),1,(0,-1))
+                            ]
+                        ]
+                    -- @-node:gcross.20100726103932.1712:examples
+                    -- @+node:gcross.20100726103932.1713:expected errors
+                    ,testGroup "expected errors"
+                        [testProperty (show angle) $
+                            \rotation_angle (Positive distance) →
+                                let wrapVertexAround =
+                                        periodicityWrapVertexAround
+                                        .
+                                        flip hexagonalPeriodicityRotatedBy undefined
+                                        $
+                                        (rotation_angle/pi*180)
+                                in  isBottom
+                                    .
+                                    wrapVertexAround distance
+                                    $
+                                    Vertex
+                                        (2 * distance * cos (angle + rotation_angle))
+                                        (2 * distance * sin (angle + rotation_angle))
+                                        0
+                        | angle ← fmap (pi/180*) [0,60..360]
+                        ]
+                    -- @-node:gcross.20100726103932.1713:expected errors
+                    -- @-others
+                    ]
+                -- @nonl
+                -- @-node:gcross.20100726103932.1711:wrapVertexAround
+                -- @-others
+                ]
+        -- @-node:gcross.20100726103932.1706:hexagonal
+        -- @+node:gcross.20100726103932.1714:hexagonal (rotated 30 degrees)
+        ,testGroup "hexagonal (rotated 30 degrees)" $
+            let Periodicity computeVertexDistance wrapVertexAround _ =
+                    hexagonalPeriodicityRotatedBy 30 undefined
+            in
+                -- @        @+others
+                -- @+node:gcross.20100726103932.1715:computeVertexDistance
+                [testGroup "computeVertexDistance"
+                    -- @    @+others
+                    -- @+node:gcross.20100726103932.1716:examples
+                    [testGroup "examples" $
+                        [let vertex = Vertex x y 0
+                         in testCase (show (x,y))
+                            .
+                            assertEqual
+                                "Was the distance correct?"
+                                correct_distance
+                            .
+                            computeVertexDistance
+                            $
+                            vertex
+                        | (x,y,correct_distance) ←
+                            [(0,2,sqrt 3)
+                            ,(1,sqrt 3,2)
+                            ]
+                        ]
+                    -- @-node:gcross.20100726103932.1716:examples
+                    -- @+node:gcross.20100726103932.1717:bounded by actual distance
+                    ,testProperty "bounded by actual distance" $
+                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
+                    -- @-node:gcross.20100726103932.1717:bounded by actual distance
+                    -- @-others
+                    ]
+                -- @-node:gcross.20100726103932.1715:computeVertexDistance
+                -- @-others
+                ]
+        -- @-node:gcross.20100726103932.1714:hexagonal (rotated 30 degrees)
+        -- @-others
+        ]
+    -- @-node:gcross.20100726103932.1700:Periodicities
     -- @+node:gcross.20100307133316.1312:Tilings
     ,testGroup "Tilings"
-        -- @    @+others
-        -- @+node:gcross.20100307133316.1313:sum to 360
-        [testGroup "sum to 360" $
-            [testCase tilingName $
-                assertEqual
-                    "Do the interior angles sum to 360?"
-                    360
-                    (sum . map polygonInteriorAngle $ tilingPolygons)
-            | Tiling{..} ← tilings
-            ]
-        -- @nonl
-        -- @-node:gcross.20100307133316.1313:sum to 360
-        -- @+node:gcross.20100308112554.1313:correct steps
-        ,testGroup "correct steps" $
-            [testCase name $
-                assertEqual
-                    "Do the interior angles sum to 360?"
-                    correct_steps
-                    (lookupTilingSteps name)
-            | (name,correct_steps) ←
+        [ testGroup tilingName
+            .
+            catMaybes
+            $
+            -- @        @+others
+            -- @+node:gcross.20100307133316.1313:sum to 360
+            [Just . testCase "interior angles sum to 360" $
+                    assertEqual
+                        "Do the interior angles sum to 360?"
+                        360
+                        (sum . map polygonInteriorAngle $ tilingPolygons)
+            -- @-node:gcross.20100307133316.1313:sum to 360
+            -- @+node:gcross.20100308112554.1313:correct steps
+            ,fmap (
+                testCase "correct steps"
+                .
+                flip (assertEqual "Are the steps correct?") tilingSteps
+             )
+             .
+             lookup tilingName
+             $
                 [("quadrille"
                  ,[Step (90 * i) 0 | i ← [0..3]]
                  )
@@ -617,93 +942,72 @@ main = defaultMain
                  ,[Step (60 * i) 0 | i ← [0..5]]
                  )
                 ]
-            ]
-        -- @nonl
-        -- @-node:gcross.20100308112554.1313:correct steps
-        -- @+node:gcross.20100308112554.1317:invertible steps
-        ,testGroup "invertible steps" $
-            [testCase (tilingName tiling) $
-                forM_ (tilingSteps tiling) $
+            -- @-node:gcross.20100308112554.1313:correct steps
+            -- @+node:gcross.20100308112554.1317:invertible steps
+            ,Just . testCase "invertible steps" $
+                mapM_ (
                     evaluate
                     .
-                    findStepNumberForVertex (tilingSteps tiling) originVertex
+                    findStepNumberForVertex tilingSteps originVertex
                     .
                     stepFromVertex originVertex
-            | tiling ← tilings
-            ]
-        -- @-node:gcross.20100308112554.1317:invertible steps
-        -- @+node:gcross.20100713173607.1583:ordered steps
-        ,testGroup "ordered steps" $
-            [testCase (tilingName tiling) $
-                let steps = tilingSteps tiling
-                in assertEqual
-                    "Are the steps ordered?"
-                    (sortBy (compare `on` stepAngle) steps)
-                    steps
-            | tiling ← tilings
-            ]
-        -- @-node:gcross.20100713173607.1583:ordered steps
-        -- @+node:gcross.20100713173607.1586:zero-based steps
-        ,testGroup "zero-based steps" $
-            [testCase (tilingName tiling) $
+                ) tilingSteps
+            -- @-node:gcross.20100308112554.1317:invertible steps
+            -- @+node:gcross.20100713173607.1583:ordered steps
+            ,Just . testCase "ordered steps" $
                 assertEqual
                     "Are the steps ordered?"
+                    (sortBy (compare `on` stepAngle) tilingSteps)
+                    tilingSteps
+            -- @-node:gcross.20100713173607.1583:ordered steps
+            -- @+node:gcross.20100713173607.1586:zero-based steps
+            ,Just . testCase "zero-based steps" $
+                assertEqual
+                    "Is the first step at angle 0?"
                     0
                 .
                 stepAngle
                 .
                 head
-                .
-                tilingSteps
                 $
-                tiling
-            | tiling ← tilings
-            ]
-        -- @-node:gcross.20100713173607.1586:zero-based steps
-        -- @+node:gcross.20100309160622.1349:based on unit radius periodic lattice
-        ,testGroup "based on unit radius periodic lattice" $
-            -- @    @+others
-            -- @+node:gcross.20100309124842.1406:consistent
-            [testGroup "consistent" $
-                [testCase tilingName
+                tilingSteps
+            -- @-node:gcross.20100713173607.1586:zero-based steps
+            -- @+node:gcross.20100309160622.1349:based on unit radius periodic lattice
+            ,Just . testGroup "based on unit radius periodic lattice" $
+                -- @    @+others
+                -- @+node:gcross.20100309124842.1406:consistent
+                [testCase "consistent"
                     .
                     fmap (const ())
                     .
                     evaluate
                     $
                     tilingUnitRadiusLattice
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100309124842.1406:consistent
-            -- @+node:gcross.20100309150650.1374:correct number of orientations
-            ,testGroup "correct number of orientations" $
-                [testCase tilingName $
+                -- @-node:gcross.20100309124842.1406:consistent
+                -- @+node:gcross.20100309150650.1374:correct number of orientations
+                ,testCase "correct number of orientations"
+                    .
                     assertEqual
                         "Is the number of computed orientations correct?"
                         tilingNumberOfOrientations
-                        .
-                        length
-                        $
-                        tilingOrientations
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100309150650.1374:correct number of orientations
-            -- @+node:gcross.20100714141137.2538:correct number of permutations
-            ,testGroup "correct number of symmetries" $
-                [testCase tilingName $
+                    .
+                    length
+                    $
+                    tilingOrientations
+                -- @-node:gcross.20100309150650.1374:correct number of orientations
+                -- @+node:gcross.20100714141137.2538:correct number of permutations
+                ,testCase "correct number of symmetries"
+                    .
                     assertEqual
                         "Is the number of symmetries correct?"
                         tilingNumberOfSymmetries
-                        .
-                        length
-                        $
-                        tilingSymmetries
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100714141137.2538:correct number of permutations
-            -- @+node:gcross.20100309160622.1348:valid adjacencies
-            ,testGroup "valid adjacencies" $
-                [testCase tilingName
+                    .
+                    length
+                    $
+                    tilingSymmetries
+                -- @-node:gcross.20100714141137.2538:correct number of permutations
+                -- @+node:gcross.20100309160622.1348:valid adjacencies
+                ,testCase "valid adjacencies"
                     .
                     assertEqual
                         "Are there any adjacencies not equal to the number of rays?"
@@ -718,12 +1022,9 @@ main = defaultMain
                     computeVertexAdjacencies
                     $
                     tilingUnitRadiusLattice
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100309160622.1348:valid adjacencies
-            -- @+node:gcross.20100723142502.1646:correct lattice translation symmetry distance
-            ,testGroup "correct lattice translation symmetry distance" $
-                [testCase tilingName
+                -- @-node:gcross.20100309160622.1348:valid adjacencies
+                -- @+node:gcross.20100723142502.1646:correct lattice translation symmetry distance
+                ,testCase "correct lattice translation symmetry distance"
                     .
                     assertEqual
                         "Is the distance correct?"
@@ -732,12 +1033,9 @@ main = defaultMain
                     latticeTranslationDistance
                     $
                     tilingUnitRadiusLattice
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100723142502.1646:correct lattice translation symmetry distance
-            -- @+node:gcross.20100723142502.1647:size of lattice invariant under discretization
-            ,testGroup "size of lattice invariant under discretization" $
-                [testCase tilingName $ do
+                -- @-node:gcross.20100723142502.1646:correct lattice translation symmetry distance
+                -- @+node:gcross.20100723142502.1647:size of lattice invariant under discretization
+                ,testCase "size of lattice invariant under discretization" $ do
                     assertEqual
                         "Has the number of vertices changed?"
                         (Set.size . latticeVertices $ tilingUnitRadiusLattice)
@@ -746,24 +1044,13 @@ main = defaultMain
                         "Has the number of edges changed?"
                         (length . latticeEdges $ tilingUnitRadiusLattice)
                         (length . discreteLatticeEdges $ tilingUnitRadiusDiscreteLattice)
-                | Tiling{..} ← tilings
-                ]
-            -- @-node:gcross.20100723142502.1647:size of lattice invariant under discretization
-            -- @+node:gcross.20100723201654.1656:correct number of edges
-            ,testGroup "correct number of edges" $
-                [testCase tilingName
-                    .
-                    assertEqual
-                        "Is the number of edges correct?"
-                        correct_number_of_edges
-                    .
-                    length
-                    .
-                    latticeEdges
-                    $
-                    tilingUnitRadiusLattice
-                | (Tiling{..},correct_number_of_edges) ←
-                    map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
+                -- @-node:gcross.20100723142502.1647:size of lattice invariant under discretization
+                -- @+node:gcross.20100723201654.1656:correct number of edges
+                ,let correct_number_of_edges =
+                        fromJust
+                        .
+                        lookup tilingName
+                        $
                         [("quadrille",8)
                         ,("truncated quadrille",24)
                         ,("snub quadrille",20)
@@ -774,22 +1061,27 @@ main = defaultMain
                         ,("rhombihexadeltille",36)
                         ,("isosnub quadrille",30)
                         ]
-                ]
-            -- @-node:gcross.20100723201654.1656:correct number of edges
-            -- @+node:gcross.20100723142502.1633:correct pictures
-            ,testGroup "correct pictures" $
-                [testCase tilingName
-                    .
-                    assertEqual
-                        "Is the picture correct?"
-                        correct_picture
-                    .
-                    drawDiscreteLattice
-                    $
-                    tilingUnitRadiusDiscreteLattice
-                | (Tiling{..},correct_picture) ←
-                    map ((\name → fromJust (find ((== name) . tilingName) tilings)) *** unlines)
-                        -- @            @+others
+                 in testCase "correct number of edges"
+                        .
+                        assertEqual
+                            "Is the number of edges correct?"
+                            correct_number_of_edges
+                        .
+                        length
+                        .
+                        latticeEdges
+                        $
+                        tilingUnitRadiusLattice
+                -- @-node:gcross.20100723201654.1656:correct number of edges
+                -- @+node:gcross.20100723142502.1633:correct pictures
+                ,let correct_picture =
+                        unlines
+                        .
+                        fromJust
+                        .
+                        lookup tilingName
+                        $
+                        -- @        @+others
                         -- @+node:gcross.20100723142502.1635:quadrille
                         [("quadrille"
                          ,["00"
@@ -883,610 +1175,40 @@ main = defaultMain
                         -- @-node:gcross.20100723201654.1668:isosnub quadrille
                         -- @-others
                         ]
-                ]
-            -- @-node:gcross.20100723142502.1633:correct pictures
-            -- @+node:gcross.20100723201654.1736:correct symmetries
-            ,testGroup "correct symmetries" $
-                [testGroup tilingName
-                    [testCase description
+                 in testCase "correct pictures"
                         .
-                        assertBool
-                            "Was the symmetry recognized?"
+                        assertEqual
+                            "Is the picture correct?"
+                            correct_picture
                         .
-                        isJust
-                        .
-                        checkTilingSymmetry tiling
-                        .
-                        (trace ("Checking symmetry " ++ description))
+                        drawDiscreteLattice
                         $
-                        f
-                    | (description,f) ← symmetries
-                    ]
-                | (tiling@Tiling{..},symmetries) ←
-                    map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
-                        [("truncated quadrille"
-                         ,[("id",id)
-                          ,("90 CW",(+90))
-                          ,("180 CW",(+180))
-                          ,("270 CW",(+270))
-                          ]
-                         )
-                        ]
+                        tilingUnitRadiusDiscreteLattice
+                -- @-node:gcross.20100723142502.1633:correct pictures
+                -- @+node:gcross.20100726103932.1663:correct symmetries
+                ,testProperty "correct symmetries" $
+                    arbitraryLatticeLabeling tilingUnitRadiusLattice
+                    >>=
+                    \labeling → return $
+                        let (first_solution:rest_solutions) =
+                                map (
+                                    solveForLabeling (latticeToScanConfiguration tilingUnitRadiusDiscreteLattice)
+                                    .
+                                    permuteLatticeLabeling labeling
+                                ) tilingSymmetries
+                        in all (== first_solution) rest_solutions
+                -- @-node:gcross.20100726103932.1663:correct symmetries
+                -- @-others
                 ]
-            -- @-node:gcross.20100723201654.1736:correct symmetries
-            -- @-others
-            ]
-        -- @-node:gcross.20100309160622.1349:based on unit radius periodic lattice
-        -- @+node:gcross.20100310140947.1395:correct pictures
-        ,testGroup "correct pictures" . const [] $
-            -- @    @+others
-            -- @+node:gcross.20100310123433.1422:before pruning
-            [testGroup "before pruning" $
-                [testGroup name $
-                    [testCase (show bounds) $
-                        assertEqual
-                            "Was the drawn picture correct?"
-                            (unlines correct_picture)
-                            (fst . runLatticeMonadForTiling name $ (
-                                growLatticeToBoundsFromOrigin (withinBounds bounds)
-                                >>
-                                getAndDrawLattice
-                            ))
-                    | (bounds,correct_picture) ← bounds_and_correct_pictures
-                    ]
-                | (name,bounds_and_correct_pictures) ←
-                    -- @        @+others
-                    -- @+node:gcross.20100310123433.1423:quadrille
-                    [("quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds 0 0 1 1
-                       ,["00"
-                        ,"00"
-                        ]
-                       )
-                      ,(Bounds 0 0 2 2
-                       ,["000"
-                        ,"000"
-                        ,"000"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["000"
-                        ,"000"
-                        ,"000"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310123433.1423:quadrille
-                    -- @+node:gcross.20100310123433.1425:truncated quadrille
-                    ,("truncated quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["2  "
-                        ," 03"
-                        ," 12"
-                        ]
-                       )
-                      ,(Bounds (-2) (-1) 1 2
-                       ,["03  "
-                        ,"12  "
-                        ,"  03"
-                        ,"  12"
-                        ]
-                       )
-                      ,(Bounds (-2) (-1) 3 4
-                       ,["  03  "
-                        ,"  12  "
-                        ,"03  03"
-                        ,"12  12"
-                        ,"  03  "
-                        ,"  12  "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310123433.1425:truncated quadrille
-                    -- @+node:gcross.20100310140947.1391:snub quadrille
-                    ,("snub quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["  1 "
-                        ,"3   "
-                        ," 0 2"
-                        ,"1   "
-                        ,"  3 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["     3   "
-                        ," 0 2   0 "
-                        ,"     1   "
-                        ,"  3     3"
-                        ,"2   0 2  "
-                        ,"  1     1"
-                        ,"     3   "
-                        ," 0 2   0 "
-                        ,"     1   "
-                        ]
-                       )
-                      ,(Bounds (-3) (-3) 3 3
-                       ,["0 2   0 2   0"
-                        ,"    1     1  "
-                        ," 3     3     "
-                        ,"   0 2   0 2 "
-                        ," 1     1     "
-                        ,"    3     3  "
-                        ,"0 2   0 2   0"
-                        ,"    1     1  "
-                        ," 3     3     "
-                        ,"   0 2   0 2 "
-                        ," 1     1     "
-                        ,"    3     3  "
-                        ,"0 2   0 2   0"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1391:snub quadrille
-                    -- @+node:gcross.20100310140947.1384:hextille
-                    ,("hextille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["1  "
-                        ," 01"
-                        ,"1  "
-                        ]
-                       )
-                      ,(Bounds (-2) (-1) 3 1
-                       ,[" 01  01 "
-                        ,"1  01  0"
-                        ," 01  01 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 3 2
-                       ,["1  01  0"
-                        ," 01  01 "
-                        ,"1  01  0"
-                        ," 01  01 "
-                        ,"1  01  0"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1384:hextille
-                    -- @+node:gcross.20100310140947.1386:hexdeltille
-                    ,("hexadeltille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 1   "
-                        ,"2 0 2"
-                        ,"   1 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["2 0 2 0 2"
-                        ,"   1   1 "
-                        ,"0 2 0 2 0"
-                        ," 1   1   "
-                        ,"2 0 2 0 2"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1386:hexdeltille
-                    -- @+node:gcross.20100310140947.1392:truncated hextille
-                    ,("truncated hextille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds 0 (-3) 1 0
-                       ,["0 4"
-                        ," 2 "
-                        ," 5 "
-                        ,"1 3"
-                        ]
-                       )
-                      ,(Bounds (-1) (-4) 2 1
-                       ,["3   1"
-                        ," 0 4 "
-                        ,"  2  "
-                        ,"  5  "
-                        ," 1 3 "
-                        ,"4   0"
-                        ]
-                       )
-                      ,(Bounds (-3.5) (-5) 4.5 2
-                       ,["   5     5   "
-                        ,"  1 3   1 3  "
-                        ," 4   0 4   0 "
-                        ,"2     2     2"
-                        ,"5     5     5"
-                        ," 3   1 3   1 "
-                        ,"  0 4   0 4  "
-                        ,"   2     2   "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @nonl
-                    -- @-node:gcross.20100310140947.1392:truncated hextille
-                    -- @+node:gcross.20100310140947.1387:deltille
-                    ,("deltille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 0 0 "
-                        ,"0 0 0"
-                        ," 0 0 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["0 0 0 0 0"
-                        ," 0 0 0 0 "
-                        ,"0 0 0 0 0"
-                        ," 0 0 0 0 "
-                        ,"0 0 0 0 0"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1387:deltille
-                    -- @+node:gcross.20100310140947.1393:rhombihexadeltille
-                    ,("rhombihexadeltille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 1 3"
-                        ," 0 4"
-                        ,"5   "
-                        ,"  2 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 3 2
-                       ,["     5     "
-                        ,"  2     2  "
-                        ,"3   1 3   1"
-                        ,"4   0 4   0"
-                        ,"  5     5  "
-                        ,"     2     "
-                        ," 1 3   1 3 "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1393:rhombihexadeltille
-                    -- @+node:gcross.20100310140947.1394:snub hexatille
-                    ,("snub hexatille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 5   "
-                        ,"2 0 1"
-                        ," 4 3 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["0 1 4 3 5"
-                        ," 3 5   2 "
-                        ,"  2 0 1 4"
-                        ," 1 4 3 5 "
-                        ,"3 5   2 0"
-                        ]
-                       )
-                      ]
-                     )
-
-                    -- @-node:gcross.20100310140947.1394:snub hexatille
-                    -- @+node:gcross.20100310140947.1389:isosnub quadrille
-                    ,("isosnub quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,["0"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["1 1 1"
-                        ,"0 0 0"
-                        ," 1 1 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,[" 0 0 0 0 "
-                        ,"1 1 1 1 1"
-                        ,"0 0 0 0 0"
-                        ," 1 1 1 1 "
-                        ," 0 0 0 0 "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1389:isosnub quadrille
-                    -- @-others
-                    ]
-                ]
-            -- @nonl
-            -- @-node:gcross.20100310123433.1422:before pruning
-            -- @+node:gcross.20100310140947.1407:after pruning
-            ,testGroup "after pruning" $
-                [testGroup name $
-                    [testCase (show bounds) $
-                        assertEqual
-                            "Was the drawn picture correct?"
-                            (unlines correct_picture)
-                            (fst . runLatticeMonadForTiling name $ (
-                                growLatticeToBoundsFromOrigin (withinBounds bounds)
-                                >>
-                                getAndDrawPrunedLattice
-                            ))
-                    | (bounds,correct_picture) ← bounds_and_correct_pictures
-                    ]
-                | (name,bounds_and_correct_pictures) ←
-                    -- @        @+others
-                    -- @+node:gcross.20100310140947.1408:quadrille
-                    [("quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds 0 0 1 1
-                       ,["00"
-                        ,"00"
-                        ]
-                       )
-                      ,(Bounds 0 0 2 2
-                       ,["000"
-                        ,"000"
-                        ,"000"
-                        ]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["000"
-                        ,"000"
-                        ,"000"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1408:quadrille
-                    -- @+node:gcross.20100310140947.1409:truncated quadrille
-                    ,("truncated quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["03"
-                        ,"12"
-                        ]
-                       )
-                      ,(Bounds (-2) (-1) 1 2
-                       ,["03  "
-                        ,"12  "
-                        ,"  03"
-                        ,"  12"
-                        ]
-                       )
-                      ,(Bounds (-2) (-1) 3 4
-                       ,["  03  "
-                        ,"  12  "
-                        ,"03  03"
-                        ,"12  12"
-                        ,"  03  "
-                        ,"  12  "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1409:truncated quadrille
-                    -- @+node:gcross.20100310140947.1411:hextille
-                    ,("hextille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[]
-                       )
-                      ,(Bounds (-2) (-1) 3 1
-                       ,[" 01  01 "
-                        ,"1  01  0"
-                        ," 01  01 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 3 2
-                       ,["   01   "
-                        ," 01  01 "
-                        ,"1  01  0"
-                        ," 01  01 "
-                        ,"   01   "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1411:hextille
-                    -- @+node:gcross.20100310140947.1412:hexdeltille
-                    ,("hexadeltille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 1   "
-                        ,"2 0 2"
-                        ,"   1 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["  0 2 0 2"
-                        ,"   1   1 "
-                        ,"0 2 0 2 0"
-                        ," 1   1   "
-                        ,"2 0 2 0  "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1412:hexdeltille
-                    -- @+node:gcross.20100310140947.1413:truncated hextille
-                    ,("truncated hextille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds 0 (-3) 1 0
-                       ,["0 4"
-                        ," 2 "
-                        ," 5 "
-                        ,"1 3"
-                        ]
-                       )
-                      ,(Bounds (-1) (-4) 2 1
-                       ,["0 4"
-                        ," 2 "
-                        ," 5 "
-                        ,"1 3"
-                        ]
-                       )
-                      ,(Bounds (-3.5) (-5) 4.5 2
-                       ,["   5     5   "
-                        ,"  1 3   1 3  "
-                        ," 4   0 4   0 "
-                        ,"2     2     2"
-                        ,"5     5     5"
-                        ," 3   1 3   1 "
-                        ,"  0 4   0 4  "
-                        ,"   2     2   "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @nonl
-                    -- @-node:gcross.20100310140947.1413:truncated hextille
-                    -- @+node:gcross.20100310140947.1414:deltille
-                    ,("deltille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 0 0 "
-                        ,"0 0 0"
-                        ," 0 0 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["0 0 0 0 0"
-                        ," 0 0 0 0 "
-                        ,"0 0 0 0 0"
-                        ," 0 0 0 0 "
-                        ,"0 0 0 0 0"
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1414:deltille
-                    -- @+node:gcross.20100310140947.1415:rhombihexadeltille
-                    ,("rhombihexadeltille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["1 3"
-                        ,"0 4"
-                        ," 2 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 3 2
-                       ,["     5     "
-                        ,"  2     2  "
-                        ,"3   1 3   1"
-                        ,"4   0 4   0"
-                        ,"  5     5  "
-                        ,"     2     "
-                        ," 1 3   1 3 "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1415:rhombihexadeltille
-                    -- @+node:gcross.20100310140947.1416:snub hexatille
-                    ,("snub hexatille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,[" 5   "
-                        ,"2 0 1"
-                        ," 4 3 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,["0 1 4 3 5"
-                        ," 3 5   2 "
-                        ,"  2 0 1 4"
-                        ," 1 4 3 5 "
-                        ,"3 5   2 0"
-                        ]
-                       )
-                      ]
-                     )
-
-                    -- @-node:gcross.20100310140947.1416:snub hexatille
-                    -- @+node:gcross.20100310140947.1417:isosnub quadrille
-                    ,("isosnub quadrille"
-                     ,[(Bounds 0 0 0 0
-                       ,[]
-                       )
-                      ,(Bounds (-1) (-1) 1 1
-                       ,["1 1 1"
-                        ,"0 0 0"
-                        ," 1 1 "
-                        ]
-                       )
-                      ,(Bounds (-2) (-2) 2 2
-                       ,[" 0 0 0 0 "
-                        ,"1 1 1 1 1"
-                        ,"0 0 0 0 0"
-                        ," 1 1 1 1 "
-                        ," 0 0 0 0 "
-                        ]
-                       )
-                      ]
-                     )
-                    -- @-node:gcross.20100310140947.1417:isosnub quadrille
-                    -- @-others
-                    ]
-                ]
-            -- @nonl
-            -- @-node:gcross.20100310140947.1407:after pruning
-            -- @-others
-            ]
-        -- @-node:gcross.20100310140947.1395:correct pictures
-        -- @+node:gcross.20100312175547.1383:iterable 8 times
-        ,testGroup "iterable 8 times" $
-            [testCase tiling_name $ do
+            -- @-node:gcross.20100309160622.1349:based on unit radius periodic lattice
+            -- @+node:gcross.20100312175547.1383:iterable 8 times
+            ,Just . testCase "iterable 8 times" $
                 let lattices =
                         sel1
                         .
                         fst
                         .
-                        runLatticeMonadForTiling tiling_name
+                        runLatticeMonadForTiling tilingName
                         .
                         iteratePrunedLattices
                             (liftA2 (max `on` abs) vertexLocationX vertexLocationY)
@@ -1495,364 +1217,24 @@ main = defaultMain
                             [originVertex]
                         $
                         8
-                assertEqual
-                    "Were the correct number of lattices generated?"
-                    8
-                    (length lattices)
-                forM_ (zip lattices (tail lattices)) $ \(lattice1,lattice2) → do
-                    assertBool
-                        "Is the number of edges in the lattices monotonically increasing?"
-                        (((>) `on` numberOfEdgesInLattice) lattice2 lattice1)
-                    assertBool
-                        "Is the number of vertices in the lattices monotonically increasing?"
-                        (((>) `on` numberOfVerticesInLattice) lattice2 lattice1)
-            | tiling_name ← map tilingName tilings
-            ]
-        -- @nonl
-        -- @-node:gcross.20100312175547.1383:iterable 8 times
-        -- @-others
-        ]
-    -- @-node:gcross.20100307133316.1312:Tilings
-    -- @+node:gcross.20100715150143.1659:Solving
-    ,testGroup "Solving"
-        [let scan_configuration = latticeToScanConfiguration lattice
-         in testGroup lattice_name
-            [testCase (show test_index)
-                .
-                assertEqual
-                    "Was the correct solution obtained by the solver?"
-                    correct_solution
-                .
-                solveForLabeling scan_configuration
-                .
-                LatticeLabeling
-                .
-                map VertexLabeling
-                $
-                labeling
-            | test_index ← [1..]
-            | (labeling,correct_solution) ← test_cases
-            ]
-        |(lattice_name,lattice,test_cases) ←
-            -- @        @+others
-            -- @+node:gcross.20100715150143.1660:4-qubit square, one orientation
-            [("4-qubit square, one orientation"
-             ,DiscreteLattice
-              {   discreteLatticeVertices =
-                      Seq.fromList
-                          [ DiscreteVertex i j 0
-                          | i ← [0,1]
-                          , j ← [0,1]
-                          ]
-              ,   discreteLatticeEdges =
-                      [DiscreteEdge (DiscreteEdgeSide 0 0) (DiscreteEdgeSide 2 1)
-                      ,DiscreteEdge (DiscreteEdgeSide 0 1) (DiscreteEdgeSide 1 0)
-                      ,DiscreteEdge (DiscreteEdgeSide 3 0) (DiscreteEdgeSide 1 1)
-                      ,DiscreteEdge (DiscreteEdgeSide 3 1) (DiscreteEdgeSide 2 0)
-                      ]
-              }
-             ,
-              -- @  @+others
-              -- @+node:gcross.20100715150143.1661:1
-              -- @+at
-              --  (0,0) X (1,0) X
-              --  (0,0) X (0,1) X
-              --  (1,1) X (0,1) X
-              --  (1,1) X (1,0) X
-              -- @-at
-              -- @@c
-              [([[1,1]],Solution 3 0 1 [1])
-              -- @-node:gcross.20100715150143.1661:1
-              -- @+node:gcross.20100715150143.1824:2
-              -- @+at
-              --  (0,0) X (1,0) Z
-              --  (0,0) Z (0,1) X
-              --  (1,1) X (0,1) Z
-              --  (1,1) Z (1,0) X
-              -- @-at
-              -- @@c
-              ,([[1,2]],Solution 2 1 1 [2])
-              -- @-node:gcross.20100715150143.1824:2
-              -- @-others
-              ]
-             )
-            -- @-node:gcross.20100715150143.1660:4-qubit square, one orientation
-            -- @+node:gcross.20100715150143.1828:4-qubit square, two orientations
-            ,("4-qubit square, two orientations"
-             ,DiscreteLattice
-              {   discreteLatticeVertices =
-                      Seq.fromList
-                          [ DiscreteVertex i j ((i+j) `mod` 2)
-                          | i ← [0,1]
-                          , j ← [0,1]
-                          ]
-              ,   discreteLatticeEdges =
-                      [DiscreteEdge (DiscreteEdgeSide 0 0) (DiscreteEdgeSide 2 1)
-                      ,DiscreteEdge (DiscreteEdgeSide 0 1) (DiscreteEdgeSide 1 0)
-                      ,DiscreteEdge (DiscreteEdgeSide 3 0) (DiscreteEdgeSide 1 1)
-                      ,DiscreteEdge (DiscreteEdgeSide 3 1) (DiscreteEdgeSide 2 0)
-                      ]
-              }
-             ,
-              -- @  @+others
-              -- @+node:gcross.20100715150143.1829:1
-              -- @+at
-              --  (0,0) X (1,0) X
-              --  (0,0) X (0,1) X
-              --  (1,1) X (0,1) X
-              --  (1,1) X (1,0) X
-              -- @-at
-              -- @@c
-              [([[1,1],[1,1]],Solution 3 0 1 [1])
-              -- @-node:gcross.20100715150143.1829:1
-              -- @+node:gcross.20100715150143.1830:2
-              -- @+at
-              --  (0,0) X (1,0) Z
-              --  (0,0) Z (0,1) X
-              --  (1,1) X (0,1) Z
-              --  (1,1) Z (1,0) X
-              -- @-at
-              -- @@c
-              ,([[1,2],[1,2]],Solution 2 1 1 [2])
-              -- @-node:gcross.20100715150143.1830:2
-              -- @+node:gcross.20100715150143.1835:3
-              -- @+at
-              --  (0,0) X (1,0) X
-              --  (0,0) Z (0,1) Z
-              --  (1,1) X (0,1) X
-              --  (1,1) Z (1,0) Z
-              -- @-at
-              -- @@c
-              ,([[1,2],[2,1]],Solution 2 1 1 [2])
-              -- @-node:gcross.20100715150143.1835:3
-              -- @+node:gcross.20100715150143.1837:4
-              -- @+at
-              --  (0,0) X (1,0) X
-              --  (0,0) Z (0,1) X
-              --  (1,1) X (0,1) X
-              --  (1,1) Z (1,0) X
-              -- @-at
-              -- @@c
-              ,([[1,2],[1,1]],Solution 0 2 2 [1,1])
-              -- @-node:gcross.20100715150143.1837:4
-              -- @-others
-              ]
-             )
-            -- @-node:gcross.20100715150143.1828:4-qubit square, two orientations
+                in do
+                    assertEqual
+                        "Were the correct number of lattices generated?"
+                        8
+                        (length lattices)
+                    forM_ (zip lattices (tail lattices)) $ \(lattice1,lattice2) → do
+                        assertBool
+                            "Is the number of edges in the lattices monotonically increasing?"
+                            (((>) `on` numberOfEdgesInLattice) lattice2 lattice1)
+                        assertBool
+                            "Is the number of vertices in the lattices monotonically increasing?"
+                            (((>) `on` numberOfVerticesInLattice) lattice2 lattice1)
+            -- @-node:gcross.20100312175547.1383:iterable 8 times
             -- @-others
             ]
+        | tiling@Tiling{..} ← tilings
         ]
-    -- @-node:gcross.20100715150143.1659:Solving
-    -- @+node:gcross.20100715150143.1843:Symmetries
-    ,testGroup "Symmetries" $
-        [ testProperty tilingName $
-            arbitraryLatticeLabeling tilingUnitRadiusLattice
-            >>=
-            \labeling → return $
-                let (first_solution:rest_solutions) =
-                        map (
-                            solveForLabeling (latticeToScanConfiguration tilingUnitRadiusDiscreteLattice)
-                            .
-                            permuteLatticeLabeling labeling
-                        ) tilingSymmetries
-                in all (== first_solution) rest_solutions
-        | Tiling{..} ← tilings
-        ]
-    -- @-node:gcross.20100715150143.1843:Symmetries
-    -- @+node:gcross.20100722123407.1612:Periodicities
-    ,testGroup "Periodicities"
-        -- @    @+others
-        -- @+node:gcross.20100722123407.1613:square
-        [testGroup "square" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    squarePeriodicityRotatedBy 0 undefined
-            in
-                -- @        @+others
-                -- @+node:gcross.20100723201654.1651:computeVertexDistance
-                [testGroup "computeVertexDistance"
-                    -- @    @+others
-                    -- @+node:gcross.20100722123407.1614:computeVertexDistance
-                    [testProperty "correct value" $
-                        \vertex@(Vertex x y _) → computeVertexDistance vertex == (max `on` abs) x y
-                    -- @-node:gcross.20100722123407.1614:computeVertexDistance
-                    -- @+node:gcross.20100723201654.1650:bounded by actual distance
-                    ,testProperty "bounded by actual distance" $
-                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
-                    -- @-node:gcross.20100723201654.1650:bounded by actual distance
-                    -- @-others
-                    ]
-                -- @-node:gcross.20100723201654.1651:computeVertexDistance
-                -- @+node:gcross.20100722123407.1618:wrapVertexAround
-                ,testGroup "wrapVertexAround"
-                    [let vertex = Vertex ax ay 0
-                         correct_vertex = Vertex bx by 0
-                     in testCase (show (ax,ay) ++ ", d = " ++ show d)
-                        .
-                        assertEqual
-                            "Was the wrapped vertex correct?"
-                            correct_vertex
-                        .
-                        wrapVertexAround d
-                        $
-                        vertex
-                    | ((ax,ay),d,(bx,by)) ←
-                        [((0,0),1,(0,0))
-                        ,((1,0),1,(-1,0))
-                        ,((1,1),1,(-1,-1))
-                        ,((2,2),1,(0,0))
-                        ,((1.5,2),1,(-0.5,0))
-                        ,((2,1.5),1,(0,-0.5))
-                        ,((1,1),2,(1,1))
-                        ,((3,1),2,(-1,1))
-                        ,((2.5,1),2,(-1.5,1))
-                        ]
-                    ]
-                -- @nonl
-                -- @-node:gcross.20100722123407.1618:wrapVertexAround
-                -- @-others
-                ]
-        -- @nonl
-        -- @-node:gcross.20100722123407.1613:square
-        -- @+node:gcross.20100722123407.1624:hexagonal
-        ,testGroup "hexagonal" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    hexagonalPeriodicityRotatedBy 0 undefined
-            in
-                -- @        @+others
-                -- @+node:gcross.20100722123407.1625:computeVertexDistance
-                [testGroup "computeVertexDistance"
-                    -- @    @+others
-                    -- @+node:gcross.20100722123407.1627:examples
-                    [testGroup "examples" $
-                        [let vertex = Vertex x y 0
-                         in testCase (show (x,y))
-                            .
-                            assertEqual
-                                "Was the distance correct?"
-                                correct_distance
-                            .
-                            computeVertexDistance
-                            $
-                            vertex
-                        | (x,y,correct_distance) ←
-                            [(0,1,1)
-                            ,(sqrt 3/2,1/2,1)
-                            ,(sqrt 3/2,-1/2,1)
-                            ,(1,2,2)
-                            ,(sqrt 3,0,3/2)
-                            ]
-                        ]
-                    -- @-node:gcross.20100722123407.1627:examples
-                    -- @+node:gcross.20100722123407.1628:maximum distance
-                    ,testProperty "maximum distance" $
-                        \x y →
-                            let angle = 180 / pi * atan2 y x
-                                correct_distance
-                                  | angle < -120 = -(x * sqrt 3 / 2) - (y / 2)
-                                  | angle <  -60 = -y
-                                  | angle <    0 =  (x * sqrt 3 / 2) - (y / 2)
-                                  | angle <   60 =  (x * sqrt 3 / 2) + (y / 2)
-                                  | angle <  120 =  y
-                                  | angle <  180 = -(x * sqrt 3 / 2) + (y / 2)
-                                distance = computeVertexDistance (Vertex x y undefined)
-                            in correct_distance == distance
-                    -- @-node:gcross.20100722123407.1628:maximum distance
-                    -- @+node:gcross.20100723201654.1648:bounded by actual distance
-                    ,testProperty "bounded by actual distance" $
-                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
-                    -- @-node:gcross.20100723201654.1648:bounded by actual distance
-                    -- @-others
-                    ]
-                -- @-node:gcross.20100722123407.1625:computeVertexDistance
-                -- @+node:gcross.20100722123407.1630:wrapVertexAround
-                ,testGroup "wrapVertexAround"
-                    -- @    @+others
-                    -- @+node:gcross.20100722123407.1635:examples
-                    [testGroup "examples"
-                        [let vertex = Vertex ax ay 0
-                             correct_vertex = Vertex bx by 0
-                         in testCase (show (ax,ay) ++ ", d = " ++ show d)
-                            .
-                            assertEqual
-                                "Was the wrapped vertex correct?"
-                                correct_vertex
-                            .
-                            wrapVertexAround d
-                            $
-                            vertex
-                        | ((ax,ay),d,(bx,by)) ←
-                            [((0,1),1,(0,-1))
-                            ]
-                        ]
-                    -- @-node:gcross.20100722123407.1635:examples
-                    -- @+node:gcross.20100722123407.1636:expected errors
-                    ,testGroup "expected errors"
-                        [testProperty (show angle) $
-                            \rotation_angle (Positive distance) →
-                                let wrapVertexAround =
-                                        periodicityWrapVertexAround
-                                        .
-                                        flip hexagonalPeriodicityRotatedBy undefined
-                                        $
-                                        (rotation_angle/pi*180)
-                                in  isBottom
-                                    .
-                                    wrapVertexAround distance
-                                    $
-                                    Vertex
-                                        (2 * distance * cos (angle + rotation_angle))
-                                        (2 * distance * sin (angle + rotation_angle))
-                                        0
-                        | angle ← fmap (pi/180*) [0,60..360]
-                        ]
-                    -- @-node:gcross.20100722123407.1636:expected errors
-                    -- @-others
-                    ]
-                -- @nonl
-                -- @-node:gcross.20100722123407.1630:wrapVertexAround
-                -- @-others
-                ]
-        -- @-node:gcross.20100722123407.1624:hexagonal
-        -- @+node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
-        ,testGroup "hexagonal (rotated 30 degrees)" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    hexagonalPeriodicityRotatedBy 30 undefined
-            in
-                -- @        @+others
-                -- @+node:gcross.20100723201654.1647:computeVertexDistance
-                [testGroup "computeVertexDistance"
-                    -- @    @+others
-                    -- @+node:gcross.20100723201654.1646:examples
-                    [testGroup "examples" $
-                        [let vertex = Vertex x y 0
-                         in testCase (show (x,y))
-                            .
-                            assertEqual
-                                "Was the distance correct?"
-                                correct_distance
-                            .
-                            computeVertexDistance
-                            $
-                            vertex
-                        | (x,y,correct_distance) ←
-                            [(0,2,sqrt 3)
-                            ,(1,sqrt 3,2)
-                            ]
-                        ]
-                    -- @-node:gcross.20100723201654.1646:examples
-                    -- @+node:gcross.20100723201654.1653:bounded by actual distance
-                    ,testProperty "bounded by actual distance" $
-                        \x y → computeVertexDistance (Vertex x y undefined) <= sqrt (x^2 + y^2)
-                    -- @-node:gcross.20100723201654.1653:bounded by actual distance
-                    -- @-others
-                    ]
-                -- @-node:gcross.20100723201654.1647:computeVertexDistance
-                -- @-others
-                ]
-        -- @-node:gcross.20100723201654.1644:hexagonal (rotated 30 degrees)
-        -- @-others
-        ]
-    -- @-node:gcross.20100722123407.1612:Periodicities
+    -- @-node:gcross.20100307133316.1312:Tilings
     -- @-others
     -- @-node:gcross.20100302201317.1388:<< Tests >>
     -- @nl
