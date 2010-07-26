@@ -17,6 +17,7 @@ import Control.Monad
 
 import Data.List
 import Data.Maybe
+import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Tuple.Select
 
@@ -321,49 +322,58 @@ checkTilingSymmetryAgainst ::
     Lattice →
     (ApproximateDouble → ApproximateDouble) →
     Maybe LatticeLabelingPermutation
-checkTilingSymmetryAgainst tiling@Tiling{..} lattice f
-  = do  permutation ←
-            (tilingVertexClasses ??→??)
-            .
-            computeVertexClassesModifiedBy tiling
-            $
-            f
-        let Periodicity{..} = tilingPeriodicity
-            wrapAround = periodicityWrapVertexAround periodDistance
-            borderVertex =
-                (== periodDistance)
-                .
-                periodicityComputeVertexDistance 
-            original_vertices = latticeVertices lattice         
-            modified_vertices =
-                Set.map (\(Vertex x y o) →
-                    let r = sqrt (x^2 + y^2)
-                        θ = (*(pi/180)) . f . (*(180/pi)) $ atan2 y x
-                        new_o =
-                            (tilingOrientations !!)
-                            .
-                            ((
-                                map fst
-                                .
-                                unwrapLatticeLabelingPermutation
-                                $
-                                permutation
-                            ) !!)
-                            .
-                            fromJust
-                            .
-                            (`elemIndex` tilingOrientations)
-                            $
-                            o
-                        new_vertex = Vertex (r*cos θ) (r*sin θ) new_o
-                    in if borderVertex new_vertex
-                        then (new_vertex `min` wrapAround new_vertex)
-                        else new_vertex
-                ) original_vertices
-        if original_vertices == modified_vertices
-            then return permutation
-            else Nothing
+checkTilingSymmetryAgainst tiling@Tiling{..} Lattice{..} f = do
+    (permutation,new_vertices) ← applySymmetryTransformationToVertices tiling f latticeVertices
+    if new_vertices == latticeVertices
+        then return permutation
+        else Nothing
 -- @-node:gcross.20100723201654.1713:checkTilingSymmetryAgainst
+-- @+node:gcross.20100726103932.1787:applyTransformationToVertices
+applySymmetryTransformationToVertices ::
+    Tiling →
+    (ApproximateDouble → ApproximateDouble) →
+    Set Vertex →
+    Maybe (LatticeLabelingPermutation,Set Vertex)
+applySymmetryTransformationToVertices tiling@Tiling{..} f vertices = do
+    permutation ←
+        (tilingVertexClasses ??→??)
+        .
+        computeVertexClassesModifiedBy tiling
+        $
+        f
+    let Periodicity{..} = tilingPeriodicity
+        wrapAround = periodicityWrapVertexAround periodDistance
+        borderVertex =
+            (== periodDistance)
+            .
+            periodicityComputeVertexDistance     
+        new_vertices =
+            Set.map (\(Vertex x y o) →
+                let r = sqrt (x^2 + y^2)
+                    θ = (*(pi/180)) . f . (*(180/pi)) $ atan2 y x
+                    new_o =
+                        (tilingOrientations !!)
+                        .
+                        ((
+                            map fst
+                            .
+                            unwrapLatticeLabelingPermutation
+                            $
+                            permutation
+                        ) !!)
+                        .
+                        fromJust
+                        .
+                        (`elemIndex` tilingOrientations)
+                        $
+                        o
+                    new_vertex = Vertex (r*cos θ) (r*sin θ) new_o
+                in if borderVertex new_vertex
+                    then (new_vertex `min` wrapAround new_vertex)
+                    else new_vertex
+            ) vertices
+    return (permutation,new_vertices)
+-- @-node:gcross.20100726103932.1787:applyTransformationToVertices
 -- @+node:gcross.20100723201654.1734:computeTilingSymmetriesAgainst
 computeTilingSymmetriesAgainst ::
     Tiling →
