@@ -101,7 +101,7 @@ tilings =
         )
         4
         (sqrt ((1/2)^2 + (1+sqrt 3/2)^2))
-        8
+        4
     ,makeTiling
         "hextille"
         [6,6,6]
@@ -353,15 +353,13 @@ checkTilingSymmetry tiling@Tiling{..} f
                         new_o =
                             (tilingOrientations !!)
                             .
-                            fromJust
-                            .
-                            (`elemIndex` (
+                            ((
                                 map fst
                                 .
                                 unwrapLatticeLabelingPermutation
                                 $
                                 permutation
-                            ))
+                            ) !!)
                             .
                             fromJust
                             .
@@ -375,7 +373,7 @@ checkTilingSymmetry tiling@Tiling{..} f
                 ) original_vertices
         if original_vertices == modified_vertices
             then return permutation
-            else Nothing  where
+            else Nothing
 -- @-node:gcross.20100723201654.1713:checkTilingSymmetries
 -- @+node:gcross.20100723201654.1734:computeTilingSymmetries
 computeTilingSymmetries :: Tiling → [LatticeLabelingPermutation]

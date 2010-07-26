@@ -885,6 +885,35 @@ main = defaultMain
                         ]
                 ]
             -- @-node:gcross.20100723142502.1633:correct pictures
+            -- @+node:gcross.20100723201654.1736:correct symmetries
+            ,testGroup "correct symmetries" $
+                [testGroup tilingName
+                    [testCase description
+                        .
+                        assertBool
+                            "Was the symmetry recognized?"
+                        .
+                        isJust
+                        .
+                        checkTilingSymmetry tiling
+                        .
+                        (trace ("Checking symmetry " ++ description))
+                        $
+                        f
+                    | (description,f) ← symmetries
+                    ]
+                | (tiling@Tiling{..},symmetries) ←
+                    map (first (\name → fromJust (find ((== name) . tilingName) tilings)))
+                        [("truncated quadrille"
+                         ,[("id",id)
+                          ,("90 CW",(+90))
+                          ,("180 CW",(+180))
+                          ,("270 CW",(+270))
+                          ]
+                         )
+                        ]
+                ]
+            -- @-node:gcross.20100723201654.1736:correct symmetries
             -- @-others
             ]
         -- @-node:gcross.20100309160622.1349:based on unit radius periodic lattice
