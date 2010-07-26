@@ -974,8 +974,8 @@ main = defaultMain
             -- @-node:gcross.20100713173607.1586:zero-based steps
             -- @+node:gcross.20100726103932.1737:based on periodic lattice
             ,Just . testGroup "based on periodic lattice" $
-                [ let lattice = generatePeriodicLatticeForTiling tiling radius
-                      discrete_lattice = discretizeLattice lattice
+                [ let lattice@Lattice{..} = generatePeriodicLatticeForTiling tiling radius
+                      discrete_lattice@DiscreteLattice{..} = discretizeLattice lattice
                   in testGroup ("radius = " ++ show radius) . catMaybes $
                     -- @        @+others
                     -- @+node:gcross.20100726103932.1738:consistent
@@ -1043,15 +1043,15 @@ main = defaultMain
                     ,Just . testCase "size of lattice invariant under discretization" $ do
                         assertEqual
                             "Has the number of vertices changed?"
-                            (Set.size . latticeVertices $ lattice)
-                            (Seq.length . discreteLatticeVertices $ discrete_lattice)
+                            (Set.size latticeVertices)
+                            (Seq.length discreteLatticeVertices)
                         assertEqual
                             "Has the number of edges changed?"
-                            (length . latticeEdges $ lattice)
-                            (length . discreteLatticeEdges $ discrete_lattice)
+                            (length latticeEdges)
+                            (length discreteLatticeEdges)
                     -- @-node:gcross.20100726103932.1743:size of lattice invariant under discretization
                     -- @+node:gcross.20100726103932.1781:correct number of edges
-                    ,let correct_edge_counds =
+                    ,let correct_edge_counts =
                             [("quadrille",[(1,8),(2,32)])
                             ,("truncated quadrille",[(1,24)])
                             ,("snub quadrille",[(1,20)])
@@ -1062,7 +1062,7 @@ main = defaultMain
                             ,("rhombihexadeltille",[(1,36)])
                             ,("isosnub quadrille",[(1,30)])
                             ]
-                     in lookup tilingName correct_edge_counds
+                     in lookup tilingName correct_edge_counts
                         >>=
                         lookup radius
                         >>=
@@ -1071,14 +1071,14 @@ main = defaultMain
                         testCase "correct number of edges"
                         .
                         flip (assertEqual "Is the number of edges correct?")
-                            (length . latticeEdges $ lattice)
+                            (length latticeEdges)
                     -- @-node:gcross.20100726103932.1781:correct number of edges
                     -- @+node:gcross.20100726103932.1770:correct pictures
                     ,let correct_pictures =
                             -- @        @+others
                             -- @+node:gcross.20100726103932.1771:quadrille
-                            [("quadrille"
-                             ,[(1,["00"
+                            [("quadrille",
+                              [(1,["00"
                                   ,"00"
                                   ]
                                )
@@ -1086,61 +1086,69 @@ main = defaultMain
                                   ,"0000"
                                   ,"0000"
                                   ,"0000"
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1771:quadrille
                             -- @+node:gcross.20100726103932.1772:truncated quadrille
-                            ,("truncated quadrille"
-                             ,[(1,["  03  "
+                            ,("truncated quadrille",
+                              [(1,["  03  "
                                   ,"  12  "
                                   ,"03  03"
                                   ,"12  12"
                                   ,"  03  "
                                   ,"  12  "
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1772:truncated quadrille
                             -- @+node:gcross.20100726103932.1773:snub quadrille
-                            ,("snub quadrille"
-                             ,[(1,["  1  "
+                            ,("snub quadrille",
+                              [(1,["  1  "
                                   ," 3 2 "
                                   ,"2   0"
                                   ," 0 1 "
                                   ,"  3  "
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1773:snub quadrille
                             -- @+node:gcross.20100726103932.1774:hextille
-                            ,("hextille"
-                             ,[(1,[" 01 "
+                            ,("hextille",
+                              [(1,[" 01 "
                                   ,"1  0"
                                   ," 01 "
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1774:hextille
                             -- @+node:gcross.20100726103932.1775:hexadeltille
-                            ,("hexadeltille"
-                             ,[(1,["   1   "
+                            ,("hexadeltille",
+                              [(1,["   1   "
                                   ,"0 2 0 2"
                                   ," 1   1 "
                                   ,"2 0 2 0"
                                   ,"   1   "
-                                  ]
-                               )
+                                  ])
+                              ,(2,["       2        "
+                                  ,"      1   1     "
+                                  ," 2 0 2 0 2 0 2  "
+                                  ,"1   1   1   1   "
+                                  ," 0 2 0 2 0 2 0 2"
+                                  ,"  1   1   1   1 "
+                                  ," 2 0 2 0 2 0 2 0"
+                                  ,"1   1   1   1   "
+                                  ," 0 2 0 2 0 2 0  "
+                                  ,"      1   1     "
+                                  ,"       0        "
+                                  ])
                               ]
+
                              )
                             -- @-node:gcross.20100726103932.1775:hexadeltille
                             -- @+node:gcross.20100726103932.1776:truncated hextille
-                            ,("truncated hextille"
-                             ,[(1,["     2     "
+                            ,("truncated hextille",
+                              [(1,["     2     "
                                   ,"     5     "
                                   ,"3   1 3   1"
                                   ," 0 4   0 4 "
@@ -1150,24 +1158,27 @@ main = defaultMain
                                   ,"4   0 4   0"
                                   ,"     2     "
                                   ,"     5     "
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1776:truncated hextille
                             -- @+node:gcross.20100726103932.1777:deltille
-                            ,("deltille"
-                             ,[(1,[" 0 "
+                            ,("deltille",
+                              [(1,[" 0 "
                                   ,"0 0"
                                   ," 0 "
-                                  ]
-                               )
+                                  ])
+                              ,(2,[" 0 0  " 
+                                  ,"0 0 0 "
+                                  ," 0 0 0"
+                                  ,"0 0 0 "
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1777:deltille
                             -- @+node:gcross.20100726103932.1778:rhombihexadeltille
-                            ,("rhombihexadeltille"
-                             ,[(1,["   5 3   "
+                            ,("rhombihexadeltille",
+                              [(1,["   5 3   "
                                   ," 4     4 "
                                   ,"    1    "
                                   ,"0 2   0 2"
@@ -1175,19 +1186,26 @@ main = defaultMain
                                   ,"    4    "
                                   ," 1     1 "
                                   ,"   0 2   "
-                                  ]
-                               )
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1778:rhombihexadeltille
                             -- @+node:gcross.20100726103932.1779:isosnub quadrille
-                            ,("isosnub quadrille"
-                             ,[(1,[" 0 0 0"
+                            ,("isosnub quadrille",
+                              [(1,[" 0 0 0"
                                   ,"1 1 1 "
                                   ,"0 0 0 "
                                   ," 1 1 1"
-                                  ]
-                               )
+                                  ])
+                              ,(2,[" 0 0 0 0 0 0"
+                                  ,"1 1 1 1 1 1 "
+                                  ,"0 0 0 0 0 0 "
+                                  ," 1 1 1 1 1 1"
+                                  ," 0 0 0 0 0 0"
+                                  ,"1 1 1 1 1 1 "
+                                  ,"0 0 0 0 0 0 "
+                                  ," 1 1 1 1 1 1"
+                                  ])
                               ]
                              )
                             -- @-node:gcross.20100726103932.1779:isosnub quadrille
@@ -1206,8 +1224,33 @@ main = defaultMain
                         .
                         unlines
                     -- @-node:gcross.20100726103932.1770:correct pictures
-                    -- @+node:gcross.20100726103932.1755:correct symmetries
-                    ,if radius > 1 then Nothing else Just . testProperty "correct symmetries" $
+                    -- @+node:gcross.20100726103932.1791:expected symmetries
+                    ,fmap (
+                        testCase "expected symmetries"
+                        .
+                        mapM_ (\(description,f) →
+                            assertEqual
+                                ("Did drawing when applying the " ++ description ++ " transformation?")
+                                (Just . drawDiscreteLattice $ discrete_lattice)
+                            .
+                            fmap (drawVertices . snd)
+                            .
+                            applySymmetryTransformationToVertices
+                                tiling
+                                latticeVertices
+                            $
+                            f
+                        )
+                     )
+                     .
+                     lookup tilingName
+                     $
+                     let r angle = (show angle ++ "-degree counter-clockwise rotation",(+angle))
+                     in  [("quadrille",[r 90, r 180, r 270, r 360])
+                         ]
+                    -- @-node:gcross.20100726103932.1791:expected symmetries
+                    -- @+node:gcross.20100726103932.1755:symmetries preserve code
+                    ,if radius > 1 then Nothing else Just . testProperty "symmetries preserve code" $
                         arbitraryLatticeLabeling lattice
                         >>=
                         \labeling → return $
@@ -1218,7 +1261,7 @@ main = defaultMain
                                         permuteLatticeLabeling labeling
                                     ) tilingSymmetries
                             in all (== first_solution) rest_solutions
-                    -- @-node:gcross.20100726103932.1755:correct symmetries
+                    -- @-node:gcross.20100726103932.1755:symmetries preserve code
                     -- @-others
                     ]
                 | radius ← [1,2,4,8]

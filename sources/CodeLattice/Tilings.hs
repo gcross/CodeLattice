@@ -322,19 +322,21 @@ checkTilingSymmetryAgainst ::
     Lattice →
     (ApproximateDouble → ApproximateDouble) →
     Maybe LatticeLabelingPermutation
-checkTilingSymmetryAgainst tiling@Tiling{..} Lattice{..} f = do
-    (permutation,new_vertices) ← applySymmetryTransformationToVertices tiling f latticeVertices
-    if new_vertices == latticeVertices
-        then return permutation
-        else Nothing
+checkTilingSymmetryAgainst tiling@Tiling{..} Lattice{..} =
+    applySymmetryTransformationToVertices tiling latticeVertices
+    >=>
+    \(permutation,new_vertices) →
+        if new_vertices == latticeVertices
+            then return permutation
+            else Nothing
 -- @-node:gcross.20100723201654.1713:checkTilingSymmetryAgainst
 -- @+node:gcross.20100726103932.1787:applyTransformationToVertices
 applySymmetryTransformationToVertices ::
     Tiling →
-    (ApproximateDouble → ApproximateDouble) →
     Set Vertex →
+    (ApproximateDouble → ApproximateDouble) →
     Maybe (LatticeLabelingPermutation,Set Vertex)
-applySymmetryTransformationToVertices tiling@Tiling{..} f vertices = do
+applySymmetryTransformationToVertices tiling@Tiling{..} vertices f = do
     permutation ←
         (tilingVertexClasses ??→??)
         .

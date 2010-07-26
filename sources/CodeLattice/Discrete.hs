@@ -183,6 +183,10 @@ drawDiscreteVertices vertices
 
     removeBlankLines = filter (any (/= ' '))
 -- @-node:gcross.20100726103932.1786:drawDiscreteVertices
+-- @+node:gcross.20100726103932.1792:drawLattice
+drawLattice :: Lattice → String
+drawLattice = drawDiscreteLattice . discretizeLattice
+-- @-node:gcross.20100726103932.1792:drawLattice
 -- @+node:gcross.20100717003017.2433:getAndDrawLattice
 getAndDrawLattice :: LatticeMonad String
 getAndDrawLattice =
