@@ -18,7 +18,7 @@ import Control.Applicative
 import Control.Arrow
 
 import Data.Char
-import Data.Foldable (toList)
+import Data.Foldable (Foldable,toList)
 import Data.Function
 import Data.List
 import Data.Map (Map)
@@ -64,40 +64,48 @@ data DiscreteVertex = DiscreteVertex
 -- @-node:gcross.20100717003017.2425:DiscreteVertex
 -- @-node:gcross.20100717003017.2423:Types
 -- @+node:gcross.20100717003017.2429:Functions
--- @+node:gcross.20100717003017.2437:discretizeLattice
-discretizeLattice :: Lattice → DiscreteLattice
-discretizeLattice lattice@Lattice{..} =
+-- @+node:gcross.20100726103932.1783:discretizeVertices
+discretizeVertices :: Set Vertex → [DiscreteVertex]
+discretizeVertices vertices =
     let computeLocationMap :: (Vertex → ApproximateDouble) → Map ApproximateDouble Int
         computeLocationMap getValue =
             Map.fromList
             .
             flip zip [0..]
             .
-            Set.toList
+            toList
             .
             Set.map getValue
             $
-            latticeVertices
+            vertices
         x_location_map = computeLocationMap vertexLocationX
         y_location_map = computeLocationMap vertexLocationY
         orientations_map = computeLocationMap vertexOrientation
 
-        vertices = Set.toList latticeVertices
-
-        discrete_vertices =
-            map (\Vertex{..} →
-                DiscreteVertex
-                    (fromJust . Map.lookup vertexLocationX $ x_location_map)
-                    (fromJust . Map.lookup vertexLocationY $ y_location_map)
-                    (fromJust . Map.lookup vertexOrientation $ orientations_map)
-            ) vertices
+    in  map (\Vertex{..} →
+            DiscreteVertex
+                (fromJust . Map.lookup vertexLocationX $ x_location_map)
+                (fromJust . Map.lookup vertexLocationY $ y_location_map)
+                (fromJust . Map.lookup vertexOrientation $ orientations_map)
+        )
+        .
+        toList
+        $
+        vertices
+-- @-node:gcross.20100726103932.1783:discretizeVertices
+-- @+node:gcross.20100717003017.2437:discretizeLattice
+discretizeLattice :: Lattice → DiscreteLattice
+discretizeLattice lattice@Lattice{..} =
+    let discrete_vertices = discretizeVertices latticeVertices
 
         vertex_number_map =
             Map.fromList
             .
             flip zip [0..]
+            .
+            toList
             $
-            vertices
+            latticeVertices
 
         lookupVertexNumber :: Vertex → Int
         lookupVertexNumber =
