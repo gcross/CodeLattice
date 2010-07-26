@@ -972,235 +972,258 @@ main = defaultMain
                 $
                 tilingSteps
             -- @-node:gcross.20100713173607.1586:zero-based steps
-            -- @+node:gcross.20100309160622.1349:based on unit radius periodic lattice
-            ,Just . testGroup "based on unit radius periodic lattice" $
-                -- @    @+others
-                -- @+node:gcross.20100309124842.1406:consistent
-                [testCase "consistent"
-                    .
-                    fmap (const ())
-                    .
-                    evaluate
-                    $
-                    tilingUnitRadiusLattice
-                -- @-node:gcross.20100309124842.1406:consistent
-                -- @+node:gcross.20100309150650.1374:correct number of orientations
-                ,testCase "correct number of orientations"
-                    .
-                    assertEqual
-                        "Is the number of computed orientations correct?"
-                        tilingNumberOfOrientations
-                    .
-                    length
-                    $
-                    tilingOrientations
-                -- @-node:gcross.20100309150650.1374:correct number of orientations
-                -- @+node:gcross.20100714141137.2538:correct number of permutations
-                ,testCase "correct number of symmetries"
-                    .
-                    assertEqual
-                        "Is the number of symmetries correct?"
-                        tilingNumberOfSymmetries
-                    .
-                    length
-                    $
-                    tilingSymmetries
-                -- @-node:gcross.20100714141137.2538:correct number of permutations
-                -- @+node:gcross.20100309160622.1348:valid adjacencies
-                ,testCase "valid adjacencies"
-                    .
-                    assertEqual
-                        "Are there any adjacencies not equal to the number of rays?"
-                        []
-                    .
-                    nub
-                    .
-                    filter (/= tilingNumberOfRays)
-                    .
-                    Map.elems
-                    .
-                    computeVertexAdjacencies
-                    $
-                    tilingUnitRadiusLattice
-                -- @-node:gcross.20100309160622.1348:valid adjacencies
-                -- @+node:gcross.20100723142502.1646:correct lattice translation symmetry distance
-                ,testCase "correct lattice translation symmetry distance"
-                    .
-                    assertEqual
-                        "Is the distance correct?"
-                        (Just tilingTranslationSymmetryDistance)
-                    .
-                    latticeTranslationDistance
-                    $
-                    tilingUnitRadiusLattice
-                -- @-node:gcross.20100723142502.1646:correct lattice translation symmetry distance
-                -- @+node:gcross.20100723142502.1647:size of lattice invariant under discretization
-                ,testCase "size of lattice invariant under discretization" $ do
-                    assertEqual
-                        "Has the number of vertices changed?"
-                        (Set.size . latticeVertices $ tilingUnitRadiusLattice)
-                        (Seq.length . discreteLatticeVertices $ tilingUnitRadiusDiscreteLattice)
-                    assertEqual
-                        "Has the number of edges changed?"
-                        (length . latticeEdges $ tilingUnitRadiusLattice)
-                        (length . discreteLatticeEdges $ tilingUnitRadiusDiscreteLattice)
-                -- @-node:gcross.20100723142502.1647:size of lattice invariant under discretization
-                -- @+node:gcross.20100723201654.1656:correct number of edges
-                ,let correct_number_of_edges =
-                        fromJust
+            -- @+node:gcross.20100726103932.1737:based on periodic lattice
+            ,Just . testGroup "based on periodic lattice" $
+                [ let lattice = generatePeriodicLatticeForTiling tiling radius
+                      discrete_lattice = discretizeLattice lattice
+                  in testGroup ("radius = " ++ show radius) . catMaybes $
+                    -- @        @+others
+                    -- @+node:gcross.20100726103932.1738:consistent
+                    [Just . testCase "consistent"
                         .
-                        lookup tilingName
+                        fmap (const ())
+                        .
+                        evaluate
                         $
-                        [("quadrille",8)
-                        ,("truncated quadrille",24)
-                        ,("snub quadrille",20)
-                        ,("hextille",9)
-                        ,("hexadeltille",24)
-                        ,("truncated hextille",36)
-                        ,("deltille",12)
-                        ,("rhombihexadeltille",36)
-                        ,("isosnub quadrille",30)
-                        ]
-                 in testCase "correct number of edges"
+                        lattice
+                    -- @-node:gcross.20100726103932.1738:consistent
+                    -- @+node:gcross.20100726103932.1739:correct number of orientations
+                    ,Just . testCase "correct number of orientations"
                         .
                         assertEqual
-                            "Is the number of edges correct?"
-                            correct_number_of_edges
+                            "Is the number of computed orientations correct?"
+                            tilingNumberOfOrientations
+                        .
+                        numberOfOrientationsInLattice
+                        $
+                        lattice
+                    -- @-node:gcross.20100726103932.1739:correct number of orientations
+                    -- @+node:gcross.20100726103932.1740:correct number of permutations
+                    ,Just . testCase "correct number of symmetries"
+                        .
+                        assertEqual
+                            "Is the number of symmetries correct?"
+                            tilingNumberOfSymmetries
                         .
                         length
                         .
-                        latticeEdges
+                        computeTilingSymmetriesAgainst tiling
                         $
-                        tilingUnitRadiusLattice
-                -- @-node:gcross.20100723201654.1656:correct number of edges
-                -- @+node:gcross.20100723142502.1633:correct pictures
-                ,let correct_picture =
-                        unlines
-                        .
-                        fromJust
-                        .
-                        lookup tilingName
-                        $
-                        -- @        @+others
-                        -- @+node:gcross.20100723142502.1635:quadrille
-                        [("quadrille"
-                         ,["00"
-                          ,"00"
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1635:quadrille
-                        -- @+node:gcross.20100723142502.1649:truncated quadrille
-                        ,("truncated quadrille"
-                         ,["  03  "
-                          ,"  12  "
-                          ,"03  03"
-                          ,"12  12"
-                          ,"  03  "
-                          ,"  12  "
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1649:truncated quadrille
-                        -- @+node:gcross.20100723142502.1651:snub quadrille
-                        ,("snub quadrille"
-                         ,["  1  "
-                          ," 3 2 "
-                          ,"2   0"
-                          ," 0 1 "
-                          ,"  3  "
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1651:snub quadrille
-                        -- @+node:gcross.20100723142502.1637:hextille
-                        ,("hextille"
-                         ,[" 01 "
-                          ,"1  0"
-                          ," 01 "
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1637:hextille
-                        -- @+node:gcross.20100723142502.1652:hexadeltille
-                        ,("hexadeltille"
-                         ,["   1   "
-                          ,"0 2 0 2"
-                          ," 1   1 "
-                          ,"2 0 2 0"
-                          ,"   1   "
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1652:hexadeltille
-                        -- @+node:gcross.20100723142502.1654:truncated hextille
-                        ,("truncated hextille"
-                         ,["     2     "
-                          ,"     5     "
-                          ,"3   1 3   1"
-                          ," 0 4   0 4 "
-                          ,"  2     2  "
-                          ,"  5     5  "
-                          ," 1 3   1 3 "
-                          ,"4   0 4   0"
-                          ,"     2     "
-                          ,"     5     "
-                          ]
-                         )
-                        -- @-node:gcross.20100723142502.1654:truncated hextille
-                        -- @+node:gcross.20100723201654.1661:deltille
-                        ,("deltille"
-                         ,[" 0 "
-                          ,"0 0"
-                          ," 0 "
-                          ]
-                         )
-                        -- @-node:gcross.20100723201654.1661:deltille
-                        -- @+node:gcross.20100723201654.1663:rhombihexadeltille
-                        ,("rhombihexadeltille"
-                         ,["   5 3   "
-                          ," 4     4 "
-                          ,"    1    "
-                          ,"0 2   0 2"
-                          ,"5 3   5 3"
-                          ,"    4    "
-                          ," 1     1 "
-                          ,"   0 2   "
-                          ]
-                         )
-                        -- @-node:gcross.20100723201654.1663:rhombihexadeltille
-                        -- @+node:gcross.20100723201654.1668:isosnub quadrille
-                        ,("isosnub quadrille"
-                         ,[" 0 0 0"
-                          ,"1 1 1 "
-                          ,"0 0 0 "
-                          ," 1 1 1"
-                          ]
-                         )
-                        -- @-node:gcross.20100723201654.1668:isosnub quadrille
-                        -- @-others
-                        ]
-                 in testCase "correct pictures"
+                        lattice
+                    -- @-node:gcross.20100726103932.1740:correct number of permutations
+                    -- @+node:gcross.20100726103932.1741:valid adjacencies
+                    ,Just . testCase "valid adjacencies"
                         .
                         assertEqual
-                            "Is the picture correct?"
-                            correct_picture
+                            "Are there any adjacencies not equal to the number of rays?"
+                            []
                         .
-                        drawDiscreteLattice
+                        nub
+                        .
+                        filter (/= tilingNumberOfRays)
+                        .
+                        Map.elems
+                        .
+                        computeVertexAdjacencies
                         $
-                        tilingUnitRadiusDiscreteLattice
-                -- @-node:gcross.20100723142502.1633:correct pictures
-                -- @+node:gcross.20100726103932.1663:correct symmetries
-                ,testProperty "correct symmetries" $
-                    arbitraryLatticeLabeling tilingUnitRadiusLattice
-                    >>=
-                    \labeling → return $
-                        let (first_solution:rest_solutions) =
-                                map (
-                                    solveForLabeling (latticeToScanConfiguration tilingUnitRadiusDiscreteLattice)
-                                    .
-                                    permuteLatticeLabeling labeling
-                                ) tilingSymmetries
-                        in all (== first_solution) rest_solutions
-                -- @-node:gcross.20100726103932.1663:correct symmetries
-                -- @-others
+                        lattice
+                    -- @-node:gcross.20100726103932.1741:valid adjacencies
+                    -- @+node:gcross.20100726103932.1742:correct lattice translation symmetry distance
+                    ,Just . testCase "correct lattice translation symmetry distance"
+                        .
+                        assertEqual
+                            "Is the distance correct?"
+                            (Just tilingTranslationSymmetryDistance)
+                        .
+                        latticeTranslationDistance
+                        $
+                        lattice
+                    -- @-node:gcross.20100726103932.1742:correct lattice translation symmetry distance
+                    -- @+node:gcross.20100726103932.1743:size of lattice invariant under discretization
+                    ,Just . testCase "size of lattice invariant under discretization" $ do
+                        assertEqual
+                            "Has the number of vertices changed?"
+                            (Set.size . latticeVertices $ lattice)
+                            (Seq.length . discreteLatticeVertices $ discrete_lattice)
+                        assertEqual
+                            "Has the number of edges changed?"
+                            (length . latticeEdges $ lattice)
+                            (length . discreteLatticeEdges $ discrete_lattice)
+                    -- @-node:gcross.20100726103932.1743:size of lattice invariant under discretization
+                    -- @+node:gcross.20100726103932.1781:correct number of edges
+                    ,let correct_edge_counds =
+                            [("quadrille",[(1,8),(2,32)])
+                            ,("truncated quadrille",[(1,24)])
+                            ,("snub quadrille",[(1,20)])
+                            ,("hextille",[(1,9)])
+                            ,("hexadeltille",[(1,24)])
+                            ,("truncated hextille",[(1,36)])
+                            ,("deltille",[(1,12)])
+                            ,("rhombihexadeltille",[(1,36)])
+                            ,("isosnub quadrille",[(1,30)])
+                            ]
+                     in lookup tilingName correct_edge_counds
+                        >>=
+                        lookup radius
+                        >>=
+                        return
+                        .
+                        testCase "correct number of edges"
+                        .
+                        flip (assertEqual "Is the number of edges correct?")
+                            (length . latticeEdges $ lattice)
+                    -- @-node:gcross.20100726103932.1781:correct number of edges
+                    -- @+node:gcross.20100726103932.1770:correct pictures
+                    ,let correct_pictures =
+                            -- @        @+others
+                            -- @+node:gcross.20100726103932.1771:quadrille
+                            [("quadrille"
+                             ,[(1,["00"
+                                  ,"00"
+                                  ]
+                               )
+                              ,(2,["0000"
+                                  ,"0000"
+                                  ,"0000"
+                                  ,"0000"
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1771:quadrille
+                            -- @+node:gcross.20100726103932.1772:truncated quadrille
+                            ,("truncated quadrille"
+                             ,[(1,["  03  "
+                                  ,"  12  "
+                                  ,"03  03"
+                                  ,"12  12"
+                                  ,"  03  "
+                                  ,"  12  "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1772:truncated quadrille
+                            -- @+node:gcross.20100726103932.1773:snub quadrille
+                            ,("snub quadrille"
+                             ,[(1,["  1  "
+                                  ," 3 2 "
+                                  ,"2   0"
+                                  ," 0 1 "
+                                  ,"  3  "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1773:snub quadrille
+                            -- @+node:gcross.20100726103932.1774:hextille
+                            ,("hextille"
+                             ,[(1,[" 01 "
+                                  ,"1  0"
+                                  ," 01 "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1774:hextille
+                            -- @+node:gcross.20100726103932.1775:hexadeltille
+                            ,("hexadeltille"
+                             ,[(1,["   1   "
+                                  ,"0 2 0 2"
+                                  ," 1   1 "
+                                  ,"2 0 2 0"
+                                  ,"   1   "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1775:hexadeltille
+                            -- @+node:gcross.20100726103932.1776:truncated hextille
+                            ,("truncated hextille"
+                             ,[(1,["     2     "
+                                  ,"     5     "
+                                  ,"3   1 3   1"
+                                  ," 0 4   0 4 "
+                                  ,"  2     2  "
+                                  ,"  5     5  "
+                                  ," 1 3   1 3 "
+                                  ,"4   0 4   0"
+                                  ,"     2     "
+                                  ,"     5     "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1776:truncated hextille
+                            -- @+node:gcross.20100726103932.1777:deltille
+                            ,("deltille"
+                             ,[(1,[" 0 "
+                                  ,"0 0"
+                                  ," 0 "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1777:deltille
+                            -- @+node:gcross.20100726103932.1778:rhombihexadeltille
+                            ,("rhombihexadeltille"
+                             ,[(1,["   5 3   "
+                                  ," 4     4 "
+                                  ,"    1    "
+                                  ,"0 2   0 2"
+                                  ,"5 3   5 3"
+                                  ,"    4    "
+                                  ," 1     1 "
+                                  ,"   0 2   "
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1778:rhombihexadeltille
+                            -- @+node:gcross.20100726103932.1779:isosnub quadrille
+                            ,("isosnub quadrille"
+                             ,[(1,[" 0 0 0"
+                                  ,"1 1 1 "
+                                  ,"0 0 0 "
+                                  ," 1 1 1"
+                                  ]
+                               )
+                              ]
+                             )
+                            -- @-node:gcross.20100726103932.1779:isosnub quadrille
+                            -- @-others
+                            ]
+                     in lookup tilingName correct_pictures
+                        >>=
+                        lookup radius
+                        >>=
+                        return
+                        .
+                        testCase "correct picture"
+                        .
+                        flip (assertEqual "Is the picture correct?")
+                            (drawDiscreteLattice discrete_lattice)
+                        .
+                        unlines
+                    -- @-node:gcross.20100726103932.1770:correct pictures
+                    -- @+node:gcross.20100726103932.1755:correct symmetries
+                    ,if radius > 1 then Nothing else Just . testProperty "correct symmetries" $
+                        arbitraryLatticeLabeling lattice
+                        >>=
+                        \labeling → return $
+                            let (first_solution:rest_solutions) =
+                                    map (
+                                        solveForLabeling (latticeToScanConfiguration discrete_lattice)
+                                        .
+                                        permuteLatticeLabeling labeling
+                                    ) tilingSymmetries
+                            in all (== first_solution) rest_solutions
+                    -- @-node:gcross.20100726103932.1755:correct symmetries
+                    -- @-others
+                    ]
+                | radius ← [1,2,4,8]
                 ]
-            -- @-node:gcross.20100309160622.1349:based on unit radius periodic lattice
+            -- @-node:gcross.20100726103932.1737:based on periodic lattice
             -- @+node:gcross.20100312175547.1383:iterable 8 times
             ,Just . testCase "iterable 8 times" $
                 let lattices =
