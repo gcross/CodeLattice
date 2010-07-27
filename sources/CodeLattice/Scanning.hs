@@ -66,17 +66,8 @@ data Solution = Solution
     ,   solutionLogicalQubitDistances :: [CInt]
     } deriving (Eq,Show)
 -- @-node:gcross.20100714222047.1668:Solution
--- @+node:gcross.20100713173607.1613:VertexLabeling
-newtype VertexLabeling = VertexLabeling { unwrapVertexLabeling :: [Int] } deriving (Eq,Ord,Show)
-
-
--- @-node:gcross.20100713173607.1613:VertexLabeling
--- @+node:gcross.20100713173607.1614:LatticeLabeling
-newtype LatticeLabeling = LatticeLabeling { unwrapLatticeLabeling :: [VertexLabeling] } deriving (Eq,Ord,Show)
--- @nonl
--- @-node:gcross.20100713173607.1614:LatticeLabeling
 -- @-node:gcross.20100314233604.1668:Types
--- @+node:gcross.20100315191926.2795:C Functions
+-- @+node:gcross.20100315191926.2795:Functions
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 -- @+at
 --  extern "C" void solve(
@@ -136,19 +127,6 @@ solveForLabeling config labeling =
 solveForLabelingNoisily :: ScanConfiguration → LatticeLabeling → IO Solution
 solveForLabelingNoisily = solveForLabelingWithVerbosity True
 -- @-node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
--- @-node:gcross.20100315191926.2795:C Functions
--- @+node:gcross.20100314233604.1670:Functions
--- @+node:gcross.20100714222047.1669:flattenLatticeLabeling
-flattenLatticeLabeling :: LatticeLabeling → [Int]
-flattenLatticeLabeling =
-    concat
-    .
-    transpose
-    .
-    map unwrapVertexLabeling
-    .
-    unwrapLatticeLabeling
--- @-node:gcross.20100714222047.1669:flattenLatticeLabeling
 -- @+node:gcross.20100314233604.1671:latticeToScanConfiguration
 latticeToScanConfiguration :: DiscreteLattice → ScanConfiguration
 latticeToScanConfiguration lattice@DiscreteLattice{..} =
@@ -192,61 +170,7 @@ latticeToScanConfiguration lattice@DiscreteLattice{..} =
         $
         discreteLatticeEdges
 -- @-node:gcross.20100314233604.1671:latticeToScanConfiguration
--- @+node:gcross.20100713003314.1568:canonicalizeVertexLabeling
-canonicalizeVertexLabeling :: VertexLabeling → VertexLabeling
-canonicalizeVertexLabeling (VertexLabeling old_labeling) =
-    VertexLabeling
-    .
-    map ((+1) . fromJust . flip elemIndex (nub old_labeling))
-    $
-    old_labeling
--- @-node:gcross.20100713003314.1568:canonicalizeVertexLabeling
--- @+node:gcross.20100713115329.1573:generateVertexLabelings
-generateVertexLabelings :: Int → [VertexLabeling]
-generateVertexLabelings = map (VertexLabeling . (1:)) . go . (\x → x-1)
-  where
-    go 0 = [[]]
-    go n =
-        (map (1:) (go (n-1)))
-        ++
-        (map (2:) (replicateM (n-1) [1..3]))
--- @-node:gcross.20100713115329.1573:generateVertexLabelings
--- @+node:gcross.20100713115329.1584:generateLatticeLabelings
-generateLatticeLabelings :: Int → Int → [LatticeLabeling]
-generateLatticeLabelings number_of_vertices number_of_rays =
-    map LatticeLabeling
-    .
-    replicateM number_of_vertices
-    .
-    generateVertexLabelings
-    $
-    number_of_rays
--- @nonl
--- @-node:gcross.20100713115329.1584:generateLatticeLabelings
--- @+node:gcross.20100713115329.1582:canonicalizeLatticeLabeling
-canonicalizeLatticeLabeling :: LatticeLabeling → LatticeLabeling
-canonicalizeLatticeLabeling = LatticeLabeling . map canonicalizeVertexLabeling . unwrapLatticeLabeling
--- @nonl
--- @-node:gcross.20100713115329.1582:canonicalizeLatticeLabeling
--- @+node:gcross.20100714141137.1609:permuteVertexLabeling
-permuteVertexLabeling ::  VertexLabeling → VertexLabelingPermutation → VertexLabeling
-permuteVertexLabeling (VertexLabeling old_labeling) =
-    VertexLabeling
-    .
-    map (old_labeling !!)
-    .
-    unwrapVertexLabelingPermutation
--- @-node:gcross.20100714141137.1609:permuteVertexLabeling
--- @+node:gcross.20100714141137.1611:permuteLatticeLabeling
-permuteLatticeLabeling ::  LatticeLabeling → LatticeLabelingPermutation → LatticeLabeling
-permuteLatticeLabeling (LatticeLabeling old_labeling) =
-    LatticeLabeling
-    .
-    map (uncurry (permuteVertexLabeling . (old_labeling !!)))
-    .
-    unwrapLatticeLabelingPermutation
--- @-node:gcross.20100714141137.1611:permuteLatticeLabeling
--- @-node:gcross.20100314233604.1670:Functions
+-- @-node:gcross.20100315191926.2795:Functions
 -- @-others
 -- @-node:gcross.20100314233604.1666:@thin Scanning.hs
 -- @-leo

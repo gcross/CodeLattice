@@ -165,6 +165,10 @@ modulo360 angle = angle - fromIntegral ((floor (angle / 360) :: Int) * 360)
 -- @+node:gcross.20100309124842.1409:originVertex
 originVertex = Vertex 0 0 0
 -- @-node:gcross.20100309124842.1409:originVertex
+-- @+node:gcross.20100727110906.1655:(|⇆)
+(|⇆) :: ApproximateDouble → ApproximateDouble → ApproximateDouble
+reflection_axis_angle |⇆ angle = 2*reflection_axis_angle - angle
+-- @-node:gcross.20100727110906.1655:(|⇆)
 -- @-node:gcross.20100308212437.1393:Miscellaneous
 -- @+node:gcross.20100308212437.1394:Stepping
 -- @+node:gcross.20100302201317.1252:stepFromVertex
