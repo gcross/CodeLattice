@@ -4,6 +4,7 @@
 
 -- @<< Language extensions >>
 -- @+node:gcross.20100315191926.2392:<< Language extensions >>
+{-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100315191926.2392:<< Language extensions >>
 -- @nl
 
@@ -58,13 +59,12 @@ flag_mode = Optimized
 ghc_flags =
     case flag_mode of
         Debug → []
-        Optimized → ["-O2","-fvia-C","-optc=-O3"]
+        Optimized → ["-O2","-fvia-C","-optc=-O3","-threaded"]
 
 gcc_flags =
     case flag_mode of
         Debug → ["-g"]
         Optimized → ["-O3","-ffast-math","-funroll-loops"]
--- @nonl
 -- @-node:gcross.20100315191926.2401:Flags
 -- @-node:gcross.20100315191926.2399:Values
 -- @+node:gcross.20100315191926.2402:main

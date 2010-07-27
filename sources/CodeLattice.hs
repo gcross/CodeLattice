@@ -39,10 +39,9 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
 
-import TypeLevel.NaturalNumber
-
-import Debug.Trace
 import Text.Printf
+
+import TypeLevel.NaturalNumber
 -- @-node:gcross.20100302164430.1307:<< Import needed modules >>
 -- @nl
 
@@ -249,31 +248,44 @@ canonicalizeEdge (Edge s1 s2)
   | s1 > s2   = Edge s2 s1
   | otherwise = Edge s1 s2
 -- @-node:gcross.20100717003017.2452:canonicalizeEdge
+-- @+node:gcross.20100726103932.1797:canonicalizePeriodicEdge
+canonicalizePeriodicEdge :: Periodicity → Int → Edge → Edge
+canonicalizePeriodicEdge periodicity radius =
+    canonicalizeEdge
+    .
+    liftA2 Edge
+        (canonicalizePeriodicEdgeSide periodicity radius . edgeLeftSide)
+        (canonicalizePeriodicEdgeSide periodicity radius . edgeRightSide)
+-- @-node:gcross.20100726103932.1797:canonicalizePeriodicEdge
+-- @+node:gcross.20100726103932.1798:canonicalizePeriodicEdgeSide
+canonicalizePeriodicEdgeSide :: Periodicity → Int → EdgeSide → EdgeSide
+canonicalizePeriodicEdgeSide periodicity radius (EdgeSide v r) =
+    EdgeSide (canonicalizePeriodicVertex periodicity radius v) r
+-- @-node:gcross.20100726103932.1798:canonicalizePeriodicEdgeSide
 -- @+node:gcross.20100723201654.1669:canonicalizePeriodicLattice
-canonicalizePeriodicLattice ::
-    Periodicity →
-    Int →
-    Lattice →
-    Lattice
-canonicalizePeriodicLattice
-    Periodicity{..}
-    radius
-    (Lattice _ edges)
-    = latticeFromEdges new_edges
+canonicalizePeriodicLattice :: Periodicity → Int → Lattice → Lattice
+canonicalizePeriodicLattice periodicity radius =
+    latticeFromEdges
+    .
+    map (canonicalizePeriodicEdge periodicity radius)
+    .
+    latticeEdges
+-- @-node:gcross.20100723201654.1669:canonicalizePeriodicLattice
+-- @+node:gcross.20100726103932.1795:canonicalizePeriodicVertex
+canonicalizePeriodicVertex :: Periodicity → Int → Vertex → Vertex 
+canonicalizePeriodicVertex Periodicity{..} radius v
+  | isBorder v = wrapAround v `min` v
+  | otherwise  = v
   where
     wrap_around_distance = fromIntegral radius * periodDistance
-    canonicalizePeriodicEdge =
-        liftA2 Edge
-            (canonicalizePeriodicEdgeSide . edgeLeftSide)
-            (canonicalizePeriodicEdgeSide . edgeRightSide)
-    canonicalizePeriodicEdgeSide (EdgeSide v r) = EdgeSide new_v r
-      where
-        wrapped_v = periodicityWrapVertexAround wrap_around_distance v
-        new_v
-          | wrapped_v < v = wrapped_v
-          | otherwise     = v
-    new_edges = map canonicalizePeriodicEdge edges
--- @-node:gcross.20100723201654.1669:canonicalizePeriodicLattice
+    wrapAround = periodicityWrapVertexAround wrap_around_distance
+    isBorder = (== wrap_around_distance) . periodicityComputeVertexDistance
+-- @-node:gcross.20100726103932.1795:canonicalizePeriodicVertex
+-- @+node:gcross.20100726103932.1794:canonicalizePeriodicVertices
+canonicalizePeriodicVertices :: Periodicity → Int → Set Vertex → Set Vertex
+canonicalizePeriodicVertices periodicity radius =
+    Set.map (canonicalizePeriodicVertex periodicity radius)
+-- @-node:gcross.20100726103932.1794:canonicalizePeriodicVertices
 -- @+node:gcross.20100309160622.1347:computeVertexAdjacencies
 computeVertexAdjacencies :: Lattice → Map Vertex Int
 computeVertexAdjacencies Lattice{..} =
@@ -562,7 +574,7 @@ periodizeLattice ::
     Lattice →
     Maybe Lattice
 periodizeLattice
-    Periodicity
+    periodicity@Periodicity
         {   periodicityComputeVertexDistance = computeVertexDistance
         ,   periodicityWrapVertexAround = wrapVertexAround
         ,   periodDistance = translation_distance
@@ -575,14 +587,14 @@ periodizeLattice
         Set.map computeVertexDistance
         $
         latticeVertices
-  , floor (maximum_distance / translation_distance) >= requested_radius+1
+  , maximum_distance >= translation_distance * fromIntegral (requested_radius+2)
      = Just $ let
         new_edges =
             Set.toList
             .
             Set.fromList
             .
-            map canonicalizeEdge
+            map (canonicalizePeriodicEdge periodicity requested_radius)
             .
             mapMaybe (\edge@(Edge s1@(EdgeSide v1 r1) s2@(EdgeSide v2 r2)) →
                 let wrapped_v1 = wrapAround v1
@@ -592,40 +604,11 @@ periodizeLattice
                     (EQ,GT) → Nothing
                     (GT,EQ) → Nothing
                     (LT,LT) → Just edge
-                    (EQ,EQ) → let new_v1
-                                    | wrapped_v1 < v1 = wrapped_v1
-                                    | otherwise       = v1
-                                  new_v2
-                                    | wrapped_v2 < v2 = wrapped_v2
-                                    | otherwise       = v2
-                                  new_edge
-                                    | new_v1 < new_v2 =
-                                        Edge (EdgeSide new_v1 r1)
-                                             (EdgeSide new_v2 r2)
-                                    | otherwise =
-                                        Edge (EdgeSide new_v2 r2)
-                                             (EdgeSide new_v1 r1)
-                              in Just new_edge
-                    (LT,EQ)
-                        | wrapped_v2 < v2
-                            → Just (Edge s1 (EdgeSide wrapped_v2 r2))
-                        | otherwise
-                            → Just edge
-                    (EQ,LT)
-                        | wrapped_v1 < v1
-                            → Just (Edge (EdgeSide wrapped_v1 r1) s2)
-                        | otherwise
-                            → Just edge
-                    (LT,GT)
-                        | wrapped_v2 > v1
-                            → Just (Edge s1 (EdgeSide wrapped_v2 r2))
-                        | otherwise
-                            → Nothing
-                    (GT,LT)
-                        | wrapped_v1 > v2
-                            → Just (Edge (EdgeSide wrapped_v1 r1) s2)
-                        | otherwise
-                            → Nothing
+                    (EQ,EQ) → Just edge
+                    (LT,EQ) → Just edge
+                    (EQ,LT) → Just edge
+                    (LT,GT) → Just (Edge s1 (EdgeSide wrapped_v2 r2))
+                    (GT,LT) → Just (Edge (EdgeSide wrapped_v1 r1) s2)
             )
             $
             latticeEdges
@@ -783,10 +766,9 @@ rectangularPeriodicity y_over_x = rectangularPeriodicityRotatedBy y_over_x 0
 -- @-node:gcross.20100723201654.1666:rectangularPeriodicity
 -- @+node:gcross.20100723201654.1664:rectangularPeriodicityRotatedBy
 rectangularPeriodicityRotatedBy y_over_x angle distance =
-    let basis@[b1@(b1x,b1y),b2] = map (rotate angle) [(1,0),(0,1)]
-        b1_scaled = b1x*y_over_x + b1y*y_over_x
+    let [b1,b2@(b2x,b2y)] = map (rotate angle) [(1,0),(0,1)]
 
-        computeDistanceFrom = makeComputeDistanceFrom basis
+        computeDistanceFrom = makeComputeDistanceFrom [b1,(b2x/y_over_x,b2y/y_over_x)]
 
         wrapAround d =
             wrapVertexAroundVector b2 (d*y_over_x)
@@ -794,7 +776,6 @@ rectangularPeriodicityRotatedBy y_over_x angle distance =
             wrapVertexAroundVector b1 d
 
     in Periodicity computeDistanceFrom wrapAround distance
-
 -- @-node:gcross.20100723201654.1664:rectangularPeriodicityRotatedBy
 -- @+node:gcross.20100723120236.1635:squarePeriodicity
 squarePeriodicity = squarePeriodicityRotatedBy 0
@@ -822,10 +803,12 @@ hexagonalPeriodicityRotatedBy angle distance =
           | offsetIs 120 = wrapVertexAroundVector b3 d vertex
           | otherwise    =
                 error (
-                    "Vertex is located at "
-                    ++ show (x,y) ++
+                    "Cannot wrap vertex around distance "
+                    ++ show (unwrapAbsolutelyApproximateValue d) ++
+                    " because it is located at "
+                    ++ show (((,) `on` unwrapAbsolutelyApproximateValue) x y) ++
                     " @ "
-                    ++ show (atan2 y x / pi * 180) ++
+                    ++ show (unwrapAbsolutelyApproximateValue $ atan2 y x / pi * 180) ++
                     ", which is on a (hexagonal) corner"
                 )
           where

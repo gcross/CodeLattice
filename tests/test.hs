@@ -979,13 +979,10 @@ main = defaultMain
                   in testGroup ("radius = " ++ show radius) . catMaybes $
                     -- @        @+others
                     -- @+node:gcross.20100726103932.1738:consistent
-                    [Just . testCase "consistent"
-                        .
-                        fmap (const ())
-                        .
-                        evaluate
-                        $
-                        lattice
+                    [Just . testCase "consistent" $ do
+                        evaluate latticeVertices
+                        evaluate latticeEdges
+                        return ()
                     -- @-node:gcross.20100726103932.1738:consistent
                     -- @+node:gcross.20100726103932.1739:correct number of orientations
                     ,Just . testCase "correct number of orientations"
@@ -1007,7 +1004,7 @@ main = defaultMain
                         .
                         length
                         .
-                        computeTilingSymmetriesAgainst tiling
+                        computeSymmetryTransformationsFor tiling radius
                         $
                         lattice
                     -- @-node:gcross.20100726103932.1740:correct number of permutations
@@ -1168,10 +1165,11 @@ main = defaultMain
                                   ,"0 0"
                                   ," 0 "
                                   ])
-                              ,(2,[" 0 0  " 
-                                  ,"0 0 0 "
-                                  ," 0 0 0"
-                                  ,"0 0 0 "
+                              ,(2,["  0 0   " 
+                                  ," 0 0 0 0"
+                                  ,"0 0 0 0 "
+                                  ," 0 0 0 0"
+                                  ,"  0 0   "
                                   ])
                               ]
                              )
@@ -1226,9 +1224,11 @@ main = defaultMain
                     -- @-node:gcross.20100726103932.1770:correct pictures
                     -- @+node:gcross.20100726103932.1791:expected symmetries
                     ,fmap (
-                        testCase "expected symmetries"
+                        testGroup "expected symmetries"
                         .
-                        mapM_ (\(description,f) →
+                        map (\(description,f) →
+                            testCase description
+                            .
                             assertEqual
                                 ("Did drawing when applying the " ++ description ++ " transformation?")
                                 (Just . drawDiscreteLattice $ discrete_lattice)
@@ -1237,6 +1237,7 @@ main = defaultMain
                             .
                             applySymmetryTransformationToVertices
                                 tiling
+                                radius
                                 latticeVertices
                             $
                             f
@@ -1245,8 +1246,10 @@ main = defaultMain
                      .
                      lookup tilingName
                      $
-                     let r angle = (show angle ++ "-degree counter-clockwise rotation",(+angle))
-                     in  [("quadrille",[r 90, r 180, r 270, r 360])
+                     let r angle = (show (floor angle) ++ "-degree counter-clockwise rotation",(+angle))
+                     in  [("quadrille",map r [90,180,270])
+                         ,("truncated quadrille",map r [90,180,270])
+                         ,("hexadeltille",map r [60,120..300])
                          ]
                     -- @-node:gcross.20100726103932.1791:expected symmetries
                     -- @+node:gcross.20100726103932.1755:symmetries preserve code
@@ -1264,7 +1267,8 @@ main = defaultMain
                     -- @-node:gcross.20100726103932.1755:symmetries preserve code
                     -- @-others
                     ]
-                | radius ← [1,2,4,8]
+                | radius ← [1,2,3,4,5,6]
+                , tilingName /= "deltille" || radius `mod` 3 > 0
                 ]
             -- @-node:gcross.20100726103932.1737:based on periodic lattice
             -- @+node:gcross.20100312175547.1383:iterable 8 times
