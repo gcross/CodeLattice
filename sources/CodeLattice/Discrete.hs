@@ -139,7 +139,7 @@ drawDiscreteLattice :: DiscreteLattice → String
 drawDiscreteLattice = drawDiscreteVertices . discreteLatticeVertices
 -- @-node:gcross.20100717003017.2431:drawDiscreteLattice
 -- @+node:gcross.20100726103932.1786:drawDiscreteVertices
-drawDiscreteVertices :: Foldable t => t DiscreteVertex → String
+drawDiscreteVertices :: Foldable t ⇒ t DiscreteVertex → String
 drawDiscreteVertices vertices
   | Map.null coordinate_map = ""
   | otherwise =
@@ -182,6 +182,7 @@ drawDiscreteVertices vertices
     (min_Y,max_Y) = minmax snd
 
     removeBlankLines = filter (any (/= ' '))
+-- @nonl
 -- @-node:gcross.20100726103932.1786:drawDiscreteVertices
 -- @+node:gcross.20100726103932.1792:drawLattice
 drawLattice :: Lattice → String

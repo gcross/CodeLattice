@@ -64,10 +64,11 @@ class AlmostEq a where
 instance AlmostEq Double where
     x ≈ y = (abs x + abs y < 1e-11) || (abs (x-y) / abs(x+y) * 2 < 1e-7)
 
-instance (AlmostEq a) => AlmostEq [a] where
+instance (AlmostEq a) ⇒ AlmostEq [a] where
     x ≈ y = all (uncurry (≈)) $ zip x y
 
 x /≈ y = not (x ≈ y)
+-- @nonl
 -- @-node:gcross.20100714141137.2288:AlmostEq
 -- @+node:gcross.20100715150143.1846:Types
 -- @+node:gcross.20100717003017.2447:Bounds
@@ -129,7 +130,7 @@ instance Arbitrary Vertex where
 -- @-node:gcross.20100307122538.1301:Generators
 -- @+node:gcross.20100715150143.1839:Generator functions
 -- @+node:gcross.20100715150143.1840:arbitraryVertexLabeling
-arbitraryVertexLabeling :: Int → Gen VertexLabeling
+arbitraryVertexLabeling :: Int → Gen VertexLabeling 
 arbitraryVertexLabeling number_of_rays =
     fmap (
         canonicalizeVertexLabeling
