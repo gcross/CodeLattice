@@ -1234,7 +1234,7 @@ main =
         ]
     -- @-node:gcross.20100726103932.1700:Periodicities
     -- @+node:gcross.20100307133316.1312:Tilings
-    ,testGroup "Tilings" . const [] $
+    ,testGroup "Tilings" $
         [ testGroup tilingName
             .
             catMaybes
