@@ -7,6 +7,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- @-node:gcross.20100315120315.1445:<< Language extensions >>
 -- @nl
@@ -41,6 +42,8 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 
+import Language.Haskell.TH
+
 import System.IO.Unsafe
 
 import CodeLattice
@@ -70,43 +73,56 @@ data Solution = Solution
     } deriving (Eq,Show)
 -- @-node:gcross.20100714222047.1668:Solution
 -- @-node:gcross.20100314233604.1668:Types
--- @+node:gcross.20100315191926.2795:Functions
--- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
--- @+at
---  extern "C" void solve(
---      int number_of_qubits, int number_of_operators,
---      int* restrict operator_table, int* restrict values,
---      bool noisy,
---      int* restrict number_of_stabilizers, int* restrict 
---  number_of_gauge_qubits,
---      int* restrict number_of_logical_qubits, int ** restrict 
---  logical_qubit_distances
---  )
--- @-at
--- @@c
-
+-- @+node:gcross.20100728132013.1641:Solvers
 foreign import ccall solve_any ::
     CInt → CInt →
     Ptr CInt → Ptr CInt →
     Bool →
     Ptr CInt → Ptr CInt →
     Ptr CInt → Ptr (Ptr CInt) →
-    IO CInt
+    IO ()
 
-foreign import ccall solve_108 ::
-    CInt → CInt →
-    Ptr CInt → Ptr CInt →
-    Bool →
-    Ptr CInt → Ptr CInt →
-    Ptr CInt → Ptr (Ptr CInt) →
-    IO CInt
-
-solvers = IntMap.fromList
-    [(108,solve_108)
-    ]
+$(let
+    sizes = [4,6,8,12,16,18,24,32,36,48,54,64,72,96,100,108,128,144,150,162,192,200,216,256,288,300,384,400,432,450,576,600,648,864]
+    solverName = ("solve_" ++) . show
+    solverFn = mkName . solverName
+    sizes_and_solvers_list =
+        return .  ListE $
+        [ TupE [LitE (IntegerL size),VarE (solverFn size)]
+        | size ← sizes
+        ]
+  in do
+    solver_type ← [t|CInt → CInt → Ptr CInt → Ptr CInt → Bool → Ptr CInt → Ptr CInt → Ptr CInt → Ptr (Ptr CInt) → IO ()|]
+    solver_map_declaration ← [d| solvers = IntMap.fromList $(sizes_and_solvers_list) |]
+    solver_foreign_import_declarations ← return
+        [ForeignD $
+            ImportF
+                CCall
+                Threadsafe
+                (solverName size)
+                (solverFn size)
+                solver_type
+        | size ← sizes
+        ]
+    return (solver_map_declaration ++ solver_foreign_import_declarations)
+ )
 
 getSolver = fromMaybe solve_any . flip IntMap.lookup solvers . fromIntegral
-
+-- @-node:gcross.20100728132013.1641:Solvers
+-- @+node:gcross.20100315191926.2795:Functions
+-- @+node:gcross.20100728132013.1993:collectDistances
+collectDistances :: [CInt] → [(CInt,Int)]
+collectDistances [] = []
+collectDistances (x:xs) = go x 1 xs
+  where
+    go current_value current_count [] = [(current_value,current_count)]
+    go current_value current_count (next_value:rest_values)
+      | current_value == next_value
+        = go current_value (current_count+1) rest_values
+      | otherwise
+        = (current_value,current_count):go next_value 1 rest_values
+-- @-node:gcross.20100728132013.1993:collectDistances
+-- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 solveForLabelingWithVerbosity :: Bool → ScanConfiguration → LatticeLabeling → IO Solution
 solveForLabelingWithVerbosity verbosity ScanConfiguration{..} labeling =
     withNDArray scanOperatorTable $ \p_operator_table →

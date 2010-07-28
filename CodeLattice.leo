@@ -28,6 +28,8 @@
 </v>
 <v t="gcross.20100727222803.1684"><vh>@path scripts</vh>
 <v t="gcross.20100727222803.1691"><vh>@thin count-labelings.hs</vh></v>
+<v t="gcross.20100728132013.1636"><vh>@thin count-physical-qubits.hs</vh></v>
+<v t="gcross.20100728132013.2004"><vh>@thin count-physical-qubits-for-everything.hs</vh></v>
 <v t="gcross.20100727222803.1685"><vh>@thin scan.hs</vh></v>
 </v>
 </vnodes>
