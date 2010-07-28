@@ -132,35 +132,30 @@ instance Arbitrary Vertex where
 -- @+node:gcross.20100715150143.1840:arbitraryVertexLabeling
 arbitraryVertexLabeling :: Int → Gen VertexLabeling 
 arbitraryVertexLabeling number_of_rays =
-    fmap (
-        canonicalizeVertexLabeling
-        .
-        VertexLabeling
-    )
-    .
-    vectorOf number_of_rays
-    .
-    elements
-    $
-    [1,2,3]
+    fmap (decodeVertexLabeling number_of_rays) $
+        choose (0,computeNumberOfVertexLabelings number_of_rays-1)
 -- @-node:gcross.20100715150143.1840:arbitraryVertexLabeling
--- @+node:gcross.20100715150143.1838:arbitraryLatticeLabeling
-arbitraryLatticeLabeling :: Lattice → Gen LatticeLabeling
-arbitraryLatticeLabeling lattice =
+-- @+node:gcross.20100727151406.1701:arbitraryLatticeLabeling
+arbitraryLatticeLabeling :: Int → Int → Gen LatticeLabeling
+arbitraryLatticeLabeling number_of_orientations =
     fmap LatticeLabeling
     .
-    vectorOf (numberOfOrientationsInLattice lattice)
+    vectorOf number_of_orientations
     .
     arbitraryVertexLabeling
-    .
-    numberOfRaysInLattice
-    $
-    lattice
--- @-node:gcross.20100715150143.1838:arbitraryLatticeLabeling
+-- @-node:gcross.20100727151406.1701:arbitraryLatticeLabeling
+-- @+node:gcross.20100715150143.1838:arbitraryLabelingForLattice
+arbitraryLabelingForLattice :: Lattice → Gen LatticeLabeling
+arbitraryLabelingForLattice =
+    liftA2 arbitraryLatticeLabeling
+        numberOfOrientationsInLattice
+        numberOfRaysInLattice
+-- @-node:gcross.20100715150143.1838:arbitraryLabelingForLattice
 -- @-node:gcross.20100715150143.1839:Generator functions
 -- @-others
 
-main = defaultMain
+main = 
+    defaultMain
     -- @    << Tests >>
     -- @+node:gcross.20100302201317.1388:<< Tests >>
     -- @+others
@@ -479,7 +474,6 @@ main = defaultMain
                     number_of_rays
                 | number_of_rays ← [2..5]
                 ]
-            -- @nonl
             -- @-node:gcross.20100713115329.1577:the correct number of labelings are generated
             -- @+node:gcross.20100713115329.1581:all canonical labelings are generated
             ,testGroup "all canonical labelings are generated"
@@ -491,9 +485,56 @@ main = defaultMain
                 | number_of_rays ← [1..5]
                 ]
             -- @-node:gcross.20100713115329.1581:all canonical labelings are generated
+            -- @+node:gcross.20100727151406.1716:the labelings are generated in sorted order
+            ,testGroup "the labelings are generated in sorted order"
+                [testCase (show number_of_rays) $
+                    let labelings = generateVertexLabelings number_of_rays
+                    in assertEqual
+                        "Were the correct labelings generated?"
+                        labelings
+                        (sort labelings)
+                | number_of_rays ← [1..5]
+                ]
+            -- @-node:gcross.20100727151406.1716:the labelings are generated in sorted order
             -- @-others
             ]
         -- @-node:gcross.20100713115329.1574:generateVertexLabelings
+        -- @+node:gcross.20100727151406.1717:generateLatticeLabelings
+        ,testGroup "generateLatticeLabelings"
+            -- @    @+others
+            -- @+node:gcross.20100727151406.1719:the correct number of labelings are generated
+            [testGroup "the correct number of labelings are generated"
+                [testCase (show number_of_orientations ++ " x " ++ show number_of_rays) $
+                    assertEqual
+                        "Was the correct number of labelings generated?"
+                        (computeNumberOfLatticeLabelings number_of_orientations number_of_rays)
+                    .
+                    genericLength
+                    .
+                    generateLatticeLabelings number_of_orientations
+                    $
+                    number_of_rays
+                | number_of_orientations ← [2..4]
+                , number_of_rays ← [2..4]
+                , number_of_orientations + number_of_rays <= 6
+                ]
+            -- @-node:gcross.20100727151406.1719:the correct number of labelings are generated
+            -- @+node:gcross.20100727151406.1721:the labelings are generated in sorted order
+            ,testGroup "the labelings are generated in sorted order"
+                [testCase (show number_of_orientations ++ " x " ++ show number_of_rays) $
+                    let labelings = generateLatticeLabelings number_of_orientations number_of_rays
+                    in assertEqual
+                        "Were the correct labelings generated?"
+                        labelings
+                        (sort labelings)
+                | number_of_orientations ← [2..4]
+                , number_of_rays ← [2..4]
+                , number_of_orientations + number_of_rays <= 6
+                ]
+            -- @-node:gcross.20100727151406.1721:the labelings are generated in sorted order
+            -- @-others
+            ]
+        -- @-node:gcross.20100727151406.1717:generateLatticeLabelings
         -- @+node:gcross.20100713173607.1602:(|⇆)
         ,testGroup "(reflection operator)"
             -- @    @+others
@@ -510,6 +551,285 @@ main = defaultMain
             -- @-others
             ]
         -- @-node:gcross.20100713173607.1602:(|⇆)
+        -- @+node:gcross.20100727151406.1676:computeNumberOfVertexLabelings
+        ,testGroup "computeNumberOfVertexLabelings"
+            [ testCase (show number_of_rays)
+                .
+                assertEqual
+                    "Does computeNumberOfVertexLabelings agree with the length of generateVertexLabelings?"
+                    (genericLength . generateVertexLabelings $ number_of_rays)
+                .
+                computeNumberOfVertexLabelings
+                $
+                number_of_rays
+            | number_of_rays ← [2..6]
+            ]
+        -- @-node:gcross.20100727151406.1676:computeNumberOfVertexLabelings
+        -- @+node:gcross.20100727151406.1682:encodeVertexLabeling
+        ,testGroup "encodeVertexLabeling"
+            -- @    @+others
+            -- @+node:gcross.20100727151406.1683:examples
+            [testGroup "examples"
+                [ testCase (show example)
+                    .
+                    assertEqual
+                        "Was the encoding correct?"
+                        correct_encoding
+                    .
+                    encodeVertexLabeling
+                    .
+                    VertexLabeling
+                    $
+                    example
+                | (example,correct_encoding) ←
+                    [([1,1],0)
+                    ,([1,2],1)
+                    ,([1,1,1],0)
+                    ,([1,1,2],1)
+                    ,([1,2,1],2)
+                    ,([1,2,2],3)
+                    ,([1,2,3],4)
+                    ]
+                ]
+            -- @-node:gcross.20100727151406.1683:examples
+            -- @+node:gcross.20100727151406.1684:encodes to a number less than the number of vertex labelings
+            ,testProperty "encodes to a number less than the number of vertex labelings" $ do
+                number_of_rays ← choose (2,5)
+                labeling ← arbitraryVertexLabeling number_of_rays
+                return $
+                    encodeVertexLabeling labeling < computeNumberOfVertexLabelings number_of_rays
+            -- @-node:gcross.20100727151406.1684:encodes to a number less than the number of vertex labelings
+            -- @+node:gcross.20100727151406.1685:matches the sequence of generated labelings
+            ,testGroup "matches the sequence of generated labelings"
+                [ testCase (show number_of_rays)
+                    .
+                    assertEqual
+                        "Do the encodings match the sequence of generated labelings?"
+                        [0..computeNumberOfVertexLabelings number_of_rays-1]
+                    .
+                    map encodeVertexLabeling
+                    .
+                    generateVertexLabelings
+                    $
+                    number_of_rays
+                | number_of_rays ← [2..6]
+                ]
+            -- @-node:gcross.20100727151406.1685:matches the sequence of generated labelings
+            -- @+node:gcross.20100727151406.1686:inverse of decoding
+            ,testProperty "inverse of decoding" $ do
+                number_of_rays ← choose (2,5)
+                labeling ← arbitraryVertexLabeling number_of_rays
+                return $
+                    labeling == (decodeVertexLabeling number_of_rays . encodeVertexLabeling) labeling
+            -- @-node:gcross.20100727151406.1686:inverse of decoding
+            -- @-others
+            ]
+        -- @-node:gcross.20100727151406.1682:encodeVertexLabeling
+        -- @+node:gcross.20100727151406.1697:encodeLatticeLabeling
+        ,testGroup "encodeLatticeLabeling"
+            -- @    @+others
+            -- @+node:gcross.20100727151406.1705:examples
+            [testGroup "examples"
+                [ testCase (show example)
+                    .
+                    assertEqual
+                        "Was the encoding correct?"
+                        correct_encoding
+                    .
+                    encodeLatticeLabeling
+                    .
+                    LatticeLabeling
+                    .
+                    map VertexLabeling
+                    $
+                    example
+                | (example,correct_encoding) ←
+                    [([[1,1]],0)
+                    ,([[1,2]],1)
+                    ,([[1,1],[1,1]],0)
+                    ,([[1,1],[1,2]],1)
+                    ,([[1,2],[1,1]],2)
+                    ,([[1,2],[1,2]],3)
+                    ,([[1,1,1]],0)
+                    ,([[1,1,2]],1)
+                    ,([[1,2,1]],2)
+                    ,([[1,2,2]],3)
+                    ,([[1,2,3]],4)
+                    ,([[1,2,2],[1,2,1]],3*5+2)
+                    ,([[1,1],[1,1],[1,1]],0)
+                    ,([[1,1],[1,1],[1,2]],1)
+                    ,([[1,1],[1,2],[1,1]],2)
+                    ,([[1,1],[1,2],[1,2]],3)
+                    ,([[1,2],[1,1],[1,1]],4)
+                    ,([[1,2],[1,1],[1,2]],5)
+                    ,([[1,2],[1,2],[1,1]],6)
+                    ,([[1,2],[1,2],[1,2]],7)
+                    ]
+                ]
+            -- @-node:gcross.20100727151406.1705:examples
+            -- @+node:gcross.20100727151406.1699:encodes to a number less than the number of vertex labelings
+            ,testProperty "encodes to a number less than the number of lattice labelings" $ do
+                number_of_rays ← choose (2,5)
+                number_of_orientations ← choose (2,5)
+                labeling ← arbitraryLatticeLabeling number_of_orientations number_of_rays
+                return $
+                    encodeLatticeLabeling labeling < computeNumberOfLatticeLabelings number_of_orientations number_of_rays
+            -- @-node:gcross.20100727151406.1699:encodes to a number less than the number of vertex labelings
+            -- @+node:gcross.20100727151406.1710:matches the sequence of generated labelings
+            ,testGroup "matches the sequence of generated labelings"
+                [ testCase (show number_of_orientations ++ " x " ++ show number_of_rays)
+                    .
+                    assertEqual
+                        "Do the encodings match the sequence of generated labelings?"
+                        [0..computeNumberOfLatticeLabelings number_of_orientations number_of_rays-1]
+                    .
+                    map encodeLatticeLabeling
+                    .
+                    generateLatticeLabelings number_of_orientations
+                    $
+                    number_of_rays
+                | number_of_orientations ← [1..4]
+                , number_of_rays ← [2..4]
+                , number_of_orientations + number_of_rays <= 6
+                ]
+            -- @-node:gcross.20100727151406.1710:matches the sequence of generated labelings
+            -- @+node:gcross.20100727151406.1703:inverse of decoding
+            ,testProperty "inverse of decoding" $ do
+                number_of_rays ← choose (2,5)
+                number_of_orientations ← choose (2,5)
+                labeling ← arbitraryLatticeLabeling number_of_orientations number_of_rays
+                return $
+                    labeling == (decodeLatticeLabeling number_of_orientations number_of_rays . encodeLatticeLabeling) labeling
+            -- @-node:gcross.20100727151406.1703:inverse of decoding
+            -- @-others
+            ]
+        -- @-node:gcross.20100727151406.1697:encodeLatticeLabeling
+        -- @+node:gcross.20100727151406.1692:decodeVertexLabeling
+        ,testGroup "decodeVertexLabeling"
+            -- @    @+others
+            -- @+node:gcross.20100727151406.1693:examples
+            [testGroup "examples"
+                [ testCase (show example)
+                    .
+                    assertEqual
+                        "Was the decoding correct?"
+                        (VertexLabeling correct_decoding)
+                    .
+                    decodeVertexLabeling (length correct_decoding)
+                    $
+                    example
+                | (correct_decoding,example) ←
+                    [([1,1],0)
+                    ,([1,2],1)
+                    ,([1,1,1],0)
+                    ,([1,1,2],1)
+                    ,([1,2,1],2)
+                    ,([1,2,2],3)
+                    ,([1,2,3],4)
+                    ]
+                ]
+            -- @-node:gcross.20100727151406.1693:examples
+            -- @+node:gcross.20100727151406.1694:all decodings result in a canonical labeling
+            ,testProperty "all decodings result in a canonical labeling" $ do
+                number_of_rays ← choose (2,5)
+                encoding ← choose (0,computeNumberOfVertexLabelings number_of_rays-1)
+                let labeling = decodeVertexLabeling number_of_rays encoding
+                return $
+                    labeling == canonicalizeVertexLabeling labeling
+            -- @-node:gcross.20100727151406.1694:all decodings result in a canonical labeling
+            -- @+node:gcross.20100727151406.1695:matches the sequence of generated labelings
+            ,testGroup "matches the sequence of generated labelings"
+                [ testCase (show number_of_rays)
+                    .
+                    assertEqual
+                        "Do the encodings match the sequence of generated labelings?"
+                        (generateVertexLabelings number_of_rays)
+                    .
+                    map (decodeVertexLabeling number_of_rays)
+                    $
+                    [0..computeNumberOfVertexLabelings number_of_rays-1]
+                | number_of_rays ← [2..6]
+                ]
+            -- @-node:gcross.20100727151406.1695:matches the sequence of generated labelings
+            -- @+node:gcross.20100727151406.1696:inverse of encoding
+            ,testProperty "inverse of encoding" $ do
+                number_of_rays ← choose (2,5)
+                encoding ← choose (0,computeNumberOfVertexLabelings number_of_rays-1)
+                return $
+                    encoding == (encodeVertexLabeling . decodeVertexLabeling number_of_rays) encoding
+            -- @-node:gcross.20100727151406.1696:inverse of encoding
+            -- @-others
+            ]
+        -- @-node:gcross.20100727151406.1692:decodeVertexLabeling
+        -- @+node:gcross.20100727151406.1706:decodeLatticeLabeling
+        ,testGroup "decodeLatticeLabeling"
+            -- @    @+others
+            -- @+node:gcross.20100727151406.1708:examples
+            [testGroup "examples"
+                [ testCase (show example)
+                    .
+                    assertEqual
+                        "Was the decoding correct?"
+                        correct_decoding
+                    .
+                    map unwrapVertexLabeling
+                    .
+                    unwrapLatticeLabeling
+                    .
+                    decodeLatticeLabeling (length correct_decoding) ((length . head) correct_decoding)
+                    $
+                    example
+                | (correct_decoding,example) ←
+                    [([[1,1]],0)
+                    ,([[1,2]],1)
+                    ,([[1,1],[1,1]],0)
+                    ,([[1,1],[1,2]],1)
+                    ,([[1,2],[1,1]],2)
+                    ,([[1,2],[1,2]],3)
+                    ,([[1,1,1]],0)
+                    ,([[1,1,2]],1)
+                    ,([[1,2,1]],2)
+                    ,([[1,2,2]],3)
+                    ,([[1,2,3]],4)
+                    ,([[1,2,2],[1,2,1]],3*5+2)
+                    ,([[1,1],[1,1],[1,1]],0)
+                    ,([[1,1],[1,1],[1,2]],1)
+                    ,([[1,1],[1,2],[1,1]],2)
+                    ,([[1,1],[1,2],[1,2]],3)
+                    ,([[1,2],[1,1],[1,1]],4)
+                    ,([[1,2],[1,1],[1,2]],5)
+                    ,([[1,2],[1,2],[1,1]],6)
+                    ,([[1,2],[1,2],[1,2]],7)
+                    ]
+                ]
+            -- @-node:gcross.20100727151406.1708:examples
+            -- @+node:gcross.20100727151406.1713:matches the sequence of generated labelings
+            ,testGroup "matches the sequence of generated labelings"
+                [ testCase (show number_of_orientations ++ " x " ++ show number_of_rays)
+                    .
+                    assertEqual
+                        "Do the decodings match the sequence of generated labelings?"
+                        (generateLatticeLabelings number_of_orientations number_of_rays)
+                    .
+                    map (decodeLatticeLabeling number_of_orientations number_of_rays)
+                    $
+                    [0..computeNumberOfLatticeLabelings number_of_orientations number_of_rays-1]
+                | number_of_orientations ← [1..4]
+                , number_of_rays ← [2..4]
+                , number_of_orientations + number_of_rays <= 6
+                ]
+            -- @-node:gcross.20100727151406.1713:matches the sequence of generated labelings
+            -- @+node:gcross.20100727151406.1715:inverse of encoding
+            ,testProperty "inverse of encoding" $ do
+                number_of_orientations ← choose (2,5)
+                number_of_rays ← choose (2,5)
+                encoding ← choose (0,computeNumberOfLatticeLabelings number_of_orientations number_of_rays-1)
+                return $
+                    encoding == (encodeLatticeLabeling . decodeLatticeLabeling number_of_orientations number_of_rays) encoding
+            -- @-node:gcross.20100727151406.1715:inverse of encoding
+            -- @-others
+            ]
+        -- @-node:gcross.20100727151406.1706:decodeLatticeLabeling
         -- @-others
         ]
     -- @-node:gcross.20100307133316.1311:Functions
@@ -914,7 +1234,7 @@ main = defaultMain
         ]
     -- @-node:gcross.20100726103932.1700:Periodicities
     -- @+node:gcross.20100307133316.1312:Tilings
-    ,testGroup "Tilings"
+    ,testGroup "Tilings" . const [] $
         [ testGroup tilingName
             .
             catMaybes
@@ -1255,7 +1575,7 @@ main = defaultMain
                     -- @-node:gcross.20100726103932.1791:expected symmetries
                     -- @+node:gcross.20100726103932.1755:symmetries preserve code
                     ,if radius > 1 then Nothing else Just . testProperty "symmetries preserve code" $
-                        arbitraryLatticeLabeling lattice
+                        arbitraryLabelingForLattice lattice
                         >>=
                         \labeling → return $
                             let (first_solution:rest_solutions) =
@@ -1265,6 +1585,7 @@ main = defaultMain
                                         permuteLatticeLabeling labeling
                                     ) tilingSymmetries
                             in all (== first_solution) rest_solutions
+                    -- @nonl
                     -- @-node:gcross.20100726103932.1755:symmetries preserve code
                     -- @-others
                     ]

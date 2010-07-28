@@ -96,6 +96,14 @@ canonicalizeVertexLabeling (VertexLabeling old_labeling) =
     $
     old_labeling
 -- @-node:gcross.20100727110906.1664:canonicalizeVertexLabeling
+-- @+node:gcross.20100727151406.1711:computeNumberOfLatticeLabelings
+computeNumberOfLatticeLabelings number_of_orientations number_of_rays =
+    (computeNumberOfVertexLabelings number_of_rays)^number_of_orientations
+-- @-node:gcross.20100727151406.1711:computeNumberOfLatticeLabelings
+-- @+node:gcross.20100727151406.1652:computeNumberOfVertexLabelings
+computeNumberOfVertexLabelings :: Int → Integer
+computeNumberOfVertexLabelings = (+ 1) . (`div` 2) . (\x → x-1) . (3^) . toInteger . (\x → x-1)
+-- @-node:gcross.20100727151406.1652:computeNumberOfVertexLabelings
 -- @+node:gcross.20100727110906.1653:flattenLatticeLabeling
 flattenLatticeLabeling :: LatticeLabeling → [Int]
 flattenLatticeLabeling =
@@ -147,6 +155,62 @@ permuteVertexLabeling (VertexLabeling old_labeling) =
     .
     unwrapVertexLabelingPermutation
 -- @-node:gcross.20100727110906.1668:permuteVertexLabeling
+-- @+node:gcross.20100727151406.1651:decodeLatticeLabeling
+decodeLatticeLabeling :: Int → Int → Integer → LatticeLabeling
+decodeLatticeLabeling number_of_orientations number_of_rays =
+    LatticeLabeling . factor number_of_orientations []
+  where
+    number_of_vertex_labelings = computeNumberOfVertexLabelings number_of_rays
+    factor 0 accum _ = accum
+    factor n accum seed =
+        factor (n-1)
+               (decodeVertexLabeling number_of_rays (seed `mod` number_of_vertex_labelings):accum)
+               (seed `div` number_of_vertex_labelings)
+-- @-node:gcross.20100727151406.1651:decodeLatticeLabeling
+-- @+node:gcross.20100727151406.1647:decodeVertexLabeling
+decodeVertexLabeling :: Int → Integer → VertexLabeling
+decodeVertexLabeling number_of_rays 0 = VertexLabeling (replicate number_of_rays 1)
+decodeVertexLabeling number_of_rays seed = VertexLabeling (go 0 1 (seed-1))
+  where
+    go n offset seed
+      | seed < offset = replicate (number_of_rays-n-1) 1 ++ (2:factor n seed [])
+      | otherwise     = go (n+1) (offset*3) (seed - offset)
+    factor 0 _ accum = accum
+    factor n seed accum = factor (n-1) (seed `div` 3) (fromInteger (seed `mod` 3 + 1):accum)
+-- @-node:gcross.20100727151406.1647:decodeVertexLabeling
+-- @+node:gcross.20100727151406.1654:encodeLatticeLabeling
+encodeLatticeLabeling :: LatticeLabeling → Integer
+encodeLatticeLabeling (LatticeLabeling labeling) =
+    go 0 labeling
+  where
+    go accum [] = accum
+    go accum (x:xs) =
+        go (accum * number_of_vertex_labelings + encodeVertexLabeling x)
+           xs
+
+    number_of_vertex_labelings =
+        computeNumberOfVertexLabelings
+        .
+        length
+        .
+        unwrapVertexLabeling
+        .        
+        head
+        $
+        labeling
+-- @-node:gcross.20100727151406.1654:encodeLatticeLabeling
+-- @+node:gcross.20100727151406.1649:encodeVertexLabeling
+encodeVertexLabeling :: VertexLabeling → Integer
+encodeVertexLabeling (VertexLabeling labeling) =
+    case dropWhile (== 1) labeling of
+        [] → 0
+        (2:rest) → go 1 1 0 rest
+  where
+    go total_offset _ accum [] =
+        accum + total_offset
+    go total_offset next_offset accum (x:xs) =  
+        go (total_offset+next_offset) (next_offset*3) (accum*3 + toInteger (x-1)) xs
+-- @-node:gcross.20100727151406.1649:encodeVertexLabeling
 -- @-node:gcross.20100723201654.1706:Functions
 -- @-others
 -- @-node:gcross.20100723201654.1698:@thin Labeling.hs
