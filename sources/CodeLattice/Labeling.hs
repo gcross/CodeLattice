@@ -49,6 +49,16 @@ newtype VertexClass = VertexClass { unwrapVertexClass :: [ApproximateDouble] }
 newtype VertexClasses = VertexClasses { unwrapVertexClasses :: [VertexClass] }
 -- @-node:gcross.20100723201654.1720:VertexClass(es)
 -- @-node:gcross.20100723201654.1714:Types
+-- @+node:gcross.20100727222803.1699:Instances
+-- @+node:gcross.20100727222803.1700:Show VertexLabelingPermutation
+instance Show VertexLabelingPermutation where
+    show = show . unwrapVertexLabelingPermutation
+-- @-node:gcross.20100727222803.1700:Show VertexLabelingPermutation
+-- @+node:gcross.20100727222803.1702:Show LatticeLabelingPermutation
+instance Show LatticeLabelingPermutation where
+    show = show . unwrapLatticeLabelingPermutation
+-- @-node:gcross.20100727222803.1702:Show LatticeLabelingPermutation
+-- @-node:gcross.20100727222803.1699:Instances
 -- @+node:gcross.20100723201654.1706:Functions
 -- @+node:gcross.20100723201654.1708:(??→?)
 (??→?) :: VertexClasses → VertexClass → Maybe (Int,VertexLabelingPermutation)

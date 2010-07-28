@@ -26,11 +26,16 @@
 <v t="gcross.20100302201317.1269"><vh>@path tests</vh>
 <v t="gcross.20100302201317.1270"><vh>@thin test.hs</vh></v>
 </v>
+<v t="gcross.20100727222803.1684"><vh>@path scripts</vh>
+<v t="gcross.20100727222803.1691"><vh>@thin count-labelings.hs</vh></v>
+<v t="gcross.20100727222803.1685"><vh>@thin scan.hs</vh></v>
+</v>
 </vnodes>
 <tnodes>
 <t tx="gcross.20100302164430.1231"></t>
 <t tx="gcross.20100302164430.1232"></t>
 <t tx="gcross.20100302201317.1269"></t>
 <t tx="gcross.20100308112554.1291"></t>
+<t tx="gcross.20100727222803.1684"></t>
 </tnodes>
 </leo_file>

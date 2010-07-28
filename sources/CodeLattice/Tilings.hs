@@ -13,6 +13,7 @@ module CodeLattice.Tilings where
 
 -- @<< Import needed modules >>
 -- @+node:gcross.20100308112554.1293:<< Import needed modules >>
+import Control.Applicative
 import Control.Monad
 
 import Data.List
@@ -47,6 +48,7 @@ data Tiling = Tiling
     ,   tilingPeriodicity :: Periodicity
     ,   tilingNumberOfOrientations :: Int
     ,   tilingNumberOfRays :: Int
+    ,   tilingNumberOfLabelings :: Integer
     ,   tilingNumberOfSymmetries :: Int
     ,   tilingTranslationSymmetryDistance :: ApproximateDouble
     ,   tilingSteps :: [Step]
@@ -279,6 +281,7 @@ makeTiling
             periodicity
             number_of_orientations
             (length tilingSteps)
+            (computeNumberOfLatticeLabelings tilingNumberOfOrientations tilingNumberOfRays)
             number_of_symmetries
             translation_symmetry_distance
             (tilingToSteps tiling)
@@ -389,6 +392,13 @@ computeSymmetryTransformationsFor tiling radius lattice =
         (id:map (|⇆) [0,15..90])
         (map (+) [0,15..360])
 -- @-node:gcross.20100723201654.1734:computeSymmetryTransformationsFor
+-- @+node:gcross.20100727222803.1690:generateLatticeLabelingsForTiling
+generateLatticeLabelingsForTiling :: Tiling → [LatticeLabeling]
+generateLatticeLabelingsForTiling =
+    liftA2 generateLatticeLabelings
+        tilingNumberOfOrientations
+        tilingNumberOfRays
+-- @-node:gcross.20100727222803.1690:generateLatticeLabelingsForTiling
 -- @+node:gcross.20100726103932.1756:generatePeriodicLatticeForTiling
 generatePeriodicLatticeForTiling :: Tiling → Int → Lattice
 generatePeriodicLatticeForTiling tiling@Tiling{..} radius =
