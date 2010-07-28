@@ -83,7 +83,7 @@ foreign import ccall solve_any ::
     IO ()
 
 $(let
-    sizes = [4,6,8,12,16,18,24,32,36,48,54,64,72,96,100,108,128,144,150]
+    sizes = [4,6,8,12,16,18,24,32,36,48,54,64,72,96,100,108,128,144,150,162,192,200,216,256,288,300,384,400,432,450,576,600,648,864]
     solverName = ("solve_" ++) . show
     solverFn = mkName . solverName
     sizes_and_solvers_list =
