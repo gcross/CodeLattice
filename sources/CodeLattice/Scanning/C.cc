@@ -109,7 +109,7 @@ template<int N> void solve_fixed(
 ) {
     solve<static_quantum_operator<N>
          ,static_vector<qubit<static_quantum_operator<N> >,N>
-         ,static_vector<static_quantum_operator<N>,N*(N-1)>
+         ,static_vector<static_quantum_operator<N>,N*10>
          ,static_vector<size_t,N>
          >
     (
