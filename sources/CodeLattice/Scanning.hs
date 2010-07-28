@@ -46,6 +46,9 @@ import System.IO.Unsafe
 import CodeLattice
 import CodeLattice.Discrete
 import CodeLattice.Labeling
+
+import Debug.Trace
+-- @nonl
 -- @-node:gcross.20100314233604.1667:<< Import needed modules >>
 -- @nl
 
@@ -82,7 +85,7 @@ data Solution = Solution
 -- @-at
 -- @@c
 
-foreign import ccall solve ::
+foreign import ccall solve_any ::
     CInt → CInt →
     Ptr CInt → Ptr CInt →
     Bool →
@@ -90,16 +93,30 @@ foreign import ccall solve ::
     Ptr CInt → Ptr (Ptr CInt) →
     IO CInt
 
+foreign import ccall solve_108 ::
+    CInt → CInt →
+    Ptr CInt → Ptr CInt →
+    Bool →
+    Ptr CInt → Ptr CInt →
+    Ptr CInt → Ptr (Ptr CInt) →
+    IO CInt
+
+solvers = IntMap.fromList
+    [(108,solve_108)
+    ]
+
+getSolver = fromMaybe solve_any . flip IntMap.lookup solvers . fromIntegral
+
 solveForLabelingWithVerbosity :: Bool → ScanConfiguration → LatticeLabeling → IO Solution
-solveForLabelingWithVerbosity verbosity config labeling =
-    withNDArray (scanOperatorTable config) $ \p_operator_table →
+solveForLabelingWithVerbosity verbosity ScanConfiguration{..} labeling =
+    withNDArray scanOperatorTable $ \p_operator_table →
     withArray ((map fromIntegral . flattenLatticeLabeling) labeling) $ \p_values →
     alloca $ \p_number_of_stabilizers →
     alloca $ \p_number_of_gauge_qubits →
     alloca $ \p_number_of_logical_qubits →
     alloca $ \p_p_logical_qubit_distances → do
-        solve
-            (scanNumberOfQubits config) (scanNumberOfOperators config)
+        getSolver scanNumberOfQubits
+            scanNumberOfQubits scanNumberOfOperators
             p_operator_table p_values
             verbosity
             p_number_of_stabilizers p_number_of_gauge_qubits
