@@ -68,7 +68,7 @@ getArguments = do
 main = do
     (tiling@Tiling{..},radius) ← getArguments
     let solveFor =
-            solveForLabeling
+            solveForLabelingWithVerbosity False
             .
             latticeToScanConfiguration
             .
@@ -83,11 +83,13 @@ main = do
                 map (permuteLatticeLabeling labeling)
                 $
                 tilingSymmetries
-        in if minimal_labeling < labeling then return () else putStrLn $
-            let solution = solveFor labeling
-            in case solutionLogicalQubitDistances solution of
-                [] → printf "%i -> none" n
-                distances →
-                     printf "%i -> %i" n (fromIntegral . maximum $ distances :: Int)
+        in if minimal_labeling < labeling then return () else do
+            solution <- solveFor labeling
+            case solutionLogicalQubitDistances solution of
+                [] → return ()
+                distances@(d:_) → if d <= 2 then return () else putStrLn $
+                    show n
+                    ++ " -> " ++
+                    show distances
 -- @-node:gcross.20100727222803.1685:@thin scan.hs
 -- @-leo
