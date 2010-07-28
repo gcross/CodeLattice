@@ -15,8 +15,11 @@ import Prelude hiding (catch)
 
 import Control.Exception
 import Control.Monad
+import Control.Monad.Trans
 
 import Data.List
+
+import Database.Enumerator
 
 import System.Environment
 import System.Exit
@@ -24,6 +27,7 @@ import System.Exit
 import Text.Printf
 import Text.Read
 
+import CodeLattice.Database
 import CodeLattice.Discrete
 import CodeLattice.Labeling
 import CodeLattice.Scanning
@@ -76,20 +80,30 @@ main = do
             $
             generatePeriodicLatticeForTiling tiling radius
         labelings = generateLatticeLabelingsForTiling tiling
-    forM_ (zip [(0::Int)..] labelings) $ \(n,labeling) →
-        let minimal_labeling =
-                minimum
-                .
-                map (permuteLatticeLabeling labeling)
-                $
-                tilingSymmetries
-        in if minimal_labeling < labeling then return () else do
-            solution <- solveFor labeling
-            case solutionLogicalQubitDistances solution of
-                [] → return ()
-                distances@(d:_) → if d <= 2 then return () else putStrLn $
-                    show n
-                    ++ " -> " ++
-                    show distances
+    connection ← makeConnection "scanner"
+    withSession connection $ do
+        has_been_scanned ← checkIfScanned tilingName radius
+        when has_been_scanned . liftIO $ do
+            putStrLn "The lattice for this tiling and radius has already been completely scanned."
+            exitSuccess
+        forM_ (zip [(0::Integer)..] labelings) $ \(n,labeling) →
+            let minimal_labeling =
+                    minimum
+                    .
+                    map (permuteLatticeLabeling labeling)
+                    $
+                    tilingSymmetries
+            in if minimal_labeling < labeling then return () else do
+                solution <- liftIO $ solveFor labeling
+                case solutionLogicalQubitDistances solution of
+                    [] → return ()
+                    distances@(d:_) → if d <= 2 then return () else do
+                        liftIO . putStrLn $
+                            show n
+                            ++ " -> " ++
+                            (show . collectDistances) distances
+                        withTransaction ReadUncommitted $
+                            storeSolution tilingName radius n solution
+        markAsScanned tilingName radius
 -- @-node:gcross.20100727222803.1685:@thin scan.hs
 -- @-leo

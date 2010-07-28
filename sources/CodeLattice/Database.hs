@@ -22,6 +22,7 @@ import Control.Monad.Trans
 
 import Data.ConfigFile
 import qualified Data.Foldable as Fold
+import Data.Maybe
 import Data.Sequence (Seq,(|>))
 import qualified Data.Sequence as Seq
 import Data.UUID
@@ -34,7 +35,10 @@ import System.Exit
 import System.IO.Unsafe
 import System.Random
 
-import CodeLattice.Discrete
+import Text.Printf
+
+import CodeLattice.Tilings
+import CodeLattice.Scanning
 -- @-node:gcross.20100312175547.1385:<< Import needed modules >>
 -- @nl
 
@@ -69,6 +73,20 @@ fetch4 a b c d accum = result' ((a, b, c, d):accum) --'
 -- @nonl
 -- @-node:gcross.20100312175547.1825:fetchX
 -- @-node:gcross.20100312175547.1823:Enumerators
+-- @+node:gcross.20100728132013.1988:sql wrappers
+-- @+node:gcross.20100728132013.1989:query
+query stmt accum init message = 
+    catchDB (
+            doQuery stmt accum init
+          ) (reportRethrowMsg $ message ++ "\n")
+-- @-node:gcross.20100728132013.1989:query
+-- @+node:gcross.20100728132013.1990:modify
+modify stmt message = catchDB (
+        execDML stmt
+    ) (reportRethrowMsg $ message ++ "\n")
+-- @nonl
+-- @-node:gcross.20100728132013.1990:modify
+-- @-node:gcross.20100728132013.1988:sql wrappers
 -- @+node:gcross.20100312175547.1817:Functions
 -- @+node:gcross.20100312175547.1819:makeConnection
 makeConnection heading = do
@@ -120,6 +138,50 @@ insertRows name statement type_ids rows =
             " rows."
 -- @nonl
 -- @-node:gcross.20100312175547.1833:insertRows
+-- @+node:gcross.20100728132013.1642:storeSolution
+storeSolution :: String → Int → Integer → Solution → (forall mark. DBM mark Database.PostgreSQL.Enumerator.Session ())
+storeSolution tiling_name radius labeling_number Solution{..} = do
+    modify (cmdbind
+        "insert into codes (tiling,radius,labeling,number_of_stabilizers,number_of_gauge_qubits,number_of_logical_qubits) values (?,?,?::bigint,?::integer,?::integer,?::integer)"
+        [bindP tiling_name
+        ,bindP radius
+        ,bindP labeling_number
+        ,bindP solutionNumberOfStabilizers
+        ,bindP solutionNumberOfGaugeQubits
+        ,bindP solutionNumberOfLogicalQubits
+        ]) "Error writing code information into codes table:"
+    let collected_distances = collectDistances solutionLogicalQubitDistances
+    forM_ collected_distances $ \(distance,number_of_qubits) →
+        modify (cmdbind
+            "insert into distances (tiling,radius,labeling,distance,number_of_qubits) values (?,?,?::bigint,?::integer,?)"
+            [bindP tiling_name
+            ,bindP radius
+            ,bindP labeling_number
+            ,bindP distance
+            ,bindP number_of_qubits
+            ]) "Error writing distance information into distance table:"
+-- @-node:gcross.20100728132013.1642:storeSolution
+-- @+node:gcross.20100728132013.1994:checkIfScanned
+checkIfScanned :: String → Int → (forall mark. DBM mark Database.PostgreSQL.Enumerator.Session Bool)
+checkIfScanned tiling_name radius =
+    fmap isJust $ query
+        (sql $ (printf "select 1 from scanned where tiling = '%s' and radius = %i" tiling_name radius))
+        get1 (Nothing :: Maybe Int)
+        "Error fetching record from the scanned table:"
+-- @-node:gcross.20100728132013.1994:checkIfScanned
+-- @+node:gcross.20100728132013.1996:markAsScanned
+markAsScanned :: String → Int → (forall mark. DBM mark Database.PostgreSQL.Enumerator.Session ())
+markAsScanned tiling_name radius =
+    modify (cmdbind
+        "insert into scanned (tiling,radius) values (?,?)"
+        [bindP tiling_name
+        ,bindP radius
+        ]) "Error marking lattice as having been completely scanned:"
+    >>=
+    \number_of_rows_inserted →
+        unless (number_of_rows_inserted == 1) . error $
+            printf "Wrong number of rows was inserted! (%i /= 1)" number_of_rows_inserted
+-- @-node:gcross.20100728132013.1996:markAsScanned
 -- @-node:gcross.20100312175547.1817:Functions
 -- @-others
 -- @-node:gcross.20100312175547.1384:@thin Database.hs
