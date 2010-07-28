@@ -26,34 +26,11 @@
 <v t="gcross.20100302201317.1269"><vh>@path tests</vh>
 <v t="gcross.20100302201317.1270"><vh>@thin test.hs</vh></v>
 </v>
-<v t="gcross.20100312220352.1840"><vh>@path scripts</vh>
-<v t="gcross.20100312220352.1841"><vh>@thin generate-lattices.hs</vh></v>
-<v t="gcross.20100312220352.1851"><vh>@thin draw-lattice.hs</vh></v>
-<v t="gcross.20100316133702.1651"><vh>@thin show-lattice-edges-with-labelings.hs</vh></v>
-<v t="gcross.20100315191926.3207"><vh>@thin scan-lattice.hs</vh></v>
-<v t="gcross.20100316133702.1488"><vh>@thin solve-lattice-for-labeling.hs</vh></v>
-</v>
-<v t="gcross.20100316185958.1472"><vh>@path results</vh>
-<v t="gcross.20100316185958.1473"><vh>@path truncated hextille</vh>
-<v t="gcross.20100316190653.1559"><vh>@auto winning-labeling</vh></v>
-<v t="gcross.20100316185958.1474"><vh>@auto dodecagon</vh></v>
-<v t="gcross.20100316185958.1475"><vh>@auto single-dodecagon-input</vh></v>
-<v t="gcross.20100316185958.1476"><vh>@thin TruncatedHextille.hs</vh></v>
-<v t="gcross.20100316190653.1508"><vh>@thin build-tilted-rectangular-lattice.hs</vh></v>
-<v t="gcross.20100316190653.1542"><vh>@thin build-rectangular-lattice.hs</vh></v>
-<v t="gcross.20100316190653.1551"><vh>@thin build-uneven-rectangular-lattice.hs</vh></v>
-<v t="gcross.20100316190653.1526"><vh>@thin build-hexagonal-lattice.hs</vh></v>
-<v t="gcross.20100316190653.1534"><vh>@thin build-diamond-lattice.hs</vh></v>
-</v>
-</v>
 </vnodes>
 <tnodes>
 <t tx="gcross.20100302164430.1231"></t>
 <t tx="gcross.20100302164430.1232"></t>
 <t tx="gcross.20100302201317.1269"></t>
 <t tx="gcross.20100308112554.1291"></t>
-<t tx="gcross.20100312220352.1840"></t>
-<t tx="gcross.20100316185958.1472"></t>
-<t tx="gcross.20100316185958.1473"></t>
 </tnodes>
 </leo_file>
