@@ -38,14 +38,15 @@ import CodeLattice.Tilings
 -- @+others
 -- @+node:gcross.20100727222803.1688:Functions
 -- @+node:gcross.20100727222803.1689:getArguments
-getArguments :: IO (Tiling,Int)
+getArguments :: IO (Tiling,Int,Integer,Integer)
 getArguments = do
     args ← getArgs
-    (tiling_name,radius_as_string) ←
+    (tiling_name,radius_as_string,maybe_skip_as_string,maybe_offset_as_string) ←
         case args of
-            [x,y] → return (x,y)
+            [x,y] → return (x,y,Nothing,Nothing)
+            [x,y,z,w] → return (x,y,Just z,Just w)
             _ → do
-                putStrLn "Usage:  scan <tiling> <radius>"
+                putStrLn "Usage:  scan <tiling> <radius> [<skip> <offset>]"
                 exitFailure
     tiling ←
         case find ((== tiling_name) . tilingName) tilings of
@@ -57,20 +58,52 @@ getArguments = do
     radius ←
         case reads radius_as_string of
             ((radius,_):_)
-              | radius > 0 → return radius
-              | otherwise → do
+              | radius <= 0 → do
                     putStrLn "The radius must be greater than zero."
                     exitFailure
+              | otherwise → return radius
             _ → do
                 putStrLn "The radius must be an integer."
                 exitFailure
-    return (tiling,radius)
+    skip ←
+        case fmap reads maybe_skip_as_string of
+            Nothing → return 1
+            Just ((skip,_):_)
+              | skip <= 0 → do
+                    putStrLn "The skip must be greater than zero."
+                    exitFailure
+              | otherwise → return skip
+            _ → do
+                putStrLn "The skip must be an integer."
+                exitFailure
+    offset ←
+        case fmap reads maybe_offset_as_string of
+            Nothing → return 1
+            Just ((offset,_):_)
+              | offset <= 0 → do
+                    putStrLn "The offset must be greater than zero."
+                    exitFailure
+              | offset >= skip → do
+                    putStrLn "The offset must be less than the skip."
+                    exitFailure
+              | otherwise → return skip
+            _ → do
+                putStrLn "The offset must be an integer."
+                exitFailure
+    return (tiling,radius,skip,offset)
 -- @-node:gcross.20100727222803.1689:getArguments
+-- @+node:gcross.20100728191908.1636:skipEvery
+skipEvery :: Int → [a] → [a]
+skipEvery n = unfoldr go
+  where
+    go [] = Nothing
+    go (x:xs) = Just (x,drop (n-1) xs)
+-- @-node:gcross.20100728191908.1636:skipEvery
 -- @-node:gcross.20100727222803.1688:Functions
 -- @-others
 
 main = do
-    (tiling@Tiling{..},radius) ← getArguments
+    (tiling@Tiling{..},radius,skip,offset) ← getArguments
     let solveFor =
             solveForLabelingWithVerbosity False
             .
@@ -79,15 +112,16 @@ main = do
             discretizeLattice
             $
             generatePeriodicLatticeForTiling tiling radius
-        labelings = generateLatticeLabelingsForTiling tiling
+        start = 1
     connection ← makeConnection "scanner"
     withSession connection $ do
         has_been_scanned ← checkIfScanned tilingName radius
         when has_been_scanned . liftIO $ do
             putStrLn "The lattice for this tiling and radius has already been completely scanned."
             exitSuccess
-        forM_ (zip [(0::Integer)..] labelings) $ \(n,labeling) →
-            let minimal_labeling =
+        forM_ [start,start+skip..tilingNumberOfLabelings] $ \n →
+            let labeling = decodeLatticeLabeling tilingNumberOfOrientations tilingNumberOfRays n
+                minimal_labeling =
                     minimum
                     .
                     map (permuteLatticeLabeling labeling)
