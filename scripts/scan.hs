@@ -137,17 +137,17 @@ main = do
                     tilingSymmetries
                 checkpoint = setCheckpoint tilingName radius skip offset (n+skip)
             when (minimal_labeling >= labeling) $ do
-                counter ← liftIO $ readIORef counter_ref
-                if counter == 100
-                    then do
-                        checkpoint
-                        liftIO $ do
-                            putStrLn ("Examining " ++ show n ++ "...")
-                            writeIORef counter_ref 0
-                    else liftIO $ writeIORef counter_ref (counter+1)
                 solution <- liftIO $ solveFor labeling
                 case solutionLogicalQubitDistances solution of
-                    [] → return ()
+                    [] → do
+                        counter ← liftIO $ readIORef counter_ref
+                        if counter == 100
+                            then do
+                                  checkpoint
+                                  liftIO $ do
+                                      putStrLn ("Examining " ++ show (n+skip) ++ "...")
+                                      writeIORef counter_ref 0
+                            else liftIO $ writeIORef counter_ref (counter+1)
                     distances@(d:_) → if d <= 2 then return () else do
                         liftIO . putStrLn $
                             show n
