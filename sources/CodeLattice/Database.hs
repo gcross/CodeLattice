@@ -181,6 +181,8 @@ checkIfSkipperScanned tiling_name radius skip offset =
 -- @+node:gcross.20100728132013.1996:markAsScanned
 markAsScanned :: String → Int → (forall mark. DBM mark Database.PostgreSQL.Enumerator.Session ())
 markAsScanned tiling_name radius =
+    modify (sql $ printf "delete from checkpoints where tiling = '%s' and radius = %i and skip = 1 and \"offset\" = 0" tiling_name radius) "Error deleting checkpoints:"
+    >>
     modify (sql $ printf "insert into scanned (tiling,radius) values ('%s',%i)" tiling_name radius) "Error marking lattice as having been completely scanned:"
     >>=
     \number_of_rows_inserted →
