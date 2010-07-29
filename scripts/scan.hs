@@ -17,7 +17,9 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
 
+import Data.IORef
 import Data.List
+import Data.Maybe
 
 import Database.Enumerator
 
@@ -80,28 +82,19 @@ getArguments = do
         case fmap reads maybe_offset_as_string of
             Nothing → return 1
             Just ((offset,_):_)
-              | offset <= 0 → do
-                    putStrLn "The offset must be greater than zero."
+              | offset < 0 → do
+                    putStrLn "The offset cannot be negative."
                     exitFailure
               | offset >= skip → do
                     putStrLn "The offset must be less than the skip."
                     exitFailure
-              | otherwise → return skip
+              | otherwise → return offset
             _ → do
                 putStrLn "The offset must be an integer."
                 exitFailure
     return (tiling,radius,skip,offset)
 -- @-node:gcross.20100727222803.1689:getArguments
--- @+node:gcross.20100728191908.1636:skipEvery
-skipEvery :: Int → [a] → [a]
-skipEvery n = unfoldr go
-  where
-    go [] = Nothing
-    go (x:xs) = Just (x,drop (n-1) xs)
--- @-node:gcross.20100728191908.1636:skipEvery
--- @-node:gcross.20100727222803.1688:Functions
--- @-others
-
+-- @+node:gcross.20100728211848.1648:main
 main = do
     (tiling@Tiling{..},radius,skip,offset) ← getArguments
     let solveFor =
@@ -115,11 +108,26 @@ main = do
         start = 1
     connection ← makeConnection "scanner"
     withSession connection $ do
-        has_been_scanned ← checkIfScanned tilingName radius
-        when has_been_scanned . liftIO $ do
-            putStrLn "The lattice for this tiling and radius has already been completely scanned."
-            exitSuccess
-        forM_ [start,start+skip..tilingNumberOfLabelings] $ \n →
+        checkIfScanned tilingName radius >>=
+            (flip when . liftIO $ do
+                putStrLn "The lattice for this tiling and radius has already been completely scanned."
+                exitSuccess
+            )
+        when (skip > 1) $ do
+            checkIfSkipperScanned tilingName radius skip offset >>=
+                (flip when . liftIO $ do
+                    putStrLn $ "The lattice for this tiling and radius has already been skip scanned for offset " ++ show offset
+                    exitSuccess
+                )
+            lattice_skip ← fmap (fromMaybe skip) $ fetchLatticeSkip tilingName radius
+            when (skip /= lattice_skip) . liftIO $ do
+                putStrLn (printf "The skip for this lattice has already been established as %i, not %i." lattice_skip skip)
+                exitFailure
+        start ← fmap (fromMaybe offset) $ fetchCheckpoint tilingName radius skip offset
+        when (start > offset) . liftIO $
+            putStrLn $ "Starting from checkpoint " ++ show start ++ "..."
+        counter_ref ← liftIO $ newIORef 0
+        forM_ [start,start+skip..tilingNumberOfLabelings] $ \n → do
             let labeling = decodeLatticeLabeling tilingNumberOfOrientations tilingNumberOfRays n
                 minimal_labeling =
                     minimum
@@ -127,7 +135,16 @@ main = do
                     map (permuteLatticeLabeling labeling)
                     $
                     tilingSymmetries
-            in if minimal_labeling < labeling then return () else do
+                checkpoint = setCheckpoint tilingName radius skip offset (n+skip)
+            when (minimal_labeling >= labeling) $ do
+                counter ← liftIO $ readIORef counter_ref
+                if counter == 100
+                    then do
+                        checkpoint
+                        liftIO $ do
+                            putStrLn ("Examining " ++ show n ++ "...")
+                            writeIORef counter_ref 0
+                    else liftIO $ writeIORef counter_ref (counter+1)
                 solution <- liftIO $ solveFor labeling
                 case solutionLogicalQubitDistances solution of
                     [] → return ()
@@ -136,8 +153,16 @@ main = do
                             show n
                             ++ " -> " ++
                             (show . collectDistances) distances
-                        withTransaction ReadUncommitted $
+                        withTransaction ReadUncommitted $ do
                             storeSolution tilingName radius n solution
-        markAsScanned tilingName radius
+                            checkpoint
+                        liftIO $ writeIORef counter_ref 0
+        if skip == 1
+            then markAsScanned tilingName radius
+            else withTransaction ReadUncommitted $
+                    markAsSkipperScanned tilingName radius skip offset
+-- @-node:gcross.20100728211848.1648:main
+-- @-node:gcross.20100727222803.1688:Functions
+-- @-others
 -- @-node:gcross.20100727222803.1685:@thin scan.hs
 -- @-leo
