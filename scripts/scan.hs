@@ -139,16 +139,7 @@ main = do
             when (minimal_labeling >= labeling) $ do
                 solution <- liftIO $ solveFor labeling
                 case solutionLogicalQubitDistances solution of
-                    [] → do
-                        counter ← liftIO $ readIORef counter_ref
-                        if counter == 100
-                            then do
-                                  checkpoint
-                                  liftIO $ do
-                                      putStrLn ("Examining " ++ show (n+skip) ++ "...")
-                                      writeIORef counter_ref 0
-                            else liftIO $ writeIORef counter_ref (counter+1)
-                    distances@(d:_) → if d <= 2 then return () else do
+                    distances@(d:_) | d >= 3 → do
                         liftIO . putStrLn $
                             show n
                             ++ " -> " ++
@@ -157,6 +148,15 @@ main = do
                             storeSolution tilingName radius n solution
                             checkpoint
                         liftIO $ writeIORef counter_ref 0
+                    _ → do
+                        counter ← liftIO $ readIORef counter_ref
+                        if counter == 100
+                            then do
+                                  checkpoint
+                                  liftIO $ do
+                                      putStrLn ("Examining " ++ show (n+skip) ++ "...")
+                                      writeIORef counter_ref 0
+                            else liftIO $ writeIORef counter_ref (counter+1)
         if skip == 1
             then markAsScanned tilingName radius
             else withTransaction ReadUncommitted $
