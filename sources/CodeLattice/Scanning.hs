@@ -12,12 +12,6 @@
 -- @-node:gcross.20100315120315.1445:<< Language extensions >>
 -- @nl
 
--- @<< Link dependencies >>
--- @+node:gcross.20100315191926.1987:<< Link dependencies >>
-{-# BLUEPRINT-LINK-DEPENDENCY CodeLattice.Scanning.C o #-}
--- @-node:gcross.20100315191926.1987:<< Link dependencies >>
--- @nl
-
 module CodeLattice.Scanning where
 
 -- @<< Import needed modules >>
@@ -26,15 +20,12 @@ import Control.Arrow
 import Control.Applicative
 import Control.Monad
 
+import Data.Array.Storable
 import qualified Data.Bimap as Bimap
 import qualified Data.IntMap as IntMap
 import Data.List
 import Data.Maybe
-import Data.NDArray hiding ((!))
-import Data.NDArray.Classes
 import qualified Data.Sequence as Seq
-import Data.Vec ((:.)(..))
-import qualified Data.Vec as V
 
 import Foreign.C
 import Foreign.Marshal.Alloc
@@ -61,7 +52,7 @@ import Debug.Trace
 data ScanConfiguration = ScanConfiguration
     {   scanNumberOfQubits :: CInt
     ,   scanNumberOfOperators :: CInt
-    ,   scanOperatorTable :: Array2D CInt
+    ,   scanOperatorTable :: StorableArray (Int,Int) CInt
     }
 -- @-node:gcross.20100314233604.1669:ScanConfiguration
 -- @+node:gcross.20100714222047.1668:Solution
@@ -98,7 +89,7 @@ $(let
         [ForeignD $
             ImportF
                 CCall
-                Threadsafe
+                Safe
                 (solverName size)
                 (solverFn size)
                 solver_type
@@ -125,7 +116,7 @@ collectDistances (x:xs) = go x 1 xs
 -- @+node:gcross.20100315191926.2799:solve(Noisily)ForLabeling
 solveForLabelingWithVerbosity :: Bool → ScanConfiguration → LatticeLabeling → IO Solution
 solveForLabelingWithVerbosity verbosity ScanConfiguration{..} labeling =
-    withNDArray scanOperatorTable $ \p_operator_table →
+    withStorableArray scanOperatorTable $ \p_operator_table →
     withArray ((map fromIntegral . flattenLatticeLabeling) labeling) $ \p_values →
     alloca $ \p_number_of_stabilizers →
     alloca $ \p_number_of_gauge_qubits →
@@ -184,7 +175,9 @@ latticeToScanConfiguration lattice@DiscreteLattice{..} =
         )
 
     operator_table =
-        fromListWithShape (number_of_edges :. 4 :. ())
+        unsafePerformIO
+        .
+        newListArray ((0,0),(number_of_edges-1,4-1))
         .
         map fromIntegral
         .

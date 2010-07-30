@@ -11,7 +11,6 @@
 <vnodes>
 <v t="gcross.20100302164430.1232"><vh>@chapters</vh></v>
 <v t="gcross.20100302201317.1387"><vh>@thin CodeLattice.cabal</vh></v>
-<v t="gcross.20100315191926.2391"><vh>@thin Setup.hs</vh></v>
 <v t="gcross.20100302164430.1231"><vh>@path sources</vh>
 <v t="gcross.20100302164430.1233"><vh>@thin CodeLattice.hs</vh></v>
 <v t="gcross.20100308112554.1291"><vh>@path CodeLattice</vh>

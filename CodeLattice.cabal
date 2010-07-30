@@ -4,7 +4,7 @@
 Name:           CodeLattice
 Version:        0.1
 Cabal-Version:  >= 1.6
-Build-Type:     Custom
+Build-Type:     Simple
 
 Library
     Build-Depends:  Blueprint >= 0.2,
@@ -18,15 +18,22 @@ Library
                     uuid == 1.*,
                     Takusen == 0.8.*,
                     ConfigFile == 1.0.*,
-                    Vec == 0.9.*,
-                    NDArray == 0.1,
                     filepath == 1.1.*,
                     InfixApplicative == 1.*,
                     type-level-natural-number >= 1.0 && < 1.1,
                     approximate-equality >= 1.0 && < 1.1,
                     tuple >= 0.2 && < 0.3,
                     template-haskell >= 2.4 && < 2.5
-
+    Exposed-modules: CodeLattice,
+                     CodeLattice.Database,
+                     CodeLattice.Discrete,
+                     CodeLattice.Labeling,
+                     CodeLattice.Scanning,
+                     CodeLattice.Tilings
+    HS-Source-Dirs: ./sources
+    GHC-Options: -O3 -fvia-C -optc=-O3
+    C-Sources: ./sources/C/codequery.cc
+    CC-Options: -O3 -funroll-loops
     Extra-Libraries: stdc++
 -- @-node:gcross.20100302201317.1387:@thin CodeLattice.cabal
 -- @-leo
