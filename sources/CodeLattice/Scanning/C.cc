@@ -20,7 +20,8 @@ using namespace std;
 //@-node:gcross.20100315191926.1594:Type aliases
 //@+node:gcross.20100728085419.1624:Macros
 //@+node:gcross.20100728085419.1625:make_solve_fixed
-#define make_solve_fixed(n) extern "C" void solve_##n(int number_of_qubits, int number_of_operators, int* restrict operator_table, int* restrict values, bool noisy, int* restrict number_of_stabilizers, int* restrict number_of_gauge_qubits, int* restrict number_of_logical_qubits, int ** restrict logical_qubit_distances) { solve_fixed<n>( number_of_qubits, number_of_operators, operator_table, values, noisy, number_of_stabilizers, number_of_gauge_qubits, number_of_logical_qubits, logical_qubit_distances); } std::ostream& operator<<(std::ostream& out, const static_quantum_operator<n>& op) { for(int i = 0; i < op.length(); i++) out.put(pauli_char_from_op(op,i)); return out; }
+#define make_solve_fixed(n) extern "C" void solve_##n(int number_of_qubits, int number_of_operators, int* restrict operator_table, int* restrict values, bool noisy, int* restrict number_of_stabilizers, int* restrict number_of_gauge_qubits, int* restrict number_of_logical_qubits, int ** restrict logical_qubit_distances) { solve_fixed<n>( number_of_qubits, number_of_operators, operator_table, values, noisy, number_of_stabilizers, number_of_gauge_qubits, number_of_logical_qubits, logical_qubit_distances); }
+//@nonl
 //@-node:gcross.20100728085419.1625:make_solve_fixed
 //@-node:gcross.20100728085419.1624:Macros
 //@+node:gcross.20100315191926.1439:Functions
@@ -70,13 +71,6 @@ template<class operator_t,
     }
 }
 //@-node:gcross.20100315191926.2794:solve
-//@+node:gcross.20100728085419.1622:<<
-std::ostream& operator<<(std::ostream& out, const dynamic_quantum_operator& op) {
-    for(int i = 0; i < op.length(); i++)
-        out.put(pauli_char_from_op(op,i));
-	return out;
-}
-//@-node:gcross.20100728085419.1622:<<
 //@+node:gcross.20100728085419.1621:solve_any
 extern "C" void solve_any(
     int number_of_qubits, int number_of_operators,
