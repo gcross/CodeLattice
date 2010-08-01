@@ -33,11 +33,8 @@ import CodeLattice.Labeling
 -- @+node:gcross.20100308112554.1299:Angle
 type Angle = ApproximateDouble
 -- @-node:gcross.20100308112554.1299:Angle
--- @+node:gcross.20100308112554.1300:Edge
-type Edge = (Int,Int)
--- @-node:gcross.20100308112554.1300:Edge
 -- @+node:gcross.20100308112554.1312:EdgesAndAngles
-type EdgesAndAngles = [(Edge,Angle)]
+type EdgesAndAngles = [((Int,Int),Angle)]
 -- @-node:gcross.20100308112554.1312:EdgesAndAngles
 -- @+node:gcross.20100308112554.1302:Tiling
 data Tiling = Tiling
@@ -181,7 +178,7 @@ polygonsToStepAngles _ = error "There needs to be at least two polygons adjoinin
 -- @nonl
 -- @-node:gcross.20100308112554.1307:polygonsToEdgesAndAngles
 -- @+node:gcross.20100308112554.1309:lookupAngleOfEdge
-lookupAngleOfEdge :: EdgesAndAngles → Edge → Int → Angle
+lookupAngleOfEdge :: EdgesAndAngles → (Int,Int) → Int → Angle
 lookupAngleOfEdge table edge disambiguation = go table disambiguation
   where
     go :: EdgesAndAngles → Int → Angle
