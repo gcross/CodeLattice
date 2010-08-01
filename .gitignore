@@ -4,5 +4,12 @@ Setup
 *.cfg
 *.hi
 *.o
-scripts/draw-lattice
-scripts/generate-lattices
+scripts/*.o
+scripts/*.hi
+scripts/*.ps
+scripts/count-labelings
+scripts/count-physical-qubit
+scripts/count-physical-qubit-for-everything
+scripts/draw-tiling
+scripts/scan
+dist
