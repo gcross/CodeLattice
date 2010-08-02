@@ -116,7 +116,7 @@ getArguments = do
     (tiling_name,radius_as_string,maybe_filename) ←
         case args of
             [x,y] → return (x,y,Nothing)
-            [x,y,z] → return (x,y,Just y)
+            [x,y,z] → return (x,y,Just z)
             _ → do
                 putStrLn "Usage:  draw-tiling <tiling> <radius> [output filename]"
                 exitFailure
