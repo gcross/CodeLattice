@@ -15,6 +15,7 @@ module CodeLattice.Periodic where
 -- @<< Import needed modules >>
 -- @+node:gcross.20100801215024.1684:<< Import needed modules >>
 import Control.Applicative
+import Control.Arrow
 
 import Data.Eq.Approximate
 import Data.Function
@@ -31,8 +32,9 @@ import CodeLattice
 -- @+node:gcross.20100801215024.1675:Types
 -- @+node:gcross.20100801215024.1677:Periodicity
 data Periodicity = Periodicity
-    {   periodicityComputeVertexDistance :: (Vertex → ApproximateDouble)
-    ,   periodicityWrapVertexAround :: (ApproximateDouble → Vertex → Vertex)
+    {   periodicityComputeVertexDistance :: Vertex → ApproximateDouble
+    ,   periodicityWrapVertexAround :: ApproximateDouble → Vertex → Vertex
+    ,   periodicityComputeBorder :: ApproximateDouble → [(ApproximateDouble,ApproximateDouble)]
     ,   periodDistance :: ApproximateDouble
     }
 -- @-node:gcross.20100801215024.1677:Periodicity
@@ -220,7 +222,15 @@ rectangularPeriodicityRotatedBy y_over_x angle distance =
             .
             wrapVertexAroundVector b1 d
 
-    in Periodicity computeDistanceFrom wrapAround distance
+        computeBorder d =
+            map (rotate angle . ((*d) *** (*d)))
+            [(1,y_over_x)
+            ,(-1,y_over_x)
+            ,(-1,-y_over_x)
+            ,(1,-y_over_x)
+            ]
+
+    in Periodicity computeDistanceFrom wrapAround computeBorder distance
 -- @-node:gcross.20100801215024.1670:rectangularPeriodicityRotatedBy
 -- @+node:gcross.20100801215024.1671:squarePeriodicity
 squarePeriodicity = squarePeriodicityRotatedBy 0
@@ -263,7 +273,17 @@ hexagonalPeriodicityRotatedBy angle distance =
                 isInside offset (offset+60)
              || isInside (offset+180) (offset+240)
 
-    in Periodicity computeDistanceFrom wrapAround distance
+        computeBorder d =
+            map (rotate angle . ((*d) *** (*d)))
+            [(2/sqrt 3,0)
+            ,(1/sqrt 3,1)
+            ,(-1/sqrt 3,1)
+            ,(-2/sqrt 3,0)
+            ,(-1/sqrt 3,-1)
+            ,(1/sqrt 3,-1)
+            ]
+
+    in Periodicity computeDistanceFrom wrapAround computeBorder distance
 -- @-node:gcross.20100801215024.1674:hexagonalPeriodicityRotatedBy
 -- @-node:gcross.20100801215024.1664:Periodicities
 -- @-node:gcross.20100801215024.1700:Functions

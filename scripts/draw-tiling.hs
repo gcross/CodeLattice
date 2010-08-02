@@ -25,6 +25,8 @@ import System.Environment
 import System.Exit
 import System.IO
 
+import Text.Printf
+
 import CodeLattice
 import CodeLattice.Periodic
 import CodeLattice.Tilings
@@ -76,11 +78,13 @@ prologue = unlines
     ,"        uy ly sub multiplier mul"
     ,"    ] >> setpagedevice"
     ,"} def"
+    ,"/xcoord {x_offset add multiplier mul} def"
+    ,"/ycoord {y_offset add multiplier mul} def"
     ,"/edge {"
-    ,"    y_offset add multiplier mul /y2 exch def"
-    ,"    x_offset add multiplier mul /x2 exch def"
-    ,"    y_offset add multiplier mul /y1 exch def"
-    ,"    x_offset add multiplier mul /x1 exch def"
+    ,"    ycoord /y2 exch def"
+    ,"    xcoord /x2 exch def"
+    ,"    ycoord /y1 exch def"
+    ,"    xcoord /x1 exch def"
     ,"    newpath"
     ,"    x1 y1 5 0 360 arc"
     ,"    fill"
@@ -96,22 +100,6 @@ prologue = unlines
 -- @-node:gcross.20100801112904.1628:prologue
 -- @-node:gcross.20100801112904.1627:Values
 -- @+node:gcross.20100801112904.1629:Functions
--- @+node:gcross.20100801112904.2009:isPeriodicEdge
-isPeriodicEdge :: Edge → Bool
-isPeriodicEdge (Edge (EdgeSide (Vertex x1 y1 _) _) (EdgeSide (Vertex x2 y2 _) _)) =
-    sqrt ((x2 - x1)^2 + (y2 - y1)^2) /= 1
--- @-node:gcross.20100801112904.2009:isPeriodicEdge
--- @+node:gcross.20100801112904.1634:computePageSize
-computePageSize :: Lattice → ((ApproximateDouble,ApproximateDouble),(ApproximateDouble,ApproximateDouble))
-computePageSize =
-    (((fromJust . getMin) *** (fromJust . getMin)) *** ((fromJust . getMax) *** (fromJust . getMax)))
-    .
-    Fold.foldMap (\(Vertex x y _) →
-        ((Min (Just x),Min (Just y)),(Max (Just x),Max (Just y)))
-    )
-    .
-    latticeVertices
--- @-node:gcross.20100801112904.1634:computePageSize
 -- @+node:gcross.20100801112904.2008:extractEdges
 extractEdges :: Lattice → [((ApproximateDouble,ApproximateDouble),(ApproximateDouble,ApproximateDouble))]
 extractEdges =
@@ -169,10 +157,41 @@ applyWord word ((a,b),(c,d)) = unwords
 -- @+node:gcross.20100801112904.2010:main
 main = do
     (tiling@Tiling{..},radius,handle) ← getArguments
-    let lattice = generateLatticeForTiling tiling (fromIntegral (radius+1) * (periodDistance tilingPeriodicity))
+    let Periodicity{..} = tilingPeriodicity
+        lattice = generateLatticeForTiling tiling (fromIntegral (radius+1) * periodDistance)
+        unwrapValue = unwrapAbsolutelyApproximateValue
+        border@((hx,hy):border_tail) =
+            periodicityComputeBorder
+            .
+            (* periodDistance)
+            .
+            fromIntegral
+            $
+            radius
+        border_path = unlines $
+            ["newpath"
+            ,printf "\t%f xcoord %f ycoord moveto" (unwrapValue hx) (unwrapValue hy)
+            ] ++ [printf "\t%f xcoord %f ycoord lineto" (unwrapValue x) (unwrapValue y) | (x,y) ← border_tail] ++
+            ["closepath"
+            ]
     hPutStrLn handle prologue
-    hPutStrLn handle . applyWord "setup_page" . computePageSize $ lattice
+    hPutStrLn handle
+        .
+        applyWord "setup_page"
+        .
+        (((\x → x-1) *** (\x → x-1)) *** ((+1) *** (+1)))
+        .
+        ((minimum *** minimum) &&& (maximum *** maximum))
+        .
+        unzip
+        $
+        border
+    hPutStrLn handle border_path
+    hPutStrLn handle "clip"
     mapM_ (hPutStrLn handle . applyWord "edge") . extractEdges $ lattice
+    hPutStrLn handle "initclip"
+    hPutStrLn handle border_path
+    hPutStrLn handle "5 setlinewidth stroke"
     hFlush handle
     hClose handle
 -- @-node:gcross.20100801112904.2010:main
