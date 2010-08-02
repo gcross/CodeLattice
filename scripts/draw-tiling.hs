@@ -111,27 +111,25 @@ computePageSize =
     .
     latticeVertices
 -- @-node:gcross.20100801112904.1634:computePageSize
--- @+node:gcross.20100801112904.2008:extractNonPeriodicEdges
-extractNonPeriodicEdges :: Lattice → [((ApproximateDouble,ApproximateDouble),(ApproximateDouble,ApproximateDouble))]
-extractNonPeriodicEdges =
+-- @+node:gcross.20100801112904.2008:extractEdges
+extractEdges :: Lattice → [((ApproximateDouble,ApproximateDouble),(ApproximateDouble,ApproximateDouble))]
+extractEdges =
     map (((vertexLocationX &&& vertexLocationY) . edgeSideVertex . edgeLeftSide)
      &&& ((vertexLocationX &&& vertexLocationY) . edgeSideVertex . edgeRightSide)
     )
     .
-    filter (not . isPeriodicEdge)
-    .
     latticeEdges
--- @-node:gcross.20100801112904.2008:extractNonPeriodicEdges
+-- @-node:gcross.20100801112904.2008:extractEdges
 -- @+node:gcross.20100801112904.2012:getArguments
-getArguments :: IO (Tiling,Handle)
+getArguments :: IO (Tiling,Int,Handle)
 getArguments = do
     args ← getArgs
-    (tiling_name,maybe_filename) ←
+    (tiling_name,radius_as_string,maybe_filename) ←
         case args of
-            [x] → return (x,Nothing)
-            [x,y] → return (x,Just y)
+            [x,y] → return (x,y,Nothing)
+            [x,y,z] → return (x,y,Just y)
             _ → do
-                putStrLn "Usage:  draw-tiling <tiling> [output filename]"
+                putStrLn "Usage:  draw-tiling <tiling> <radius> [output filename]"
                 exitFailure
     tiling ←
         case find ((== tiling_name) . tilingName) tilings of
@@ -140,8 +138,18 @@ getArguments = do
                 putStrLn "Tiling must be one of the following:"
                 mapM_ (putStrLn . ('\t':) . tilingName) tilings -- '
                 exitFailure
+    radius ←
+        case reads radius_as_string of
+            ((radius,_):_)
+              | radius <= 0 → do
+                    putStrLn "The radius must be greater than zero."
+                    exitFailure
+              | otherwise → return radius
+            _ → do
+                putStrLn "The radius must be an integer."
+                exitFailure
     handle ← maybe (return stdout) (flip openFile WriteMode) maybe_filename
-    return (tiling,handle)
+    return (tiling,radius,handle)
 -- @-node:gcross.20100801112904.2012:getArguments
 -- @+node:gcross.20100801112904.2013:applyWord
 applyWord ::
@@ -159,10 +167,11 @@ applyWord word ((a,b),(c,d)) = unwords
 -- @-node:gcross.20100801112904.1629:Functions
 -- @+node:gcross.20100801112904.2010:main
 main = do
-    (Tiling{..},handle) ← getArguments
+    (tiling@Tiling{..},radius,handle) ← getArguments
+    let lattice = generateLatticeForTiling tiling (fromIntegral (radius+1) * (periodDistance tilingPeriodicity))
     hPutStrLn handle prologue
-    hPutStrLn handle . applyWord "setup_page" . computePageSize $ tilingUnitRadiusLattice
-    mapM_ (hPutStrLn handle . applyWord "edge") . extractNonPeriodicEdges $ tilingUnitRadiusLattice
+    hPutStrLn handle . applyWord "setup_page" . computePageSize $ lattice
+    mapM_ (hPutStrLn handle . applyWord "edge") . extractEdges $ lattice
     hFlush handle
     hClose handle
 -- @-node:gcross.20100801112904.2010:main

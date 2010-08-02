@@ -396,6 +396,21 @@ generateLatticeLabelingsForTiling =
         tilingNumberOfOrientations
         tilingNumberOfRays
 -- @-node:gcross.20100727222803.1690:generateLatticeLabelingsForTiling
+-- @+node:gcross.20100801201535.1652:generateLatticeForTiling
+generateLatticeForTiling :: Tiling → ApproximateDouble → Lattice
+generateLatticeForTiling tiling@Tiling{..} radius =
+    snd
+    .
+    runLatticeMonad tilingSteps
+    $
+    growLatticeToBounds
+        (
+            (<= radius)
+            .
+            (periodicityComputeVertexDistance tilingPeriodicity)
+        )
+        [tilingSeedVertex]
+-- @-node:gcross.20100801201535.1652:generateLatticeForTiling
 -- @+node:gcross.20100726103932.1756:generatePeriodicLatticeForTiling
 generatePeriodicLatticeForTiling :: Tiling → Int → Lattice
 generatePeriodicLatticeForTiling tiling@Tiling{..} radius =
