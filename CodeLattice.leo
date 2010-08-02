@@ -20,6 +20,7 @@
 <v t="gcross.20100312175547.1384"><vh>@thin Database.hs</vh></v>
 <v t="gcross.20100717003017.2420"><vh>@thin Discrete.hs</vh></v>
 <v t="gcross.20100723201654.1698"><vh>@thin Labeling.hs</vh></v>
+<v t="gcross.20100801215024.1652"><vh>@thin Periodic.hs</vh></v>
 <v t="gcross.20100314233604.1666"><vh>@thin Scanning.hs</vh></v>
 <v t="gcross.20100308112554.1292"><vh>@thin Tilings.hs</vh></v>
 </v>

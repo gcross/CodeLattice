@@ -25,6 +25,7 @@ import Data.Tuple.Select
 import CodeLattice hiding (Edge)
 import CodeLattice.Discrete
 import CodeLattice.Labeling
+import CodeLattice.Periodic
 -- @-node:gcross.20100308112554.1293:<< Import needed modules >>
 -- @nl
 

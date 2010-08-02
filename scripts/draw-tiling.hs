@@ -26,6 +26,7 @@ import System.Exit
 import System.IO
 
 import CodeLattice
+import CodeLattice.Periodic
 import CodeLattice.Tilings
 -- @-node:gcross.20100801112904.1626:<< Import needed modules >>
 -- @nl

@@ -51,6 +51,7 @@ import Test.QuickCheck
 import CodeLattice
 import CodeLattice.Discrete
 import CodeLattice.Labeling
+import CodeLattice.Periodic
 import CodeLattice.Scanning
 import CodeLattice.Tilings
 -- @-node:gcross.20091217190104.1412:<< Import needed modules >>

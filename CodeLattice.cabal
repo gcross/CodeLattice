@@ -27,6 +27,7 @@ Library
                      CodeLattice.Database,
                      CodeLattice.Discrete,
                      CodeLattice.Labeling,
+                     CodeLattice.Periodic,
                      CodeLattice.Scanning,
                      CodeLattice.Tilings
     HS-Source-Dirs: ./sources
