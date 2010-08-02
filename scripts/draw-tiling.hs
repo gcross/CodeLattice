@@ -170,8 +170,8 @@ main = do
             radius
         border_path = unlines $
             ["newpath"
-            ,printf "\t%f xcoord %f ycoord moveto" (unwrapValue hx) (unwrapValue hy)
-            ] ++ [printf "\t%f xcoord %f ycoord lineto" (unwrapValue x) (unwrapValue y) | (x,y) ← border_tail] ++
+            ,printf "    %f xcoord %f ycoord moveto" (unwrapValue hx) (unwrapValue hy)
+            ] ++ [printf "    %f xcoord %f ycoord lineto" (unwrapValue x) (unwrapValue y) | (x,y) ← border_tail] ++
             ["closepath"
             ]
     hPutStrLn handle prologue
