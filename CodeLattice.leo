@@ -34,6 +34,7 @@
 <v t="gcross.20100728132013.2004"><vh>@thin count-physical-qubits-for-everything.hs</vh></v>
 <v t="gcross.20100801112904.1624"><vh>@thin draw-tiling.hs</vh></v>
 <v t="gcross.20100801215024.1717"><vh>@thin draw-labeled-tiling.hs</vh></v>
+<v t="gcross.20100802171839.1669"><vh>@thin show-latex-combinatorics-table.hs</vh></v>
 <v t="gcross.20100727222803.1685"><vh>@thin scan.hs</vh></v>
 </v>
 </vnodes>
