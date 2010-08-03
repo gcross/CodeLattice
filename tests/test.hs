@@ -1045,8 +1045,10 @@ main =
         -- @    @+others
         -- @+node:gcross.20100726103932.1701:square
         [testGroup "square" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    squarePeriodicityRotatedBy 0 undefined
+            let Periodicity
+                    {   periodicityComputeVertexDistance = computeVertexDistance
+                    ,   periodicityWrapVertexAround = wrapVertexAround 
+                    } = squarePeriodicityRotatedBy 0 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100726103932.1702:computeVertexDistance
@@ -1096,8 +1098,10 @@ main =
         -- @-node:gcross.20100726103932.1701:square
         -- @+node:gcross.20100726103932.1706:hexagonal
         ,testGroup "hexagonal" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    hexagonalPeriodicityRotatedBy 0 undefined
+            let Periodicity
+                    {   periodicityComputeVertexDistance = computeVertexDistance
+                    ,   periodicityWrapVertexAround = wrapVertexAround 
+                    } = hexagonalPeriodicityRotatedBy 0 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100726103932.1707:computeVertexDistance
@@ -1196,8 +1200,10 @@ main =
         -- @-node:gcross.20100726103932.1706:hexagonal
         -- @+node:gcross.20100726103932.1714:hexagonal (rotated 30 degrees)
         ,testGroup "hexagonal (rotated 30 degrees)" $
-            let Periodicity computeVertexDistance wrapVertexAround _ =
-                    hexagonalPeriodicityRotatedBy 30 undefined
+            let Periodicity
+                    {   periodicityComputeVertexDistance = computeVertexDistance
+                    ,   periodicityWrapVertexAround = wrapVertexAround 
+                    } = hexagonalPeriodicityRotatedBy 30 undefined
             in
                 -- @        @+others
                 -- @+node:gcross.20100726103932.1715:computeVertexDistance
