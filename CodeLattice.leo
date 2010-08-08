@@ -36,6 +36,7 @@
 <v t="gcross.20100801215024.1717"><vh>@thin draw-labeled-tiling.hs</vh></v>
 <v t="gcross.20100802171839.1669"><vh>@thin show-latex-combinatorics-table.hs</vh></v>
 <v t="gcross.20100727222803.1685"><vh>@thin scan.hs</vh></v>
+<v t="gcross.20100808143551.1695"><vh>@thin plot-tiling-results.hs</vh></v>
 </v>
 </vnodes>
 <tnodes>
