@@ -1,5 +1,5 @@
 //@+leo-ver=4-thin
-//@+node:gcross.20100315191926.1436:@thin Scanning/C.cc
+//@+node:gcross.20100801112904.2018:@thin codequery.cc
 //@@language C++
 
 //@<< Headers >>
@@ -138,20 +138,33 @@ make_solve_fixed(144)
 make_solve_fixed(150)
 make_solve_fixed(162)
 make_solve_fixed(192)
+make_solve_fixed(196)
 make_solve_fixed(200)
 make_solve_fixed(216)
 make_solve_fixed(256)
 make_solve_fixed(288)
+make_solve_fixed(294)
 make_solve_fixed(300)
+make_solve_fixed(324)
 make_solve_fixed(384)
+make_solve_fixed(392)
 make_solve_fixed(400)
 make_solve_fixed(432)
 make_solve_fixed(450)
+make_solve_fixed(484)
+make_solve_fixed(486)
+make_solve_fixed(512)
 make_solve_fixed(576)
+make_solve_fixed(588)
 make_solve_fixed(600)
 make_solve_fixed(648)
+make_solve_fixed(676)
+make_solve_fixed(726)
+make_solve_fixed(768)
+make_solve_fixed(784)
+make_solve_fixed(800)
 make_solve_fixed(864)
 //@-node:gcross.20100728132013.1998:Solvers
 //@-others
-//@-node:gcross.20100315191926.1436:@thin Scanning/C.cc
+//@-node:gcross.20100801112904.2018:@thin codequery.cc
 //@-leo

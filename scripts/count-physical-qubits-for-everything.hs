@@ -31,12 +31,11 @@ import CodeLattice.Tilings
 -- @nl
 
 -- @+others
--- @-others
-
+-- @+node:gcross.20100806120341.1671:main
 main =
     fmap (read . head) getArgs
     >>=
-    \maximum_radius →
+    \maximum_number_of_physical_qubits →
         putStrLn
         .
         show
@@ -44,15 +43,28 @@ main =
         sort
         .
         nub
+        .
+        concat
+        .
+        map (
+            takeWhile (<= maximum_number_of_physical_qubits)
+            .
+            (\tiling@Tiling{..} →
+                [ Set.size
+                  .
+                  latticeVertices
+                  .
+                  generatePeriodicLatticeForTiling tiling
+                  $
+                  radius
+                | radius ← [1..]
+                , radius `mod` 3 /= 0 || tilingName /= "deltille"
+                ]
+            )
+        )
         $
-        [ Set.size
-          .
-          latticeVertices
-          $
-          generatePeriodicLatticeForTiling tiling radius
-        | tiling@Tiling{..} ← tilings
-        , radius ← [1..maximum_radius]
-        , not (tilingName == "deltille" && radius `mod` 3 == 0)
-        ]
+        tilings
+-- @-node:gcross.20100806120341.1671:main
+-- @-others
 -- @-node:gcross.20100728132013.2004:@thin count-physical-qubits-for-everything.hs
 -- @-leo
