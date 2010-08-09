@@ -13,9 +13,11 @@
 -- @+node:gcross.20100808143551.1697:<< Import needed modules >>
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Trans.Writer.Lazy
 
 import Data.Function
 import Data.List
+import Data.Maybe
 import Data.Tuple.Select
 
 import Database.Enumerator
@@ -25,6 +27,7 @@ import System.Environment
 import System.Exit
 import System.IO
 
+import Text.PrettyPrint.HughesPJ
 import Text.Printf
 import Text.Read
 
@@ -56,6 +59,41 @@ getArguments = do
     handle ← maybe (return stdout) (flip openFile WriteMode) maybe_filename
     return (tiling,handle)
 -- @-node:gcross.20100808143551.1699:getArguments
+-- @+node:gcross.20100809113206.1679:drawPolyAt
+drawPolyAt :: Double → Int → Double → Double → Doc
+drawPolyAt base_radius n cx cy = hsep
+    [text "gsave newpath"
+    ,first_point <+> text "moveto"
+    ,hsep [point <+> text "lineto" | point ← rest_points]
+    ,text "closepath stroke grestore"
+    ]
+  where
+    (first_point:rest_points) =
+        [let angle = (rotation_in_degrees + fromIntegral i * polygon_angle)/180*pi
+             x = cx + radius * cos angle
+             y = cy + radius * sin angle
+         in double x <+> double y
+        | i ← [0..n-1]
+        ]
+    radius = scaling * base_radius
+    (scaling,rotation_in_degrees) = (!! (n-3))
+        [(1.0,90)
+        ,(1.2,45)
+        ,(1.4,-90)
+        ,(1.6,0)
+        ]
+    polygon_angle = fromIntegral (360 `div` n)
+-- @-node:gcross.20100809113206.1679:drawPolyAt
+-- @+node:gcross.20100809113206.1688:setPageSize
+setPageSize :: Int → Int → Doc
+setPageSize width height = hsep
+    [text "<< /PageSize ["
+    ,int width
+    ,int height
+    ,text "] >> setpagedevice"
+    ]
+
+-- @-node:gcross.20100809113206.1688:setPageSize
 -- @+node:gcross.20100808143551.1700:main
 main = do
     (tiling@Tiling{..},handle) ← getArguments
@@ -76,14 +114,14 @@ main = do
             fetch4
             ([] :: [(Int,Int,Int,Int)])
             "Error fetching results from the database:"
-    hPutStrLn handle . unlines . concat $
-        [ [ "plot '-' with lines" ] ++
-          [ show radius ++ " " ++ show number_of_qubits
-          | (radius,distance,number_of_qubits) ← plotline ] ++
-          [ "e" ]
-        | plotline ← plotlines
-        ] ++
-        [[""]]
+    hPutStrLn handle . renderStyle (style { mode = LeftMode }) . vcat $
+        [text "%!PS-Adobe-3.0"
+        ,setPageSize 400 400
+        ,vcat [drawPolyAt 100 i 200 200 | i <- [3..6]]
+        ,text "showpage"
+        ]
+    hFlush handle
+    hClose handle
 -- @-node:gcross.20100808143551.1700:main
 -- @-node:gcross.20100808143551.1698:Functions
 -- @-others
