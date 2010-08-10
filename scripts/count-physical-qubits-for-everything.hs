@@ -50,13 +50,7 @@ main =
             takeWhile (<= maximum_number_of_physical_qubits)
             .
             (\tiling@Tiling{..} →
-                [ Set.size
-                  .
-                  latticeVertices
-                  .
-                  generatePeriodicLatticeForTiling tiling
-                  $
-                  radius
+                [ computeNumberOfQubitsInPeriodicLatticeForTiling tiling radius
                 | radius ← [1..]
                 , radius `mod` 3 /= 0 || tilingName /= "deltille"
                 ]

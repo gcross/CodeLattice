@@ -1,5 +1,5 @@
 -- @+leo-ver=4-thin
--- @+node:gcross.20100728132013.2004:@thin count-physical-qubits.hs
+-- @+node:gcross.20100728132013.1636:@thin count-physical-qubits.hs
 -- @@language Haskell
 
 -- @<< Language extensions >>
@@ -62,8 +62,7 @@ getArguments = do
     return (tiling,radius)
 -- @-node:gcross.20100728132013.2008:getArguments
 -- @-node:gcross.20100728132013.2007:Functions
--- @-others
-
+-- @+node:gcross.20100810123019.1697:main
 main =
     getArguments
     >>=
@@ -71,10 +70,8 @@ main =
         .
         show
         .
-        Set.size
-        .
-        latticeVertices
-        .
-        uncurry generatePeriodicLatticeForTiling
--- @-node:gcross.20100728132013.2004:@thin count-physical-qubits.hs
+        uncurry computeNumberOfQubitsInPeriodicLatticeForTiling
+-- @-node:gcross.20100810123019.1697:main
+-- @-others
+-- @-node:gcross.20100728132013.1636:@thin count-physical-qubits.hs
 -- @-leo

@@ -430,6 +430,15 @@ generatePeriodicLatticeForTiling tiling@Tiling{..} radius =
         radius
         [tilingSeedVertex]
 -- @-node:gcross.20100726103932.1756:generatePeriodicLatticeForTiling
+-- @+node:gcross.20100810123019.1696:computeNumberOfQubitsInPeriodicLatticeForTiling
+computeNumberOfQubitsInPeriodicLatticeForTiling :: Tiling → Int → Int
+computeNumberOfQubitsInPeriodicLatticeForTiling tiling =
+    Set.size
+    .
+    latticeVertices
+    .
+    generatePeriodicLatticeForTiling tiling
+-- @-node:gcross.20100810123019.1696:computeNumberOfQubitsInPeriodicLatticeForTiling
 -- @-node:gcross.20100308112554.1303:Functions
 -- @-others
 -- @-node:gcross.20100308112554.1292:@thin Tilings.hs
