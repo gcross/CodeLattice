@@ -40,9 +40,7 @@ import CodeLattice.Tilings
 -- @+node:gcross.20100809113206.2150:Types
 -- @+node:gcross.20100809113206.2151:Frame
 data Frame = Frame
-    {   frameXLabel :: String
-    ,   frameXTics :: Tics
-    ,   frameYLabel :: String
+    {   frameXTics :: Tics
     ,   frameYTics :: Tics
     ,   frameLeftMargin :: Double
     ,   frameRightMargin :: Double
@@ -116,13 +114,12 @@ computeYTics "rhombihexadeltille" = makeTics 100 50 2 16
 computeYTics _ = makeTics 100 50 20 200
 -- @-node:gcross.20100809113206.2159:computeYTics
 -- @+node:gcross.20100809113206.2148:drawFrame
-drawFrame :: String → Frame → Doc
-drawFrame title Frame{..} = vcat
+drawFrame :: Tiling → Frame → Doc
+drawFrame tiling@Tiling{..} Frame{..} = vcat
     [(setPageSize `on` ceiling) page_width page_height
     ,int 4 <+> text "setlinewidth"
     ,drawFrameBox
     ,int 2 <+> text "setlinewidth"
-    ,text "/TimesRoman findfont 36 scalefont setfont"
     ,drawXTics
     ,drawYTics
     ,text "/TimesRoman findfont 48 scalefont setfont"
@@ -130,25 +127,49 @@ drawFrame title Frame{..} = vcat
         [double (frameLeftMargin + width/2)
         ,double (y-128)
         ,text "moveto"
-        ,(parens . text) frameXLabel
+        ,(parens . text) "Radius"
         ,int 0
         ,text "cshow"
         ]
+    ,text "/TimesRoman findfont 36 scalefont setfont"
     ,hsep
-        [double (x-128)
-        ,double (frameBottomMargin + height/2)
+        [double (frameLeftMargin + width/2)
+        ,double (y-180)
         ,text "moveto"
-        ,(parens . text) frameYLabel
-        ,int 90
+        ,(parens . parens . text) "Number of physical qubits"
+        ,int 0
         ,text "cshow"
         ]
     ,text "/TimesRoman findfont 48 scalefont setfont"
+    ,if ticCount frameYTics > 2
+        then hsep
+            [double (x-128)
+            ,double (frameBottomMargin + height/2)
+            ,text "moveto"
+            ,(parens . text) "Number of logical qubits"
+            ,int 90
+            ,text "cshow"
+            ]
+        else hsep
+            [double (x-168)
+            ,double (frameBottomMargin + height/2)
+            ,text "moveto"
+            ,(parens . text) "Number of"
+            ,int 90
+            ,text "cshow"
+            ,double (x-128)
+            ,double (frameBottomMargin + height/2)
+            ,text "moveto"
+            ,(parens . text) "logical qubits"
+            ,int 90
+            ,text "cshow"
+            ]
     ,if ticCount frameXTics > 6
         then hsep
             [double (frameLeftMargin + width/2)
             ,double (frameBottomMargin + height + 72)
             ,text "moveto"
-            ,(parens . text) $ "Codes found for the " ++ title ++ " tiling"
+            ,(parens . text) $ "Codes found for the " ++ tilingName ++ " tiling"
             ,int 0
             ,text "cshow"
             ]
@@ -162,7 +183,7 @@ drawFrame title Frame{..} = vcat
             ,double (frameLeftMargin + width/2)
             ,double (frameBottomMargin + height + 72)
             ,text "moveto"
-            ,(parens . text) $ title ++ " tiling"
+            ,(parens . text) $ tilingName ++ " tiling"
             ,int 0
             ,text "cshow"
             ]
@@ -191,20 +212,23 @@ drawFrame title Frame{..} = vcat
         ]
     tic_size = 20
     drawXTics = vcat
-        [ let x = ((+ frameLeftMargin) . (* ticSize) . (\x -> x-0.5) . fromIntegral) i
-              label = ((+ ticStart) . (* ticDelta)) i
+        [ let x = ((+ frameLeftMargin) . (* ticSize) . (\x -> x-0.5) . fromIntegral) radius
+              number_of_physical_qubits = computeNumberOfQubitsInPeriodicLatticeForTiling tiling radius
           in hsep
             [text "newpath"
             ,double x <+> double (y-tic_size/2) <+> text "moveto"
             ,double x <+> double (y+tic_size/2) <+> text "lineto"
             ,text "stroke"
-            ,double x <+> double (y-36) <+> text "moveto" <+> (parens . int) label <+> int 0 <+> text "cshow"
+            ,text "/TimesRoman findfont 36 scalefont setfont"
+            ,double x <+> double (y-36) <+> text "moveto" <+> (parens . int) radius <+> int 0 <+> text "cshow"
+            ,text "/TimesRoman findfont 27 scalefont setfont"
+            ,double x <+> double (y-72) <+> text "moveto" <+> (parens . parens . int) number_of_physical_qubits <+> int 0 <+> text "cshow"
             ]
-        | i ← [1..ticCount-1]
+        | radius ← [1..ticCount-1]
         ]
       where
         Tics{..} = frameXTics
-    drawYTics = vcat
+    drawYTics = text "/TimesRoman findfont 36 scalefont setfont" $+$ vcat
         [ let y = ((+ frameBottomMargin) . (* ticSize) . fromIntegral) i
               label = ((+ ticStart) . (* ticDelta)) i
           in hsep
@@ -298,15 +322,13 @@ getFramePoint Frame{..} x y =
     )
 -- @-node:gcross.20100809113206.2157:getFramePoint
 -- @+node:gcross.20100809113206.2156:makeFrame
-makeFrame :: String → Tics → String → Tics → Frame
-makeFrame x_label x_tics y_label y_tics =
+makeFrame :: Tics → Tics → Frame
+makeFrame x_tics y_tics =
     Frame
     {   frameXTics = x_tics
-    ,   frameXLabel = x_label
     ,   frameYTics = y_tics
-    ,   frameYLabel = y_label
     ,   frameLeftMargin = 200
-    ,   frameBottomMargin = 200
+    ,   frameBottomMargin = 220
     ,   frameTopMargin = 150
     ,   frameRightMargin = 150
     }
@@ -352,13 +374,11 @@ main = do
         exitFailure
     let frame@Frame{..} =
             makeFrame
-                "Radius"
                 (makeTics 100 0 1 . maximum . map sel1 $ data_points)
-                "Number of qubits"
                 (computeYTics tilingName)
     hPutStrLn handle . renderStyle (style { mode = LeftMode }) . vcat $
         [prologue
-        ,drawFrame tilingName frame
+        ,drawFrame tiling frame
         ,vcat
             [ drawDataPoint frame radius distance number_of_qubits
             | (radius,distance,number_of_qubits) ← data_points
